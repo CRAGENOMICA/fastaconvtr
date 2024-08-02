@@ -12,7 +12,7 @@ int file_es = 0;
 int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip *file_output_gz,
                FILE *file_logerr, SGZip *file_logerr_gz, char *input_format,int *nsam,
 			   long int *lenR,long int *length_al_real, double *length_al, long int *length_seg,
-			   long int **matrix_pos, char **matrix_pol, int ploidy, 
+			   long int **matrix_pos, char **matrix_pol, int ploidy,
 			   int gfffiles, char *name_fileinputgff, char *subset_positions, 
 			   char *genetic_code, char *criteria_transcript, char *format, int outgroup_presence,
 			   double **matrix_sizepos, float *svratio,float *summatrix_sizepos,long int *nmissing,
@@ -24,8 +24,8 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 			   double ***nsites1_pop,double ***nsites2_pop,double ***nsites3_pop,double ***nsites1_pop_outg,
                double ***nsites2_pop_outg,double ***nsites3_pop_outg,
 			   float *wP,float *wPV, FILE *file_ws, SGZip *file_ws_gz,long int *wgenes, long int nwindows, int include_unknown,
-               long int *masked_wgenes, long int masked_nwindows,char *chr_name,unsigned long first,unsigned long nscaffolds)
-{	
+               long int *masked_wgenes, long int masked_nwindows,char *chr_name,unsigned long first,unsigned long nscaffolds, int printtfasta)
+{
 	/*
 	 file_input: fasta file, tfasta gzip or not
 	 file_output: stdout
@@ -37,7 +37,7 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 	 length_seg: pointer to the number of variants
 	 matrix_pos: pointer to a vector of the number position of each variant
 	 matrix_pol: pointer to a vector with the total variants per sample
-	 ploidy: 1 or 2
+	 ploidy: 1, 2 (4 if Ns are counted as lowercase a=AN, c=CN, g=GN, t=TN)
 	 gfffiles: 1 include, 0 not
 	 name_fileinputgff: name of the GFF file
 	 subset_positions: name of the subset in gff (synonymous, coding, etc.)
@@ -303,13 +303,14 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 	}
 	/*end option flag O*/
 	
-    if(ploidy==2)
+    if(ploidy>=2)
 		nsamtot *= 2; /*of ploidy=2 double samples*/
 	*nsam = nsamtot;
 
 	/*!--- Not used nsamuser_eff = (nsamtot)/ploidy ; */
 		
-	if(n_samp * ploidy < nsamtot) return(0);
+    if(ploidy>=2) if(n_samp * 2 < nsamtot) return(0);
+    if(ploidy==1) if(n_samp * 1 < nsamtot) return(0);
 	if(n_samp == 0 || n_site == 0) return(0);
 	else {
 		if(n_samp > 32167) {
@@ -349,7 +350,7 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 			matrix_sizepos[0][xx] = (double)1;
 			matrix_segrpos[xx] = (double)1;
 		}
-        if(ploidy==2 && input_format[0] == 'f'){
+        if(ploidy>=2 && input_format[0] == 'f'){
 			if ((DNA_matr2 = (char *)calloc(n_site*(long int)n_samp*2,sizeof(char))) == 0) {
 				fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.23 \n");
 				for(x=0;x<n_sam;x++) free(names[x]);
@@ -648,7 +649,7 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
                         if(outgroup_presence==0) strcat(file_weights_char,"_NOoutg");
                         if(outgroup_presence==1) strcat(file_weights_char,"_outg");
                         if(ploidy==1) strcat(file_weights_char,"_ploidy1");
-                        if(ploidy==2) strcat(file_weights_char,"_ploidy2");
+                        if(ploidy>=2) strcat(file_weights_char,"_ploidy2");
                         strcat(file_weights_char,"_WEIGHTS.gz");
                         if( (file_weights = fzopen( file_weights_char, "w", &file_weights_gz)) == 0) {
                             fzprintf(file_output,file_output_gz,"\n It is not possible to write the weigths file %s.", file_weights_char);
@@ -699,7 +700,7 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 		if(tfasta == 1) {
             /*printf("\nWriting tfasta file...");*/
             fflush(stdout);
-            fzprintf(file_logerr,file_logerr_gz,"\nWriting tfasta file...");
+            if(!(gfffiles == 1 && printtfasta==0)) fzprintf(file_logerr,file_logerr_gz,"\nWriting tfasta file...");
             /*
 			memset(file_fas_char, 0, MSP_MAX_FILENAME);
 			strcpy(file_fas_char, file_in);
@@ -710,29 +711,31 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 			if(outgroup_presence==0) strcat(file_fas_char,"_outg0");
 			if(outgroup_presence==1) strcat(file_fas_char,"_outg1");
 			if(ploidy==1) strcat(file_fas_char,"_ploidy1");
-			if(ploidy==2) strcat(file_fas_char,"_ploidy2");
+			if(ploidy>=2) strcat(file_fas_char,"_ploidy2");
 			strcat(file_fas_char,".tfa");
 			if( (file_fas = fzopen( file_fas_char, "w", file_fas_gz)) == 0) {
 				fzprintf(file_output,file_output_gz,"\n It is not possible to write the tfasta file %s.", file_fas_char);
 			}
 			else {
 			*/
-                file_tfas = file_output;
-                file_tfas_gz = file_output_gz;
-
-                if(first == 0) {
-                    /*fzprintf(file_tfas,file_tfas_gz,"#PLOIDY: ");
-                    for(x=0;x<n_samp;x++) {
-                        fzprintf(file_tfas,file_tfas_gz,"%d ",ploidy);
+                if(!(gfffiles == 1 && printtfasta==0)) {
+                    file_tfas = file_output;
+                    file_tfas_gz = file_output_gz;
+                    
+                    if(first == 0) {
+                        /*fzprintf(file_tfas,file_tfas_gz,"#PLOIDY: ");
+                         for(x=0;x<n_samp;x++) {
+                         fzprintf(file_tfas,file_tfas_gz,"%d ",ploidy);
+                         }
+                         fzprintf(file_tfas,file_tfas_gz,"\n");*/
+                        fzprintf(file_tfas,file_tfas_gz,"#NAMES: ");
+                        for(x=0;x<n_samp;x++) {
+                            fzprintf(file_tfas,file_tfas_gz,">%s ",names2[x]);
+                        }
+                        fzprintf(file_tfas,file_tfas_gz,"\n");
+                        /*if(gfffiles == 0 && file_es == 0) */fzprintf(file_tfas,file_tfas_gz,"#CHR:POSITION\tGENOTYPES");
+                        fzprintf(file_tfas,file_tfas_gz,"\n");
                     }
-                    fzprintf(file_tfas,file_tfas_gz,"\n");*/
-                    fzprintf(file_tfas,file_tfas_gz,"#NAMES: ");
-                    for(x=0;x<n_samp;x++) {
-                        fzprintf(file_tfas,file_tfas_gz,">%s ",names2[x]);
-                    }
-                    fzprintf(file_tfas,file_tfas_gz,"\n");
-                    /*if(gfffiles == 0 && file_es == 0) */fzprintf(file_tfas,file_tfas_gz,"#CHR:POSITION\tGENOTYPES");
-                    fzprintf(file_tfas,file_tfas_gz,"\n");
                 }
                 if(gfffiles == 1 || file_es != 0) {
                     memset(file_weights_char, 0, MSP_MAX_FILENAME);
@@ -757,7 +760,7 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
                     if(outgroup_presence==0) strcat(file_weights_char,"_NOoutg");
                     if(outgroup_presence==1) strcat(file_weights_char,"_outg");
                     if(ploidy==1) strcat(file_weights_char,"_ploidy1");
-                    if(ploidy==2) strcat(file_weights_char,"_ploidy2");
+                    if(ploidy>=2) strcat(file_weights_char,"_ploidy2");
                     strcat(file_weights_char,"_WEIGHTS.gz");
                     if(first == 0) {
                         if( (file_weights = fzopen( file_weights_char, "w", &file_weights_gz)) == 0) {
@@ -782,35 +785,37 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 				dd = 0;
 
 				for(xx=0;xx<n_site;xx++) {
-                    fzprintf(file_tfas,file_tfas_gz,"%s:%ld\t",chr_name,xx+1);
+                    if(!(gfffiles == 1 && printtfasta==0)) fzprintf(file_tfas,file_tfas_gz,"%s:%ld\t",chr_name,xx+1);
                     if(gfffiles == 1 || file_es != 0) fzprintf(file_weights,&file_weights_gz,"%s:%ld\t",chr_name,xx+1);
-					for(x=0;x<n_samp;x++) {
-						/*if(x != 0 && ploidy == 1) fzprintf(file_tfas,file_tfas_gz,",");*/
-						/*if(x != 0 && ploidy == 2 && x/2 == (float)x/2.0) fzprintf(file_tfas,file_tfas_gz,",");*/
-						switch (DNA_matr2[(long int)n_site*(unsigned long)x+xx]) {
-							case '1':
-								fzprintf(file_tfas,file_tfas_gz,"T");
-								break;
-							case '2':
-								fzprintf(file_tfas,file_tfas_gz,"C");
-								break;
-							case '3':
-								fzprintf(file_tfas,file_tfas_gz,"G");
-								break;
-							case '4':
-								fzprintf(file_tfas,file_tfas_gz,"A");
-								break;
-							case '5':
-								fzprintf(file_tfas,file_tfas_gz,"N");
-								break;
-							case '6':
-								fzprintf(file_tfas,file_tfas_gz,"-");
-								break;
-							default:
-								fzprintf(file_tfas,file_tfas_gz,"%c",DNA_matr2[(long int)n_site*(unsigned long)x+xx]);
-								break;
-						}
-					}
+                    if(!(gfffiles == 1 && printtfasta==0)) {
+                        for(x=0;x<n_samp;x++) {
+                            /*if(x != 0 && ploidy == 1) fzprintf(file_tfas,file_tfas_gz,",");*/
+                            /*if(x != 0 && ploidy >= 2 && x/2 == (float)x/2.0) fzprintf(file_tfas,file_tfas_gz,",");*/
+                            switch (DNA_matr2[(long int)n_site*(unsigned long)x+xx]) {
+                                case '1':
+                                    fzprintf(file_tfas,file_tfas_gz,"T");
+                                    break;
+                                case '2':
+                                    fzprintf(file_tfas,file_tfas_gz,"C");
+                                    break;
+                                case '3':
+                                    fzprintf(file_tfas,file_tfas_gz,"G");
+                                    break;
+                                case '4':
+                                    fzprintf(file_tfas,file_tfas_gz,"A");
+                                    break;
+                                case '5':
+                                    fzprintf(file_tfas,file_tfas_gz,"N");
+                                    break;
+                                case '6':
+                                    fzprintf(file_tfas,file_tfas_gz,"-");
+                                    break;
+                                default:
+                                    fzprintf(file_tfas,file_tfas_gz,"%c",DNA_matr2[(long int)n_site*(unsigned long)x+xx]);
+                                    break;
+                            }
+                        }
+                    }
 					if(gfffiles == 1) {
 						/*fzprintf(file_weights,&file_weights_gz,"\t");*/
 						fzprintf(file_weights,&file_weights_gz,"%.3f\t",matrix_sizepos[0][xx]);
@@ -883,7 +888,7 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
         if(outgroup_presence==0) strcat(mask_name,"_NOoutg");
         if(outgroup_presence==1) strcat(mask_name,"_outg");
         if(ploidy==1) strcat(mask_name,"_ploidy1");
-        if(ploidy==2) strcat(mask_name,"_ploidy2");
+        if(ploidy>=2) strcat(mask_name,"_ploidy2");
         strcat(mask_name,"_MASK.txt");
         if((file_mask = fzopen(mask_name,"w",&file_mask_gz)) == 0) {
             fzprintf(file_logerr,file_logerr_gz,"Error in mask file %s.",mask_name);
@@ -900,7 +905,7 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
                 else fzprintf(file_mask,&file_mask_gz,"1");/*normal*/
             }
             fzprintf(file_mask,&file_mask_gz,"\n");
-            if(ploidy==2) {
+            if(ploidy>=2) {
                 for(xx=0;xx<n_site;xx++) {
                     w = *(DNA_matr+(((long int)n_site*(unsigned long)x)+(unsigned long)xx));
                     if(w >= 48+5) fzprintf(file_mask,&file_mask_gz,"0");/*missing*/
@@ -1091,7 +1096,7 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
             if(outgroup_presence==0) strcat(file_weights_char,"_NOoutg");
             if(outgroup_presence==1) strcat(file_weights_char,"_outg");
             if(ploidy==1) strcat(file_weights_char,"_ploidy1");
-            if(ploidy==2) strcat(file_weights_char,"_ploidy2");
+            if(ploidy>=2) strcat(file_weights_char,"_ploidy2");
             strcat(file_weights_char,"_WEIGHTS.gz");
             if( (file_weights = fzopen( file_weights_char, "w", &file_weights_gz)) == 0) {
                 fzprintf(file_output,file_output_gz,"\n It is not possible to write the weigths file %s.", file_weights_char);
@@ -1207,7 +1212,7 @@ int var_char(FILE *file_input, SGZip *file_input_gz,FILE *file_logerr, SGZip *fi
                     break;
                 case 't':
                     DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = '1';
-					if(ploidy==2) 
+					if(ploidy==4)
 						DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = 't';
 					/*fnut[0] += 1;*/
                     *count += 1;
@@ -1223,7 +1228,7 @@ int var_char(FILE *file_input, SGZip *file_input_gz,FILE *file_logerr, SGZip *fi
                     break;
                 case 'u':
                     DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = '1';
-					if(ploidy==2) 
+					if(ploidy==4)
 						DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = 't';
 					/*fnut[0] += 1;*/
                     *count += 1;
@@ -1239,7 +1244,7 @@ int var_char(FILE *file_input, SGZip *file_input_gz,FILE *file_logerr, SGZip *fi
                     break;
                 case 'c':
                     DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = '2';
-					if(ploidy==2) 
+					if(ploidy==4)
 						DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = 'c';
  					/*fnut[1] += 1;*/
                    *count += 1;
@@ -1256,7 +1261,7 @@ int var_char(FILE *file_input, SGZip *file_input_gz,FILE *file_logerr, SGZip *fi
                     break;
                 case 'g':
                     DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = '3';
-					if(ploidy==2) 
+					if(ploidy==4)
 						DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = 'g';
  					/*fnut[2] += 1;*/
 					*count += 1;
@@ -1273,7 +1278,7 @@ int var_char(FILE *file_input, SGZip *file_input_gz,FILE *file_logerr, SGZip *fi
                     break;
                 case 'a':
                     DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = '4';
-					if(ploidy==2) 
+					if(ploidy==4)
 						DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = 'a';
 					/*fnut[3] += 1;*/
                     *count += 1;
