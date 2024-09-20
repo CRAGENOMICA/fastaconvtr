@@ -7,16 +7,48 @@
  */
 
 #include "get_obsdatastats.h"
+#include "log.h"
 
-int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr, SGZip *file_logerr_gz, int n_samp, long int n_site,
-				 long int *n_realsite,char *DNA_matr,double *matrix_sizepos,
-				 double *matrix_segrpos,char **matrix_pol,
-				 long int **matrix_pos,double *length_al,long int *length_seg,
-				 int include_unknown,int outgroup_presence, 
-			     float *svratio, long int *nmissing, char *format,
-			     int *nsamuser,int npops, double **sum_sam,
-				 int **svp, float **pwmatrix_miss, float *CpG, int *CpGp, float *GCs, int *Tp, int *Cp, int *Gp, int *Ap, int *GCp,
-				 double **nsites1_pop,double **nsites2_pop,double **nsites3_pop,double **nsites1_pop_outg,double **nsites2_pop_outg,double **nsites3_pop_outg)
+int get_obsstats_mod(
+	FILE *file_output, 
+	SGZip *file_output_gz, 
+	//FILE *file_logerr, 
+	//SGZip *file_logerr_gz, 
+	int n_samp, 
+	long int n_site,
+	long int *n_realsite,
+	char *DNA_matr,
+	double *matrix_sizepos,
+	double *matrix_segrpos,
+	char **matrix_pol,
+	long int **matrix_pos,
+	double *length_al,
+	long int *length_seg,
+	// int include_unknown,
+	// int outgroup_presence, 
+	float *svratio, 
+	long int *nmissing, 
+	// char *format,
+	// int *nsamuser, ## vint_perpop_nsam
+	// int npops, 
+	double **sum_sam,
+	int **svp, 
+	float **pwmatrix_miss, 
+	float *CpG, 
+	int *CpGp, 
+	float *GCs, 
+	int *Tp, 
+	int *Cp, 
+	int *Gp, 
+	int *Ap, 
+	int *GCp,
+	double **nsites1_pop,
+	double **nsites2_pop,
+	double **nsites3_pop,
+	double **nsites1_pop_outg,
+	double **nsites2_pop_outg,
+	double **nsites3_pop_outg,
+	fastaconvtr_args_t *args)
 {	
 	/*
 	 file_output: not necessary but ok -> include info into function
@@ -45,6 +77,8 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 	 **nsites[123]_pop[_outg]: number of valid positions for each POP per position
 	 */
 	
+	int *nsamuser = args->vint_perpop_nsam;
+
 	long int maxbialsites = 256;
     long int maxnsamp = n_samp;
 	
@@ -73,22 +107,23 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
     
 	int *initsq1,sumnsam,inits,endis;
 	
-    initsq1 = (int *)calloc(npops,sizeof(int));
+    initsq1 = (int *)calloc(args->npops,sizeof(int));
     sumnsam = 0;
-    for(z=0;z<npops;z++) {
+    for(z=0;z<args->npops;z++) {
 		initsq1[z] = sumnsam;
 		sumnsam += nsamuser[z];
     }
 	nsamtot = 0;
-	for(x=0;x<npops;x++)
+	for(x=0;x<args->npops;x++)
 		nsamtot += nsamuser[x];
 		
 	*nmissing = 0;
     /* calculate number of samples in outgroup and in the current sample */
 	/* if no outgroup, then all sequences are samples */
 	if(n_samp < 2) {
-		fzprintf(file_logerr,file_logerr_gz," n_samples: %d .",n_samp);
-		fzprintf(file_logerr,file_logerr_gz," NOT ENOUGH SAMPLES.");
+		// fzprintf(file_logerr,file_logerr_gz," n_samples: %d .",n_samp);
+		log_error("n_samples: %d . NOT ENOUGH SAMPLES.",n_samp);
+		//fzprintf(file_logerr,file_logerr_gz," NOT ENOUGH SAMPLES.");
 		if(file_output) {
 			fzprintf(file_output,file_output_gz," n_samples: %d .",n_samp);
 			fzprintf(file_output,file_output_gz," NOT ENOUGH SAMPLES.");
@@ -99,44 +134,52 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 	
 	/* 2D (really 1D) matrix of polymorphisms */
 	if((*matrix_pol = (char *) calloc (maxnsamp*maxbialsites, sizeof(char))) == 0) {
-		fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.3");
+		// fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.3");
+		log_error("Error: memory not reallocated. get_obsstat.3");
         free(initsq1);
 		return(0);
 	}
 	/* indicates the position and the frequency */
 	if((*matrix_pos = (long int *) calloc (maxbialsites, sizeof(long int))) == 0) {
-		fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.4");
+		// fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.4");
+		log_error("Error: memory not reallocated. get_obsstat.4");
         free(initsq1);
 		return(0);
 	}
 	/*pointer to the samples of a given position*/
  	if((colsam = (char *) calloc (maxnsamp, sizeof(char))) == 0) {
-		fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.col");
+		// fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.col");
+		log_error("Error: memory not reallocated. get_obsstat.col");
         free(initsq1);
 		return(0);
 	}
  	if((varnt = (char *) calloc (4, sizeof(char))) == 0) {
-		fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.col");
+		// fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.col");
+		log_error("Error: memory not reallocated. get_obsstat.col");
         free(initsq1);
 		return(0);
 	}
  	if((varmis = (char *) calloc (2, sizeof(char))) == 0) {
-		fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.col");
+		// fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.col");
+		log_error("Error: memory not reallocated. get_obsstat.col");
         free(initsq1);
 		return(0);
 	}
  	if((nvar = (int *) calloc (4, sizeof(int))) == 0) {
-		fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.col");
+		//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.col");
+		log_error("Error: memory not reallocated. get_obsstat.col");
         free(initsq1);
 		return(0);
 	}
  	if((nmis = (int *) calloc (2, sizeof(int))) == 0) {
-		fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.col");
+		//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.col");
+		log_error("Error: memory not reallocated. get_obsstat.col");
         free(initsq1);
 		return(0);
 	}
  	if((nm = (int *) calloc (1,sizeof(int))) == 0) {
-		fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.col");
+		// fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.col");
+		log_error("Error: memory not reallocated. get_obsstat.col");
         free(initsq1);
 		return(0);
 	}
@@ -164,7 +207,7 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
             algsites -= (double)1 - matrix_sizepos[xx]*matrix_segrpos[xx] ;
             continue;
         }
-		if(include_unknown == 0 && *nm > 0) {
+		if(args->include_unknown == 0 && *nm > 0) {
 			/*if gap/missing is not allowed, exclude from analysis*/
 			algsites -=matrix_sizepos[xx]*matrix_segrpos[xx] ;
 			matrix_sizepos[xx] = 0.;
@@ -172,9 +215,9 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 		}
 
 		/*loop for populations to count the total number of positions per pop and the matrix of valid positions between pops*/
-		if(outgroup_presence == 1) {
-			inits   = initsq1[npops-1];
-			endis   = initsq1[npops-1]+nsamuser[npops-1];
+		if(args->outgroup == 1) {
+			inits   = initsq1[args->npops-1];
+			endis   = initsq1[args->npops-1]+nsamuser[args->npops-1];
 			/*define as value '0' the value observed in the outgroup population*/
 			varout[0] = 0;/* 0 is undefined value. Note is not '0'*/
 			for(y=inits;y<endis;y++) {
@@ -290,7 +333,7 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 				/*count pairwise differences among populations: */
 				/*count if at least there is one sample for each population*/
                 z = 0;cp=0;p=0;
-				for(y=0;y<npops-outgroup_presence;y++) {
+				for(y=0;y<args->npops-args->outgroup;y++) {
 					v = 0;
 					for(x=z;x<z+nsamuser[y];x++) {
 						w = *(DNA_matr+(((long int)n_site*(unsigned long)x)+(unsigned long)xx));	
@@ -299,29 +342,29 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 					if(v < nsamuser[y]) nsites1_pop[xx][y] += (matrix_sizepos[xx]);
 					if(v < nsamuser[y]-1) nsites2_pop[xx][y] += (matrix_sizepos[xx]);
 					if(v < nsamuser[y]-2) nsites3_pop[xx][y] += (matrix_sizepos[xx]);
-					if(outgroup_presence == 1) {
+					if(args->outgroup == 1) {
 						p = 0;
-						for(x=nsamtot-1;x>=nsamtot-nsamuser[npops-1];x--) {
+						for(x=nsamtot-1;x>=nsamtot-nsamuser[args->npops-1];x--) {
 							q = *(DNA_matr+(((long int)n_site*(unsigned long)x)+(unsigned long)xx));	
 							if(q > '4') p += 1;
 						}
-						if(p < nsamuser[npops-1] && v < nsamuser[y]) 
+						if(p < nsamuser[args->npops-1] && v < nsamuser[y]) 
 							nsites1_pop_outg[xx][y] += (matrix_sizepos[xx]);
-						if(p < nsamuser[npops-1] && v < nsamuser[y]-1) 
+						if(p < nsamuser[args->npops-1] && v < nsamuser[y]-1) 
 							nsites2_pop_outg[xx][y] += (matrix_sizepos[xx]);
-						if(p < nsamuser[npops-1] && v < nsamuser[y]-2) 
+						if(p < nsamuser[args->npops-1] && v < nsamuser[y]-2) 
 							nsites3_pop_outg[xx][y] += (matrix_sizepos[xx]);
 					}
 					z2 = z; x= y;
 					while(x<y+1) {z2 += nsamuser[x]; x++;}
-					for(y2=y+1;y2<npops-outgroup_presence;y2++) {
+					for(y2=y+1;y2<args->npops-args->outgroup;y2++) {
 						v_2 = 0;
 						for(x=z2;x<z2+nsamuser[y2];x++) {
 							w = *(DNA_matr+(((long int)n_site*(unsigned long)x)+(unsigned long)xx));	
 							if(w >'4') v_2 += 1;
 						}
-						if(outgroup_presence == 1) {
-							if(p < nsamuser[npops-1] && v < nsamuser[y] && v_2 < nsamuser[y2])
+						if(args->outgroup == 1) {
+							if(p < nsamuser[args->npops-1] && v < nsamuser[y] && v_2 < nsamuser[y2])
 								pwmatrix_miss[xx][cp] += (matrix_sizepos[xx]);
 						}
 						else {
@@ -347,13 +390,13 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 				}
 				for(y=0;y<nsamtot;y++) {
 					if(*(DNA_matr+(((long int)n_site*(unsigned long)y)+(unsigned long)xx)) == varnt[0]) {
-						if(format[0]!='x') matrix_pol[0][((bial_sites*(nsamtot))+y)] = '0';
-						if(format[0]=='x') matrix_pol[0][((bial_sites*(nsamtot))+y)] = varnt[0];
+						if(args->format[0]!='x') matrix_pol[0][((bial_sites*(nsamtot))+y)] = '0';
+						if(args->format[0]=='x') matrix_pol[0][((bial_sites*(nsamtot))+y)] = varnt[0];
 					}
 					else {
-						if(include_unknown == 0) { /* and not missing*/
-							if(format[0]!='x') matrix_pol[0][((bial_sites*(nsamtot))+y)] = '1';
-							if(format[0]=='x') matrix_pol[0][((bial_sites*(nsamtot))+y)] = varnt[1];
+						if(args->include_unknown == 0) { /* and not missing*/
+							if(args->format[0]!='x') matrix_pol[0][((bial_sites*(nsamtot))+y)] = '1';
+							if(args->format[0]=='x') matrix_pol[0][((bial_sites*(nsamtot))+y)] = varnt[1];
 						}
 						else {/*perhaps missing or gaps*/
 							if(*(DNA_matr+(((long int)n_site*(unsigned long)y)+(unsigned long)xx)) == '5')
@@ -362,8 +405,8 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 								if(*(DNA_matr+(((long int)n_site*(unsigned long)y)+(unsigned long)xx)) == '6')
 									matrix_pol[0][((bial_sites*(nsamtot))+y)] = '9'; /*gap*/
 								else {
-									if(format[0]!='x') matrix_pol[0][((bial_sites*(nsamtot))+y)] = '1';
-									if(format[0]=='x') matrix_pol[0][((bial_sites*(nsamtot))+y)] = varnt[1];
+									if(args->format[0]!='x') matrix_pol[0][((bial_sites*(nsamtot))+y)] = '1';
+									if(args->format[0]=='x') matrix_pol[0][((bial_sites*(nsamtot))+y)] = varnt[1];
 								}
 							}
 						}
@@ -372,7 +415,7 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 				/*count pairwise differences among populations: */
 				/*count if at least there is one sample for each population*/
                 z = 0;cp=0;p=0;
-				for(y=0;y<npops-outgroup_presence;y++) {
+				for(y=0;y<args->npops-args->outgroup;y++) {
 					v = 0;
 					for(x=z;x<z+nsamuser[y];x++) {
 						w = matrix_pol[0][((bial_sites*(nsamtot))+y)];	
@@ -381,29 +424,29 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 					if(v < nsamuser[y]) nsites1_pop[xx][y] += (matrix_sizepos[xx]);
 					if(v < nsamuser[y]-1) nsites2_pop[xx][y] += (matrix_sizepos[xx]);
 					if(v < nsamuser[y]-2) nsites3_pop[xx][y] += (matrix_sizepos[xx]);
-					if(outgroup_presence == 1) {
+					if(args->outgroup == 1) {
 						p = 0;
-						for(x=nsamtot-1;x>=nsamtot-nsamuser[npops-1];x--) {
+						for(x=nsamtot-1;x>=nsamtot-nsamuser[args->npops-1];x--) {
 							q = matrix_pol[0][((bial_sites*(nsamtot))+x)];	
 							if(q > '4') p += 1;
 						}
-						if(p < nsamuser[npops-1] && v < nsamuser[y]) 
+						if(p < nsamuser[args->npops-1] && v < nsamuser[y]) 
 							nsites1_pop_outg[xx][y] += (matrix_sizepos[xx]);
-						if(p < nsamuser[npops-1] && v < nsamuser[y]-1) 
+						if(p < nsamuser[args->npops-1] && v < nsamuser[y]-1) 
 							nsites2_pop_outg[xx][y] += (matrix_sizepos[xx]);
-						if(p < nsamuser[npops-1] && v < nsamuser[y]-2) 
+						if(p < nsamuser[args->npops-1] && v < nsamuser[y]-2) 
 							nsites3_pop_outg[xx][y] += (matrix_sizepos[xx]);
 					}
 					z2 = z; x= y;
 					while(x<y+1) {z2 += nsamuser[x]; x++;}
-					for(y2=y+1;y2<npops-outgroup_presence;y2++) {
+					for(y2=y+1;y2<args->npops-args->outgroup;y2++) {
 						v_2 = 0;
 						for(x=z2;x<z2+nsamuser[y2];x++) {
 							w = matrix_pol[0][((bial_sites*(nsamtot))+x)];	
 							if(w >'4') v_2 += 1;
 						}
-						if(outgroup_presence == 1) {
-							if(p < nsamuser[npops-1] && v < nsamuser[y] && v_2 < nsamuser[y2]) 
+						if(args->outgroup == 1) {
+							if(p < nsamuser[args->npops-1] && v < nsamuser[y] && v_2 < nsamuser[y2]) 
 								pwmatrix_miss[xx][cp] += (matrix_sizepos[xx]);
 						}
 						else {
@@ -421,12 +464,14 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 				if(bial_sites == maxbialsites) {
 					maxbialsites += 128;
 					if((*matrix_pol = realloc (*matrix_pol, maxnsamp*maxbialsites*sizeof(char))) == 0) {
-						fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.11");
+						//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.11");
+						log_error("Error: memory not reallocated. get_obsstat.11");
                         free(initsq1);
 						return(0);
 					}
 					if((*matrix_pos = realloc(*matrix_pos,(maxbialsites)*sizeof(long int))) == 0) {
-						fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.12");
+						//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.12");
+						log_error("Error: memory not reallocated. get_obsstat.12");
                         free(initsq1);
 						return(0);
 					}
@@ -435,14 +480,14 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 				algsites -= (double)1 - matrix_sizepos[xx]*matrix_segrpos[xx];
 				break;
 			default: /*multiple hits. Eliminate the lowest frequency if missing allowed, Otherwise exclude from analysis*/
-				if(format[0]!='x') {
-					if(include_unknown == 0) {
+				if(args->format[0]!='x') {
+					if(args->include_unknown == 0) {
                         algsites -=matrix_sizepos[xx];
 						matrix_sizepos[xx] = 0.;
                         *n_realsite -= (long int)1;/*here we also erase the mhits from the total*/
 					}
 					else { /*in case missing allowed, include missing positions*/
-						if(outgroup_presence == 1) {
+						if(args->outgroup == 1) {
 							if((w = *(DNA_matr+(((long int)n_site*(unsigned long)(nsamtot-1))+(unsigned long)xx))) >= 48 +5) w = 0;
 						} 
 						else w = 0;
@@ -485,7 +530,7 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 						/*count pairwise differences among populations: */
 						/*count if at least there is one sample for each population*/
                         z = 0;cp=0;p=0;
-						for(y=0;y<npops-outgroup_presence;y++) {
+						for(y=0;y<args->npops-args->outgroup;y++) {
 							v = 0;
 							for(x=z;x<z+nsamuser[y];x++) {
 								w = matrix_pol[0][((bial_sites*(nsamtot))+y)];	
@@ -494,29 +539,29 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 							if(v < nsamuser[y]) nsites1_pop[xx][y] += (matrix_sizepos[xx]);
 							if(v < nsamuser[y]-1) nsites2_pop[xx][y] += (matrix_sizepos[xx]);
 							if(v < nsamuser[y]-2) nsites3_pop[xx][y] += (matrix_sizepos[xx]);
-							if(outgroup_presence == 1) {
+							if(args->outgroup == 1) {
 								p = 0;
-								for(x=nsamtot-1;x>=nsamtot-nsamuser[npops-1];x--) {
+								for(x=nsamtot-1;x>=nsamtot-nsamuser[args->npops-1];x--) {
 									q = matrix_pol[0][((bial_sites*(nsamtot))+x)];	
 									if(q > '4') p += 1;
 								}
-								if(p < nsamuser[npops-1] && v < nsamuser[y]) 
+								if(p < nsamuser[args->npops-1] && v < nsamuser[y]) 
 									nsites1_pop_outg[xx][y] += (matrix_sizepos[xx]);
-								if(p < nsamuser[npops-1] && v < nsamuser[y]-1) 
+								if(p < nsamuser[args->npops-1] && v < nsamuser[y]-1) 
 									nsites2_pop_outg[xx][y] += (matrix_sizepos[xx]);
-								if(p < nsamuser[npops-1] && v < nsamuser[y]-2) 
+								if(p < nsamuser[args->npops-1] && v < nsamuser[y]-2) 
 									nsites3_pop_outg[xx][y] += (matrix_sizepos[xx]);
 							}
 							z2 = z; x= y;
 							while(x<y+1) {z2 += nsamuser[x]; x++;}
-							for(y2=y+1;y2<npops-outgroup_presence;y2++) {
+							for(y2=y+1;y2<args->npops-args->outgroup;y2++) {
 								v_2 = 0;
 								for(x=z2;x<z2+nsamuser[y2];x++) {
 									w = matrix_pol[0][((bial_sites*(nsamtot))+x)];	
 									if(w >'4') v_2 += 1;
 								}
-								if(outgroup_presence == 1) {
-									if(p < nsamuser[npops-1] && v < nsamuser[y] && v_2 < nsamuser[y2])
+								if(args->outgroup == 1) {
+									if(p < nsamuser[args->npops-1] && v < nsamuser[y] && v_2 < nsamuser[y2])
 										pwmatrix_miss[xx][cp] += (matrix_sizepos[xx]);
 								}
 								else {
@@ -534,12 +579,14 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 						if(bial_sites == maxbialsites) {
 							maxbialsites += 128;
 							if((*matrix_pol = realloc (*matrix_pol, maxnsamp*maxbialsites*sizeof(char))) == 0) {
-								fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.11");
+								//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.11");
+								log_error("Error: memory not reallocated. get_obsstat.11");
                                 free(initsq1);
 								return(0);
 							}
 							if((*matrix_pos = realloc(*matrix_pos,(maxbialsites)*sizeof(long int))) == 0) {
-								fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.12");
+								//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.12");
+								log_error("Error: memory not reallocated. get_obsstat.12");
                                 free(initsq1);
 								return(0);
 							}
@@ -548,8 +595,8 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 						algsites -= (double)1 - matrix_sizepos[xx]*matrix_segrpos[xx] ;
 					}
 				}
-				if(format[0]=='x') {
-					if(outgroup_presence == 1) {
+				if(args->format[0]=='x') {
+					if(args->outgroup== 1) {
 						if((w = *(DNA_matr+(((long int)n_site*(unsigned long)(nsamtot-1))+(unsigned long)xx))) >= 48 +5) w = 0;
 					} 
 					else w = 0;
@@ -602,7 +649,7 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 					/*count pairwise differences among populations: */
 					/*count if at least there is one sample for each population*/
                     z = 0;cp=0;p=0;
-					for(y=0;y<npops-outgroup_presence;y++) {
+					for(y=0;y<args->npops-args->outgroup;y++) {
 						v = 0;
 						for(x=z;x<z+nsamuser[y];x++) {
 							w = matrix_pol[0][((bial_sites*(nsamtot))+y)];	
@@ -612,31 +659,31 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 						if(v < nsamuser[y]-1) nsites2_pop[xx][y] += (matrix_sizepos[xx]);
 						if(v < nsamuser[y]-2) nsites3_pop[xx][y] += (matrix_sizepos[xx]);
 						if((matrix_sizepos[xx] > 0)) {
-							if(outgroup_presence == 1) {
+							if(args->outgroup == 1) {
 								p = 0;
-								for(x=nsamtot-1;x>=nsamtot-nsamuser[npops-1];x--) {
+								for(x=nsamtot-1;x>=nsamtot-nsamuser[args->npops-1];x--) {
 									q = matrix_pol[0][((bial_sites*(nsamtot))+x)];	
 									if(q > '4') p += 1;
 								}
-								if(p < nsamuser[npops-1] && v < nsamuser[y]) 
+								if(p < nsamuser[args->npops-1] && v < nsamuser[y]) 
 									nsites1_pop_outg[xx][y] += (matrix_sizepos[xx]);
-								if(p < nsamuser[npops-1] && v < nsamuser[y]-1) 
+								if(p < nsamuser[args->npops-1] && v < nsamuser[y]-1) 
 									nsites2_pop_outg[xx][y] += (matrix_sizepos[xx]);
-								if(p < nsamuser[npops-1] && v < nsamuser[y]-2) 
+								if(p < nsamuser[args->npops-1] && v < nsamuser[y]-2) 
 									nsites3_pop_outg[xx][y] += (matrix_sizepos[xx]);
 							}
 						}
 						z2 = z; x= y;
 						while(x<y+1) {z2 += nsamuser[x]; x++;}
-						for(y2=y+1;y2<npops-outgroup_presence;y2++) {
+						for(y2=y+1;y2<args->npops-args->outgroup;y2++) {
 							v_2 = 0;
 							for(x=z2;x<z2+nsamuser[y2];x++) {
 								w = matrix_pol[0][((bial_sites*(nsamtot))+x)];	
 								if(w >'4') v_2 += 1;
 							}
 							if((matrix_sizepos[xx] > 0)) {
-								if(outgroup_presence == 1) {
-									if(p < nsamuser[npops-1] && v < nsamuser[y] && v_2 < nsamuser[y2])
+								if(args->outgroup == 1) {
+									if(p < nsamuser[args->npops-1] && v < nsamuser[y] && v_2 < nsamuser[y2])
 										pwmatrix_miss[xx][cp] += (matrix_sizepos[xx]);
 								}
 								else {
@@ -655,12 +702,14 @@ int get_obsstats_mod(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr
 					if(bial_sites == maxbialsites) {
 						maxbialsites += 128;
 						if((*matrix_pol = realloc (*matrix_pol, maxnsamp*maxbialsites*sizeof(char))) == 0) {
-							fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.11");
+							//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.11");
+							log_error("Error: memory not reallocated. get_obsstat.11");
                             free(initsq1);
 							return(0);
 						}
 						if((*matrix_pos = realloc(*matrix_pos,(maxbialsites)*sizeof(long int))) == 0) {
-							fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.12");
+							//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsstat.12");
+							log_error("Error: memory not reallocated. get_obsstat.12");
                             free(initsq1);
 							return(0);
 						}

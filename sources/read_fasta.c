@@ -7,24 +7,79 @@
  */
 
 #include "read_fasta.h"
+#include "log.c"
 int file_es = 0;
-
-int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip *file_output_gz,
-               FILE *file_logerr, SGZip *file_logerr_gz, char *input_format,int *nsam,
-			   long int *lenR,long int *length_al_real, double *length_al, long int *length_seg,
-			   long int **matrix_pos, char **matrix_pol, int ploidy, 
-			   int gfffiles, char *name_fileinputgff, char *subset_positions, 
-			   char *genetic_code, char *criteria_transcript, char *format, int outgroup_presence,
-			   double **matrix_sizepos, float *svratio,float *summatrix_sizepos,long int *nmissing,
-               int **mis_pos, float *fnut,
-			   float *CpG, float *GCs, float *wV, int **svp, float ***pwmatrix_miss,
-               /*FILE *file_es, SGZip *file_es_gz,*/ char *file_in, char *file_out,int refasta,int tfasta,
-			   long int *Pp,int **CpGp,int **Ap,int **Cp,int **Gp,int **Tp,int **GCp,int **sort_nsam,
-               int *int_total_nsam_order,int *nsamuser,int npops, double ***sum_sam,
-			   double ***nsites1_pop,double ***nsites2_pop,double ***nsites3_pop,double ***nsites1_pop_outg,
-               double ***nsites2_pop_outg,double ***nsites3_pop_outg,
-			   float *wP,float *wPV, FILE *file_ws, SGZip *file_ws_gz,long int *wgenes, long int nwindows, int include_unknown,
-               long int *masked_wgenes, long int masked_nwindows,char *chr_name,unsigned long first,unsigned long nscaffolds)
+// require a better refactor
+int read_fasta( 
+    FILE *file_input, 
+    SGZip *file_input_gz, 
+    FILE *file_output, 
+    SGZip *file_output_gz,
+    // FILE *file_logerr, 
+    // SGZip *file_logerr_gz, 
+    // char *input_format,
+    int *nsam,
+	long int *lenR,
+    long int *length_al_real, 
+    double *length_al, 
+    long int *length_seg,
+	long int **matrix_pos, 
+    char **matrix_pol, 
+    // int ploidy, 
+	// int gfffiles, 
+    // char *name_fileinputgff,  # args.file_GFF
+    // char *subset_positions,  # args.subset_positions
+	char *genetic_code, 
+    //char *criteria_transcript, # args.criteria_transcript
+    // char *format, 
+    // int outgroup_presence, # args.outgroup
+	double **matrix_sizepos, 
+    float *svratio,
+    float *summatrix_sizepos,
+    long int *nmissing,
+    int **mis_pos, 
+    float *fnut,
+	float *CpG, 
+    float *GCs, 
+    float *wV, 
+    int **svp, 
+    float ***pwmatrix_miss,
+    /*FILE *file_es, SGZip *file_es_gz,*/ 
+    // char *file_in, 
+    // char *file_out,
+    // int refasta,
+    // int tfasta,
+	long int *Pp,
+    int **CpGp,
+    int **Ap,
+    int **Cp,
+    int **Gp,
+    int **Tp,
+    int **GCp,
+    // int **sort_nsam,
+    // int *int_total_nsam_order, # args.int_total_nsam_order
+    // int *nsamuser, # args.vint_perpop_nsam
+    // int npops, 
+    double ***sum_sam,
+	double ***nsites1_pop,
+    double ***nsites2_pop,
+    double ***nsites3_pop,
+    double ***nsites1_pop_outg,
+    double ***nsites2_pop_outg,
+    double ***nsites3_pop_outg,
+	float *wP,
+    float *wPV, 
+    FILE *file_ws, 
+    SGZip *file_ws_gz,
+    long int *wgenes, 
+    long int nwindows, 
+    // int include_unknown,
+    long int *masked_wgenes, 
+    long int masked_nwindows,
+    char *chr_name,
+    unsigned long first,
+    unsigned long nscaffolds,
+    fastaconvtr_args_t *args)
 {	
 	/*
 	 file_input: fasta file, tfasta gzip or not
@@ -51,7 +106,7 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 	 **sort_nsam: vector with the order of the samples 
 	 *int_total_nsam_order: total samples included and defined in the order flag.
 	 *file_es: pointer to the file containing the effect sizes
-	 *nsamuser: the number of samples per population
+	 *nsamuser:  'vint_perpop_nsam' the number of samples per population
 	 npops: the number of populations used
 	 fnut: vector with the total frequency of each nucleotide
 	 
@@ -133,8 +188,9 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
     char w;
     
     /*printf("\nReading input file...");*/
-    fflush(stdout);
-    fzprintf(file_logerr,file_logerr_gz,"\nReading input file...");
+    // fflush(stdout);
+    // fzprintf(file_logerr,file_logerr_gz,"\nReading input file...");
+    log_info("Reading input file...");
     
 	count = 0;
 	c = 0;
@@ -156,31 +212,36 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
     
     if(names == 0) { /* only initialize once. Check */
         if((names = (char **)calloc(128,sizeof(char *))) == 0) {
-            fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.1 \n");
+            // fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.1 \n");
+            log_error("Error: memory not reallocated. read_fasta.names");
             return(0);
         }
         for(x=0;x<128;x++) {
             if((names[x] = (char *)calloc(50,sizeof(char))) == 0) {
-                fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.2 \n");
+                // fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.2 \n");
+                log_error("Error: memory not reallocated. read_fasta.names[x]");
                 return(0);
             }
         }
         if((DNA_matr = (char *)calloc(1e6,sizeof(char))) == 0) {
             for(x=0;x<128;x++) free(names[x]);
             free(names);
-            fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.3 \n");
+            //fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.3 \n");
+            log_error("Error: memory not reallocated. read_fasta.DNA_matr");
             return(0);
         }
     }
         
-    if(input_format[0] == 'f') {
+    if(args->input_format[0] == 'f') {
         /* ok for diploid or haploid */
         c = fzgetc(file_input, file_input_gz);
         while (c != 0 && c != -1/* && n_sam < nsamuser_eff*/) {
             while(c == 32 || c == 9 || c == 13 || c == 10 || c == '*' || c=='#') c = fzgetc(file_input, file_input_gz);
             n_sit = 0;
-            if(!(var_char(file_input,file_input_gz,file_logerr,file_logerr_gz,&count,&c,&n_sam,&n_sit,&nseq,&maxsam,&names,&DNA_matr,&n_site,
-                          excludelines,name_excluded,&n_excl,includelines,name_ingroups,name_outgroup,outgroup,ploidy/*,fnut*//*,CpG*/)))
+            if(!(var_char(file_input,file_input_gz,
+                        // file_logerr,file_logerr_gz,
+                        &count,&c,&n_sam,&n_sit,&nseq,&maxsam,&names,&DNA_matr,&n_site,
+                        excludelines,name_excluded,&n_excl,includelines,name_ingroups,name_outgroup,outgroup,args->ploidy/*,fnut*//*,CpG*/)))
                 return 0;
             if(n_sam == 32167) {
                 fzprintf(file_output,file_output_gz,"Only 32167 samples per loci are allowed.\n");
@@ -189,10 +250,13 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
         }
         n_samp = n_sam;
     }
-    if(input_format[0] == 't') {
+    if(args->input_format[0] == 't') {
         /*READ TFASTA FILE*/
-        if(function_read_tfasta(file_input,file_input_gz,file_logerr,file_logerr_gz,init_site,end_site,&n_sam,&n_site,&names,&DNA_matr,chr_name,first)==0) {
-            fzprintf(file_logerr,file_logerr_gz,"Unable reading tfasta file\n");
+        if(function_read_tfasta(file_input,file_input_gz,
+                // file_logerr,file_logerr_gz,
+                init_site,end_site,&n_sam,&n_site,&names,&DNA_matr,chr_name,first)==0) {
+            // fzprintf(file_logerr,file_logerr_gz,"Unable reading tfasta file\n");
+            log_error("Unable reading tfasta file");
             exit(1);
         }
         n_samp = n_sam;
@@ -204,19 +268,22 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 	/*modify the order of samples using option flag O*/
 	/*ordering data: in case O is not a flag included*/
 	flag_change_sort = 0;
-	if(*int_total_nsam_order == 0) {
-		*int_total_nsam_order = nsamtot = n_samp;
-		if((sort_nsam[0] = (int *) calloc( (unsigned long)n_samp, sizeof(int) )) == 0) {
-			fzprintf(file_logerr,file_logerr_gz,"Error allocating memory");
+	// if(*int_total_nsam_order == 0) {
+    if( args->int_total_nsam_order == 0) {    
+		args->int_total_nsam_order = nsamtot = n_samp;
+		if((args->sort_nsam[0] = (int *) calloc( (unsigned long)n_samp, sizeof(int) )) == 0) {
+			//fzprintf(file_logerr,file_logerr_gz,"Error allocating memory");
+            log_error("Error allocating memory for sort_nsam");
 			exit(1);
 		}
 		for( x = 0; x < n_samp; x++ ) {
-			sort_nsam[0][ x ] = x;
+			// sort_nsam[0][ x ] = x;
+            args->sort_nsam[ x ] = x;
 		}
 	} 
 	else { 
 		for(x=0;x<n_samp;x++) {
-			if(sort_nsam[0][x] != x) {
+			if(args->sort_nsam[x] != x) {
 				flag_change_sort = 1;
 				break;
 			}
@@ -225,18 +292,20 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
     nsamtot = n_sam; /*number of samples*/
     
 	if(flag_change_sort == 1) {
-		nsamtot = *int_total_nsam_order; 
+		nsamtot = args->int_total_nsam_order;// *int_total_nsam_order; 
 		/*define duplicated matr (we re-use DNAmatrix2 and we delete again once DNA matrix is redefined)*/
         if(first == 0) {
             if ((DNA_matr2 = (char *)calloc(n_site*(long int)n_samp,sizeof(char))) == 0) {
-                fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.23d \n");
+                //fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.23d \n");
+                log_error("Error: memory not reallocated. read_fasta.DNA_matr2");
                 for(x=0;x<n_sam;x++) free(names[x]);
                 free(names);
                 free(DNA_matr);
                 return(0);
             }
             if((names2 = (char **)calloc(n_samp,sizeof(char *))) == 0) {
-                fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.1s2 \n");
+                // fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.1s2 \n");
+                log_error("Error: memory not reallocated. read_fasta.names2");
                 for(x=0;x<n_sam;x++) free(names[x]);
                 free(names);
                 free(DNA_matr);
@@ -244,7 +313,8 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
             }
             for(x=0;x<n_samp;x++) {
                 if((names2[x] = (char *)calloc(50,sizeof(char))) == 0) {
-                    fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.22 \n");
+                    // fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.22 \n");
+                    log_error("Error: memory not reallocated. read_fasta.names2[x]");
                     for(x=0;x<n_sam;x++) free(names[x]);
                     free(names);
                     free(DNA_matr);
@@ -254,7 +324,8 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
         }
         else {
             if ((DNA_matr2 = (char *)realloc(DNA_matr2,n_site*(long int)n_samp*sizeof(char))) == 0) {
-                fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.23d \n");
+                //fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.23d \n");
+                log_error("Error: memory not reallocated. read_fasta.DNA_matr2");
                 for(x=0;x<n_sam;x++) free(names[x]);
                 free(names);
                 free(DNA_matr);
@@ -270,19 +341,19 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 		/*end define and duplicate*/
 		
 		/*include data in *DNA_matr and in *names[] in the correct order*/
-		if(input_format[0] == 'f') {
+		if(args->input_format[0] == 'f') {
             for(x=0;x<nsamtot;x++) {
-                strncpy(DNA_matr+(long int)n_site*(long int)x,DNA_matr2+(long int)n_site*(long int)(sort_nsam[0][x]),n_site);
-                strncpy(names[x],names2[sort_nsam[0][x]],50);
+                strncpy(DNA_matr+(long int)n_site*(long int)x,DNA_matr2+(long int)n_site*(long int)(args->sort_nsam[x]),n_site);
+                strncpy(names[x],names2[args->sort_nsam[x]],50);
             }
         }
-        if(input_format[0] == 't') {
+        if(args->input_format[0] == 't') {
             for(x=0;x<nsamtot;x++) {
                 for(xx=0;xx<n_site;xx++) {
                     DNA_matr [(((long int)n_samp*(unsigned long)xx)+(unsigned long)x)] =
-                    DNA_matr2[(((long int)n_samp*(unsigned long)xx)+(unsigned long)sort_nsam[0][x])];
+                    DNA_matr2[(((long int)n_samp*(unsigned long)xx)+(unsigned long)args->sort_nsam[x])];
                 }
-                strncpy(names[x],names2[sort_nsam[0][x]],50);
+                strncpy(names[x],names2[args->sort_nsam[x]],50);
             }
         }
 		/*delete duplicated matr*/
@@ -292,7 +363,8 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 		
 		/*erase lines no used*/
 		if(nsamtot > n_sam) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: too low samples in the file according to defined in -N flag.\n");
+			// fzprintf(file_logerr,file_logerr_gz,"\nError: too low samples in the file according to defined in -N flag.\n");
+            log_error("Error: too low samples in the file according to defined in -N flag.");
 			for(x=0;x<n_sam;x++) free(names[x]);
 			free(names);
 			free(DNA_matr);
@@ -303,23 +375,25 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 	}
 	/*end option flag O*/
 	
-    if(ploidy==2)
+    if(args->ploidy==2)
 		nsamtot *= 2; /*of ploidy=2 double samples*/
 	*nsam = nsamtot;
 
 	/*!--- Not used nsamuser_eff = (nsamtot)/ploidy ; */
 		
-	if(n_samp * ploidy < nsamtot) return(0);
+	if(n_samp * args->ploidy < nsamtot) return(0);
 	if(n_samp == 0 || n_site == 0) return(0);
 	else {
 		if(n_samp > 32167) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: too much samples. Only 32167 samples per loci are allowed.\n");
+			//fzprintf(file_logerr,file_logerr_gz,"\nError: too much samples. Only 32167 samples per loci are allowed.\n");
+            log_error("Error: too much samples. Only 32167 samples per loci are allowed.");
 			return(0);
 		}
 		/*init matrix_sizepos*/
 		/*if(*matrix_sizepos == 0) {*/
 			if((*matrix_sizepos = (double *)malloc(n_site*sizeof(double))) == 0) {
-				fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.2");
+				//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.2");
+                log_error("Error: memory not reallocated. read_fasta.matrix_sizepos");
 				for(x=0;x<n_sam;x++) free(names[x]);
 				free(names);
 				free(DNA_matr);
@@ -327,7 +401,8 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 			}
         if(first == 0) {
 			if((matrix_segrpos = (double *)malloc(n_site*sizeof(double))) == 0) {
-				fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.2");
+				// fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.2");
+                log_error("Error: memory not reallocated. read_fasta.matrix_segrpos");
 				for(x=0;x<n_sam;x++) free(names[x]);
 				free(names);
 				free(DNA_matr);
@@ -337,7 +412,8 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
         }
         else {
             if((matrix_segrpos = (double *)realloc(matrix_segrpos,n_site*sizeof(double))) == 0) {
-                fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.2");
+                // fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.2");
+                log_error("Error: memory not reallocated. read_fasta.matrix_segrpos");
                 for(x=0;x<n_sam;x++) free(names[x]);
                 free(names);
                 free(DNA_matr);
@@ -349,9 +425,10 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 			matrix_sizepos[0][xx] = (double)1;
 			matrix_segrpos[xx] = (double)1;
 		}
-        if(ploidy==2 && input_format[0] == 'f'){
+        if(args->ploidy==2 && args->input_format[0] == 'f'){
 			if ((DNA_matr2 = (char *)calloc(n_site*(long int)n_samp*2,sizeof(char))) == 0) {
-				fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.23 \n");
+				//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.23 \n");
+                log_error("Error: memory not reallocated. read_fasta.DNA_matr2");
 				for(x=0;x<n_sam;x++) free(names[x]);
 				free(names);
 				free(DNA_matr);
@@ -360,12 +437,14 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 				return(0);
 			}
 			if((names2 = (char **)calloc(n_samp*2,sizeof(char *))) == 0) {
-				fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.12 \n");
+				// fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.12 \n");
+                log_error("Error: memory not reallocated. read_fasta.names2");
 				return(0);
 			}
 			for(x=0;x<n_samp*2;x++) {
 				if((names2[x] = (char *)calloc(50,sizeof(char))) == 0) {
-					fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.22 \n");
+					//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.22 \n");
+                    log_error("Error: memory not reallocated. read_fasta.names2[x]");
 					return(0);
 				}
 			}
@@ -450,7 +529,8 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 		}
 		else {
 			if((DNA_matr2 = (char *)calloc((long int)n_site*n_samp,sizeof(char))) == 0) {
-				fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.23 \n");
+				//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.23 \n");
+                log_error("Error: memory not reallocated. read_fasta.DNA_matr2");
 				for(x=0;x<n_sam;x++) free(names[x]);
 				free(names);
 				free(DNA_matr);
@@ -459,20 +539,22 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 				return(0);
 			}
 			if((names2 = (char **)calloc(n_samp*1,sizeof(char *))) == 0) {
-				fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.12 \n");
+				//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.12 \n");
+                log_error("Error: memory not reallocated. read_fasta.names2");
 				return(0);
 			}
 			for(x=0;x<n_samp*1;x++) {
 				if((names2[x] = (char *)calloc(50,sizeof(char))) == 0) {
-					fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.22 \n");
+					//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.22 \n");
+                    log_error("Error: memory not reallocated. read_fasta.names2[x]");
 					return(0);
 				}
 			}
             for(x=0;x<n_samp*1;x++) {
-                if(input_format[0] == 'f') {
+                if(args->input_format[0] == 'f') {
                     strncpy(DNA_matr2+(long int)n_site*(unsigned long)x,DNA_matr+(long int)n_site*(unsigned long)x,n_site);
                 }
-                if(input_format[0] == 't') {
+                if(args->input_format[0] == 't') {
                     for(xx=0;xx<n_site;xx++) { /*transpose (...)*/
                         DNA_matr2[(((long int)n_site*(unsigned long)x)+(unsigned long)xx)] =
                         DNA_matr [(((long int)n_samp*(unsigned long)xx)+(unsigned long)x)];
@@ -497,14 +579,31 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
         }
         
         /*here include a function to filter positions: to read gff files (if necessary)*/
-		if(gfffiles == 1) {
+		if(args->gfffiles == 1) {
 			/*include**name_fileinputgff,*subset_positions,ifgencode,*codename,*genetic_code,*matrix_sizepos,n_samp,n_site,*DNA_matr*/
 			/*the function read the gff file and cut the DNA_matr, also gives the number of positions in matrix_sizepos and count the total in n_site*/
 			/*modify values in matrix_sizepos*/
 			/*also modify values in matrix_segrpos, only for syn/nsyn variants (that is, in case counting syn positions but the variant is nsyn, reject it)*/
-			if(use_gff(name_fileinputgff,subset_positions,genetic_code,*matrix_sizepos,n_samp,n_site,DNA_matr2,matrix_segrpos,
-					   file_output/*,mainargc*/,file_output_gz,file_logerr,file_logerr_gz,include_unknown,criteria_transcript,
-                       output,outgroup_presence,*nsam-nsamuser[npops-1],chr_name,first) == 0) {
+			if(use_gff(
+                args->file_GFF , //name_fileinputgff,
+                args->subset_positions,
+                genetic_code,
+                *matrix_sizepos,
+                n_samp,
+                n_site,
+                DNA_matr2,
+                matrix_segrpos,
+				file_output/*,mainargc*/,
+                file_output_gz,
+                NULL, // file_logerr,
+                NULL, //file_logerr_gz,
+                args->include_unknown,
+                args->criteria_transcript,
+                output,
+                args->outgroup, // outgroup_presence
+                *nsam-args->vint_perpop_nsam[args->npops-1],   //  nsamuser[args->npops-1],
+                chr_name,
+                first) == 0) {
                 /*in case option -G call the start and end of each gene: NOT DONE YET*/
 				/*if error realloc DNA_matr*/
 				for(x=0;x<n_sam;x++) free(names[x]);
@@ -530,8 +629,9 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 			}
 		}
 		/*rewrite fasta files of the specific filtered region (by gff, excluding experiments using sil/syn/nsyn)*/
-		if(refasta == 1) {
-            fzprintf(file_logerr,file_logerr_gz,"\nWrite fasta file for specific regions...");
+		if(args->refasta == 1) {
+            // fzprintf(file_logerr,file_logerr_gz,"\nWrite fasta file for specific regions...");
+            log_info("Write fasta file for specific regions...");
             fflush(stdout);
             /*
             memset(file_fas_char, 0, MSP_MAX_FILENAME);
@@ -543,15 +643,14 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 			}
 			else {
             */
-            /*
-                file_fas = file_output;
-                file_fas_gz = file_output_gz;
-            */
+            
+                
+            
                 if(nwindows>0) {
                     //fzprintf(file_fas,file_fas_gz,">%s_%ld\n",names2[x]);
                     for(yy=0;yy<nwindows;yy++) {
                         memset(file_fas_char, 0, MSP_MAX_FILENAME);
-                        strcpy(file_fas_char,file_out);
+                        strcpy(file_fas_char,args->file_out);
                         strcat(file_fas_char,chr_name);
                         snprintf(file_fas_char2,MSP_MAX_FILENAME, "_win_%ld.fas", yy);
                         strcat(file_fas_char,file_fas_char2);
@@ -589,15 +688,20 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
                     /*fzclose(file_fas,&file_fas_gz);*/
                 }
                 else {
+                    // one way to do it
+                    file_fas = file_output;
+                    file_fas_gz = *file_output_gz;
                     memset(file_fas_char, 0, MSP_MAX_FILENAME);
-                    strcpy(file_fas_char, file_out);
-                    strcat(file_fas_char,"_");
-                    strcat(file_fas_char,chr_name);
-                    strcat(file_fas_char,".fa");
-                    if( (file_fas = fzopen( file_fas_char, "w", &file_fas_gz)) == 0) {
-                        fzprintf(file_output,file_output_gz,"\n It is not possible to write the fasta file %s.", file_fas_char);
-                    }
-                    else {
+                    strcpy(file_fas_char, args->file_out);
+                    //strcat(file_fas_char,"_");
+                    //strcat(file_fas_char,chr_name);
+                    //strcat(file_fas_char,".fa");
+                    // file_output_gz was init outside
+                    // if( (file_fas = fzopen( file_fas_char, "w", &file_fas_gz)) == 0) {
+                    //     fzprintf(file_output,file_output_gz,"\n It is not possible to write the fasta file %s.", file_fas_char);
+                    // }
+                    // else 
+                    {
                         for(x=0;x<n_samp;x++) {
                             fzprintf(file_fas,&file_fas_gz,">%s\n",names2[x]); /*one fasta per chr_name*/
                             for(xx=0;xx<n_site;xx++) {
@@ -620,35 +724,38 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
                                     fzprintf(file_fas,&file_fas_gz,"-");
                                 }
                             }
+                            fzprintf(file_fas,&file_fas_gz,"\n");
                         }
-                        fzprintf(file_fas,&file_fas_gz,"\n");
+                       
                     }
                     /*fzclose(file_fas,&file_fas_gz);*/
                     
-                    if(gfffiles == 1 || file_es != 0) {
+                    if(args->gfffiles == 1 || file_es != 0) {
                         memset(file_weights_char, 0, MSP_MAX_FILENAME);
-                        if(file_out[0]=='\0') strcpy(file_weights_char, file_in);
-                        else strcpy(file_weights_char, file_out);
+                        if(args->file_out[0]=='\0') strcpy(file_weights_char, args->file_in);
+                        else strcpy(file_weights_char, args->file_out);
                         //sprintf(file_weights_char,"%s_npops%d_nsam%d",file_weights_char,(npops>0?npops:1),nsamtot);
                         char chtemp[MSP_MAX_FILENAME];
-                        sprintf(chtemp,"npops%d_nsam%d",(npops>0?npops:1),nsamtot);
+                        sprintf(chtemp,"npops%d_nsam%d",(args->npops>0?args->npops:1),nsamtot);
                         strcat(file_weights_char,"_");
                         strcat(file_weights_char,chtemp);
-                        if(gfffiles == 1) {
+                        if(args->gfffiles == 1) {
                             strcat(file_weights_char,"_");
-                            strcat(file_weights_char,subset_positions);
+                            strcat(file_weights_char,args->subset_positions);
                             strcat(file_weights_char,"_");
-                            strcat(file_weights_char,criteria_transcript);
+                            strcat(file_weights_char,args->criteria_transcript);
                         }
                         if(file_ws != 0) {
                             strcat(file_weights_char,"_IncludedWeightFile");
                         }
-                        if(include_unknown) strcat(file_weights_char,"_IncludeMissingVariantsmhits");
+                        if(args->include_unknown) strcat(file_weights_char,"_IncludeMissingVariantsmhits");
                         else strcat(file_weights_char,"_ExcludeMissingVariantsmhits");
-                        if(outgroup_presence==0) strcat(file_weights_char,"_NOoutg");
-                        if(outgroup_presence==1) strcat(file_weights_char,"_outg");
-                        if(ploidy==1) strcat(file_weights_char,"_ploidy1");
-                        if(ploidy==2) strcat(file_weights_char,"_ploidy2");
+                        // if(outgroup_presence==0) strcat(file_weights_char,"_NOoutg");
+                        if(args->outgroup ==0) strcat(file_weights_char,"_NOoutg");
+                        // if(outgroup_presence==1) strcat(file_weights_char,"_outg");
+                        if(args->outgroup==1) strcat(file_weights_char,"_outg");
+                        if(args->ploidy==1) strcat(file_weights_char,"_ploidy1");
+                        if(args->ploidy==2) strcat(file_weights_char,"_ploidy2");
                         strcat(file_weights_char,"_WEIGHTS.gz");
                         if( (file_weights = fzopen( file_weights_char, "w", &file_weights_gz)) == 0) {
                             fzprintf(file_output,file_output_gz,"\n It is not possible to write the weigths file %s.", file_weights_char);
@@ -656,14 +763,14 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
                         }
                         file_weights_gz.index = &file_weights_gz_index;
 
-                        if(gfffiles == 0 && (file_es != 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTVARX");
-                        if(gfffiles == 1 && (file_es == 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTPOS\tWEIGHTVAR");
-                        if(gfffiles == 1 && (file_es != 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTPOS\tWEIGHTVAR\tWEIGHTVARX");
+                        if(args->gfffiles == 0 && (file_es != 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTVARX");
+                        if(args->gfffiles == 1 && (file_es == 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTPOS\tWEIGHTVAR");
+                        if(args->gfffiles == 1 && (file_es != 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTPOS\tWEIGHTVAR\tWEIGHTVARX");
                         fzprintf(file_weights,&file_weights_gz,"\n");
                         
                         for(xx=0;xx<n_site;xx++) {
-                            if(gfffiles == 1 || file_es != 0) fzprintf(file_weights,&file_weights_gz,"%s:%ld\t",chr_name,xx+1);
-                            if(gfffiles == 1) {
+                            if(args->gfffiles == 1 || file_es != 0) fzprintf(file_weights,&file_weights_gz,"%s:%ld\t",chr_name,xx+1);
+                            if(args->gfffiles == 1) {
                                 /*fzprintf(file_weights,&file_weights_gz,"\t");*/
                                 fzprintf(file_weights,&file_weights_gz, "%.3f\t",matrix_sizepos[0][xx]);
                                 /*if(matrix_sizepos[0][xx] == 0.0) fzprintf(file_weights,&file_weights_gz,"%.3f\t",(double)0);
@@ -679,9 +786,9 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
                                 else
                                     fzprintf(file_weights,&file_weights_gz,"NA\t");
                             }
-                            if(gfffiles == 1 || file_es != 0) fzprintf(file_weights,&file_weights_gz,"\n");
+                            if(args->gfffiles == 1 || file_es != 0) fzprintf(file_weights,&file_weights_gz,"\n");
                         }
-                        if(gfffiles == 1 || file_es != 0) fzclose(file_weights,&file_weights_gz);
+                        if(args->gfffiles == 1 || file_es != 0) fzclose(file_weights,&file_weights_gz);
                     }
                }
             /*}*/
@@ -696,10 +803,11 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 		/*PRINT TFASTA: IT SHOULD NOT BE HERE THIS "FUNCTION"!!*/
 		/*PRINT TFASTA: IT SHOULD NOT BE HERE THIS "FUNCTION"!!*/
 
-		if(tfasta == 1) {
+		if(args->tfasta == 1) {
             /*printf("\nWriting tfasta file...");*/
             fflush(stdout);
-            fzprintf(file_logerr,file_logerr_gz,"\nWriting tfasta file...");
+            // fzprintf(file_logerr,file_logerr_gz,"\nWriting tfasta file...");
+            log_info("Writing tfasta file...");
             /*
 			memset(file_fas_char, 0, MSP_MAX_FILENAME);
 			strcpy(file_fas_char, file_in);
@@ -734,30 +842,30 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
                     /*if(gfffiles == 0 && file_es == 0) */fzprintf(file_tfas,file_tfas_gz,"#CHR:POSITION\tGENOTYPES");
                     fzprintf(file_tfas,file_tfas_gz,"\n");
                 }
-                if(gfffiles == 1 || file_es != 0) {
+                if(args->gfffiles == 1 || file_es != 0) {
                     memset(file_weights_char, 0, MSP_MAX_FILENAME);
-                    if(file_out[0]=='\0') strcpy(file_weights_char, file_in);
-                    else strcpy(file_weights_char, file_out);
+                    if(args->file_out[0]=='\0') strcpy(file_weights_char, args->file_in);
+                    else strcpy(file_weights_char, args->file_out);
                     //sprintf(file_weights_char,"%s_npops%d_nsam%d",file_weights_char,(npops>0?npops:1),nsamtot);
                     char chtemp[MSP_MAX_FILENAME];
-                    sprintf(chtemp,"npops%d_nsam%d",(npops>0?npops:1),nsamtot);
+                    sprintf(chtemp,"npops%d_nsam%d",(args->npops>0?args->npops:1),nsamtot);
                     strcat(file_weights_char,"_");
                     strcat(file_weights_char,chtemp);
-                    if(gfffiles == 1) {
+                    if(args->gfffiles == 1) {
                         strcat(file_weights_char,"_");
-                        strcat(file_weights_char,subset_positions);
+                        strcat(file_weights_char,args->subset_positions);
                         strcat(file_weights_char,"_");
-                        strcat(file_weights_char,criteria_transcript);
+                        strcat(file_weights_char,args->criteria_transcript);
                     }
                     if(file_ws != 0) {
                         strcat(file_weights_char,"_IncludedWeightFile");
                     }
-                    if(include_unknown) strcat(file_weights_char,"_IncludeMissingVariantsmhits");
+                    if(args->include_unknown) strcat(file_weights_char,"_IncludeMissingVariantsmhits");
                     else strcat(file_weights_char,"_ExcludeMissingVariantsmhits");
-                    if(outgroup_presence==0) strcat(file_weights_char,"_NOoutg");
-                    if(outgroup_presence==1) strcat(file_weights_char,"_outg");
-                    if(ploidy==1) strcat(file_weights_char,"_ploidy1");
-                    if(ploidy==2) strcat(file_weights_char,"_ploidy2");
+                    if(args->outgroup==0) strcat(file_weights_char,"_NOoutg");
+                    if(args->outgroup==1) strcat(file_weights_char,"_outg");
+                    if(args->ploidy==1) strcat(file_weights_char,"_ploidy1");
+                    if(args->ploidy==2) strcat(file_weights_char,"_ploidy2");
                     strcat(file_weights_char,"_WEIGHTS.gz");
                     if(first == 0) {
                         if( (file_weights = fzopen( file_weights_char, "w", &file_weights_gz)) == 0) {
@@ -765,9 +873,9 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
                             exit(1);
                         }
                         file_weights_gz.index = &file_weights_gz_index;
-                        if(gfffiles == 0 && (file_es != 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTVARX");
-                        if(gfffiles == 1 && (file_es == 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTPOS\tWEIGHTVAR");
-                        if(gfffiles == 1 && (file_es != 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTPOS\tWEIGHTVAR\tWEIGHTVARX");
+                        if(args->gfffiles == 0 && (file_es != 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTVARX");
+                        if(args->gfffiles == 1 && (file_es == 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTPOS\tWEIGHTVAR");
+                        if(args->gfffiles == 1 && (file_es != 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTPOS\tWEIGHTVAR\tWEIGHTVARX");
                         fzprintf(file_weights,&file_weights_gz,"\n");
                     }
                     /*
@@ -783,7 +891,7 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 
 				for(xx=0;xx<n_site;xx++) {
                     fzprintf(file_tfas,file_tfas_gz,"%s:%ld\t",chr_name,xx+1);
-                    if(gfffiles == 1 || file_es != 0) fzprintf(file_weights,&file_weights_gz,"%s:%ld\t",chr_name,xx+1);
+                    if(args->gfffiles == 1 || file_es != 0) fzprintf(file_weights,&file_weights_gz,"%s:%ld\t",chr_name,xx+1);
 					for(x=0;x<n_samp;x++) {
 						/*if(x != 0 && ploidy == 1) fzprintf(file_tfas,file_tfas_gz,",");*/
 						/*if(x != 0 && ploidy == 2 && x/2 == (float)x/2.0) fzprintf(file_tfas,file_tfas_gz,",");*/
@@ -811,7 +919,7 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 								break;
 						}
 					}
-					if(gfffiles == 1) {
+					if(args->gfffiles == 1) {
 						/*fzprintf(file_weights,&file_weights_gz,"\t");*/
 						fzprintf(file_weights,&file_weights_gz,"%.3f\t",matrix_sizepos[0][xx]);
 						/*if(matrix_sizepos[0][xx] == 0.0) fzprintf(file_weights,&file_weights_gz,"%.3f\t",(double)0);
@@ -827,19 +935,19 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 							fzprintf(file_weights,&file_weights_gz,"NA\t");
 					}
                     fzprintf(file_tfas,file_tfas_gz,"\n");
-                    if(gfffiles == 1 || file_es != 0) fzprintf(file_weights,&file_weights_gz,"\n");
+                    if(args->gfffiles == 1 || file_es != 0) fzprintf(file_weights,&file_weights_gz,"\n");
 				}
 			/*}
 			fzclose(file_tfas,file_tfas_gz);
             */
-            if((first == nscaffolds-1) && (gfffiles == 1 || file_es != 0))
+            if((first == nscaffolds-1) && (args->gfffiles == 1 || file_es != 0))
                 fzclose(file_weights,&file_weights_gz);
 		}
 
         for(x=0;x<n_samp;x++) free(names2[x]);
         free(names2);
 
-        if(format[0] == 't' || format[0] == 'f' || format[0] == '0') {
+        if(args->format[0] == 't' || args->format[0] == 'f' || args->format[0] == '0') {
             free(DNA_matr2);
             return(1);
         }
@@ -861,46 +969,47 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 		
         /***** print MASK in a file ******/
         memset(mask_name, 0, MSP_MAX_FILENAME);
-        if(file_out[0]=='\0') strcpy(mask_name, file_in);
-        else strcpy(mask_name, file_out);
-        if (npops == 0) npops = 1;
+        if(args->file_out[0]=='\0') strcpy(mask_name, args->file_in);
+        else strcpy(mask_name, args->file_out);
+        if (args->npops == 0) args->npops = 1;
         //sprintf(mask_name,"%s_npops%d_nsam%d",mask_name,npops,nsamtot);
         char chtemp[MSP_MAX_FILENAME];
-        sprintf(chtemp,"npops%d_nsam%d",(npops>0?npops:1),nsamtot);
+        sprintf(chtemp,"npops%d_nsam%d",(args->npops>0?args->npops:1),nsamtot);
         strcat(mask_name,"_");
         strcat(mask_name,chtemp);
-        if(gfffiles == 1) {
+        if(args->gfffiles == 1) {
             strcat(mask_name,"_");
-            strcat(mask_name,subset_positions);
+            strcat(mask_name,args->subset_positions);
             strcat(mask_name,"_");
-            strcat(mask_name,criteria_transcript);
+            strcat(mask_name,args->criteria_transcript);
         }
         if(file_ws != 0) {
             strcat(mask_name,"_IncludedWeightFile");
         }
-        if(include_unknown) strcat(mask_name,"_IncludeMissingVariantsmhits");
+        if(args->include_unknown) strcat(mask_name,"_IncludeMissingVariantsmhits");
         else strcat(mask_name,"_ExcludeMissingVariantsmhits");
-        if(outgroup_presence==0) strcat(mask_name,"_NOoutg");
-        if(outgroup_presence==1) strcat(mask_name,"_outg");
-        if(ploidy==1) strcat(mask_name,"_ploidy1");
-        if(ploidy==2) strcat(mask_name,"_ploidy2");
+        if(args->outgroup==0) strcat(mask_name,"_NOoutg");
+        if(args->outgroup==1) strcat(mask_name,"_outg");
+        if(args->ploidy==1) strcat(mask_name,"_ploidy1");
+        if(args->ploidy==2) strcat(mask_name,"_ploidy2");
         strcat(mask_name,"_MASK.txt");
         if((file_mask = fzopen(mask_name,"w",&file_mask_gz)) == 0) {
-            fzprintf(file_logerr,file_logerr_gz,"Error in mask file %s.",mask_name);
+            //fzprintf(file_logerr,file_logerr_gz,"Error in mask file %s.",mask_name);
+            log_error("Error in mask file %s.",mask_name);
             exit(1);
         }
         for(xx=0;xx<n_site;xx++) {
             fzprintf(file_mask,&file_mask_gz,"%.3f ",matrix_sizepos[0][xx]); /*print the value of each position*/
         }
         fzprintf(file_mask,&file_mask_gz,"\n");
-        for(x=0;x<nsamtot/ploidy;x++) {
+        for(x=0;x<nsamtot/args->ploidy;x++) {
             for(xx=0;xx<n_site;xx++) {
                 w = *(DNA_matr+(((long int)n_site*(unsigned long)x)+(unsigned long)xx));
                 if(w >= 48+5) fzprintf(file_mask,&file_mask_gz,"0");/*missing*/
                 else fzprintf(file_mask,&file_mask_gz,"1");/*normal*/
             }
             fzprintf(file_mask,&file_mask_gz,"\n");
-            if(ploidy==2) {
+            if(args->ploidy==2) {
                 for(xx=0;xx<n_site;xx++) {
                     w = *(DNA_matr+(((long int)n_site*(unsigned long)x)+(unsigned long)xx));
                     if(w >= 48+5) fzprintf(file_mask,&file_mask_gz,"0");/*missing*/
@@ -953,113 +1062,152 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 		
 		/*Define the arrays to use in the next function*/
 		if((*CpGp = (int *)calloc(n_site,sizeof(int))) == 0) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.00 \n");
+			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.00 \n");
+            log_error("Error: memory not reallocated. read_fasta.CpGp");
 			return(0);
 		}
 		if((*Tp = (int *)calloc(n_site,sizeof(int))) == 0) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.00 \n");
+			// fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.00 \n");
+            log_error("Error: memory not reallocated. read_fasta.Tp");
 			return(0);
 		}
 		if((*Cp = (int *)calloc(n_site,sizeof(int))) == 0) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.00 \n");
+			// fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.00 \n");
+            log_error("Error: memory not reallocated. read_fasta.Cp");
 			return(0);
 		}
 		if((*Gp = (int *)calloc(n_site,sizeof(int))) == 0) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.00 \n");
+			// fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.00 \n");
+            log_error("Error: memory not reallocated. read_fasta.Gp");
 			return(0);
 		}
 		if((*Ap = (int *)calloc(n_site,sizeof(int))) == 0) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.00 \n");
+			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.00 \n");
+            log_error("Error: memory not reallocated. read_fasta.Ap");
 			return(0);
 		}
 		if((*GCp = (int *)calloc(n_site,sizeof(int))) == 0) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.00 \n");
+			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.00 \n");
+            log_error("Error: memory not reallocated. read_fasta.GCp");
 			return(0);
 		}
 		if((*svp = (int *)calloc(n_site,sizeof(int))) == 0) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.00 \n");
+			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.00 \n");
+            log_error("Error: memory not reallocated. read_fasta.svp");
 			return(0);
 		}
 		if((*nsites1_pop = (double **)calloc((unsigned long)n_site,sizeof(double *))) == NULL) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.6 \n");
+			// fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.6 \n");
+            log_error("Error: memory not reallocated. get_obsdata.nsites1_pop");
 			exit(1);
 		}
 		if((*nsites2_pop = (double **)calloc((unsigned long)n_site,sizeof(double *))) == NULL) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.7 \n");
+			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.7 \n");
+            log_error("Error: memory not reallocated. get_obsdata.nsites2_pop");
 			exit(1);
 		}
 		if((*nsites3_pop = (double **)calloc((unsigned long)n_site,sizeof(double *))) == NULL) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.8 \n");
+			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.8 \n");
+            log_error("Error: memory not reallocated. get_obsdata.nsites3_pop");
 			exit(1);
 		}
 		if((*nsites1_pop_outg = (double **)calloc((unsigned long)n_site,sizeof(double *))) == NULL) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.9 \n");
+			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.9 \n");
+            log_error("Error: memory not reallocated. get_obsdata.nsites1_pop_outg");
 			exit(1);
 		}
 		if((*nsites2_pop_outg = (double **)calloc((unsigned long)n_site,sizeof(double *))) == NULL) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.10 \n");
+			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.10 \n");
+            log_error("Error: memory not reallocated. get_obsdata.nsites2_pop_outg");
 			exit(1);
 		}
 		if((*nsites3_pop_outg = (double **)calloc((unsigned long)n_site,sizeof(double *))) == NULL) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.11 \n");
+			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.11 \n");
+            log_error("Error: memory not reallocated. get_obsdata.nsites3_pop_outg");
 			exit(1);
 		}
 		
 		if((*sum_sam = (double **)calloc((unsigned long)n_site,sizeof(double *))) == NULL) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.12 \n");
+			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.12 \n");
+            log_error("Error: memory not reallocated. get_obsdata.sum_sam");
 			exit(1);
 		}
 		if((*pwmatrix_miss = (float **)calloc((unsigned long)n_site,sizeof(float *))) == NULL) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.12 \n");
+			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.12 \n");
+            log_error("Error: memory not reallocated. get_obsdata.pwmatrix_miss");
 			exit(1);
 		}
-        if(npops==0) {
-            npops = 1;
-            nsamuser[0] = n_samp;
+        if(args->npops==0) {
+            args->npops = 1;
+            // nsamuser[0] = n_samp;
+            args->vint_perpop_nsam = n_samp;
         }
 		for(x=0;x<n_site;x++) {
 			if((sum_sam[0][x] = (double *)calloc((unsigned long)n_samp,sizeof(double))) == NULL) {
-				fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.13 \n");
+				// fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.13 \n");
+                log_error("Error: memory not reallocated. get_obsdata.sum_sam");
 				exit(1);
 			}
 			/*if(format[0] != 'm') {*/
- 				if((pwmatrix_miss[0][x] = (float *)calloc((unsigned long)(npops-outgroup_presence)*(npops-outgroup_presence-1)/2,sizeof(float))) == NULL) {
-					fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.13 \n");
+ 				if((pwmatrix_miss[0][x] = (float *)calloc((unsigned long)(args->npops-args->outgroup)*(args->npops-args->outgroup-1)/2,sizeof(float))) == NULL) {
+					// fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.13 \n");
+                    log_error("Error: memory not reallocated. get_obsdata.pwmatrix_miss");
 					exit(1);
 				}
-				if((nsites1_pop[0][x] = (double *)calloc((unsigned long)npops-outgroup_presence,sizeof(double))) == NULL) {
-					fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.6 \n");
+				if((nsites1_pop[0][x] = (double *)calloc((unsigned long)args->npops-args->outgroup,sizeof(double))) == NULL) {
+					// fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.6 \n");
+                    log_error("Error: memory not reallocated. get_obsdata.nsites1_pop");
 					exit(1);
 				}
-				if((nsites2_pop[0][x] = (double *)calloc((unsigned long)npops-outgroup_presence,sizeof(double))) == NULL) {
-					fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.7 \n");
+				if((nsites2_pop[0][x] = (double *)calloc((unsigned long)args->npops-args->outgroup,sizeof(double))) == NULL) {
+					// fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.7 \n");
+                    log_error("Error: memory not reallocated. get_obsdata.nsites2_pop");
 					exit(1);
 				}
-				if((nsites3_pop[0][x] = (double *)calloc((unsigned long)npops-outgroup_presence,sizeof(double))) == NULL) {
-					fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.8 \n");
+				if((nsites3_pop[0][x] = (double *)calloc((unsigned long)args->npops-args->outgroup,sizeof(double))) == NULL) {
+					//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.8 \n");
+                    log_error("Error: memory not reallocated. get_obsdata.nsites3_pop");
 					exit(1);
 				}
-				if((nsites1_pop_outg[0][x] = (double *)calloc((unsigned long)npops-outgroup_presence,sizeof(double))) == NULL) {
-					fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.9 \n");
+				if((nsites1_pop_outg[0][x] = (double *)calloc((unsigned long)args->npops-args->outgroup,sizeof(double))) == NULL) {
+					//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.9 \n");
+                    log_error("Error: memory not reallocated. get_obsdata.nsites1_pop_outg");
 					exit(1);
 				}
-				if((nsites2_pop_outg[0][x] = (double *)calloc((unsigned long)npops-outgroup_presence,sizeof(double))) == NULL) {
-					fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.10 \n");
+				if((nsites2_pop_outg[0][x] = (double *)calloc((unsigned long)args->npops-args->outgroup,sizeof(double))) == NULL) {
+					//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.10 \n");
+                    log_error("Error: memory not reallocated. get_obsdata.nsites2_pop_outg");
 					exit(1);
 				}
-				if((nsites3_pop_outg[0][x] = (double *)calloc((unsigned long)npops-outgroup_presence,sizeof(double))) == NULL) {
-					fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.11 \n");
+				if((nsites3_pop_outg[0][x] = (double *)calloc((unsigned long)args->npops-args->outgroup,sizeof(double))) == NULL) {
+					//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.11 \n");
+                    log_error("Error: memory not reallocated. get_obsdata.nsites3_pop_outg");
 					exit(1);
 				}
 			/*}*/
 		}
 
         /*function to analyze all data*/
-		if(get_obsstats_mod(file_output,file_output_gz,file_logerr,file_logerr_gz,n_samp,n_site,
+		if(get_obsstats_mod(file_output,file_output_gz,
+                            // file_logerr,
+                            // file_logerr_gz,
+                            n_samp,n_site,
                             length_al_real,DNA_matr2,*matrix_sizepos,matrix_segrpos,matrix_pol,matrix_pos,
-                            length_al,length_seg,include_unknown,outgroup_presence,svratio,nmissing,format,
-                            nsamuser,npops,*sum_sam,svp,*pwmatrix_miss,CpG, *CpGp, GCs, *Tp, *Cp, *Gp, *Ap,*GCp,
-                            *nsites1_pop,*nsites2_pop,*nsites3_pop,*nsites1_pop_outg,*nsites2_pop_outg,*nsites3_pop_outg) == 0) {
+                            length_al,length_seg,
+                            // include_unknown,
+                            // outgroup_presence,
+                            svratio,nmissing,
+                            // format,
+                            // nsamuser,
+                            // npops,
+                            *sum_sam,svp,*pwmatrix_miss,CpG, *CpGp, GCs, *Tp, *Cp, *Gp, *Ap,*GCp,
+                            *nsites1_pop,
+                            *nsites2_pop,
+                            *nsites3_pop,
+                            *nsites1_pop_outg,
+                            *nsites2_pop_outg,
+                            *nsites3_pop_outg,
+                            args) == 0) {
 			for(x=0;x<n_sam;x++) free(names[x]);
 			free(names);
 			free(DNA_matr);
@@ -1073,28 +1221,29 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 			matrix_sizepos[0][xx] *= matrix_segrpos[xx]; 
 		}
         */
-        if(gfffiles == 1) {
+        if(args->gfffiles == 1) {
             memset(file_weights_char, 0, MSP_MAX_FILENAME);
-            if(file_out[0]=='\0') strcpy(file_weights_char, file_in);
-            else strcpy(file_weights_char, file_out);
+            if(args->file_out[0]=='\0') strcpy(file_weights_char, args->file_in);
+            else strcpy(file_weights_char, args->file_out);
             //sprintf(file_weights_char,"%s_npops%d_nsam%d",file_weights_char,npops,nsamtot);
             char chtemp[MSP_MAX_FILENAME];
-            sprintf(chtemp,"npops%d_nsam%d",(npops>0?npops:1),nsamtot);
+            sprintf(chtemp,"npops%d_nsam%d",(args->npops>0?args->npops:1),nsamtot);
             strcat(file_weights_char,"_");
             strcat(file_weights_char,chtemp);
             strcat(file_weights_char,"_");
-            strcat(file_weights_char,subset_positions);
+            strcat(file_weights_char,args->subset_positions);
             strcat(file_weights_char,"_");
-            strcat(file_weights_char,criteria_transcript);
-            if(include_unknown) strcat(file_weights_char,"_IncludeMissingmhits");
+            strcat(file_weights_char,args->criteria_transcript);
+            if(args->include_unknown) strcat(file_weights_char,"_IncludeMissingmhits");
             else strcat(file_weights_char,"_ExcludeMissingmhits");
-            if(outgroup_presence==0) strcat(file_weights_char,"_NOoutg");
-            if(outgroup_presence==1) strcat(file_weights_char,"_outg");
-            if(ploidy==1) strcat(file_weights_char,"_ploidy1");
-            if(ploidy==2) strcat(file_weights_char,"_ploidy2");
+            if(args->outgroup==0) strcat(file_weights_char,"_NOoutg");
+            if(args->outgroup==1) strcat(file_weights_char,"_outg");
+            if(args->ploidy==1) strcat(file_weights_char,"_ploidy1");
+            if(args->ploidy==2) strcat(file_weights_char,"_ploidy2");
             strcat(file_weights_char,"_WEIGHTS.gz");
             if( (file_weights = fzopen( file_weights_char, "w", &file_weights_gz)) == 0) {
-                fzprintf(file_output,file_output_gz,"\n It is not possible to write the weigths file %s.", file_weights_char);
+                //fzprintf(file_output,file_output_gz,"\n It is not possible to write the weigths file %s.", file_weights_char);
+                log_error("It is not possible to write the weigths file %s.", file_weights_char);
                 exit(1);
             }
             file_weights_gz.index = &file_weights_gz_index;
@@ -1118,9 +1267,28 @@ int read_fasta( FILE *file_input, SGZip *file_input_gz, FILE *file_output, SGZip
 }
 
 
-int var_char(FILE *file_input, SGZip *file_input_gz,FILE *file_logerr, SGZip *file_logerr_gz,long int *count,int *c,int *n_sam,long int *n_sit,int *nseq,int *maxsam,char ***names,char **DNA_matr,
-			 long int *n_site,int excludelines,char *name_excluded,int *n_excl,int includelines,char *name_ingroups,char *name_outgroup,
-			 int outgroup,int ploidy/*, float *fnut*//*, float *CpG*/)
+int var_char(
+    FILE *file_input, 
+    SGZip *file_input_gz,
+    //FILE *file_logerr, 
+    //SGZip *file_logerr_gz,
+    long int *count,
+    int *c,
+    int *n_sam,
+    long int *n_sit,
+    int *nseq,
+    int *maxsam,
+    char ***names,
+    char **DNA_matr,
+	long int *n_site,
+    int excludelines,
+    char *name_excluded,
+    int *n_excl,
+    int includelines,
+    char *name_ingroups,
+    char *name_outgroup,
+	int outgroup,
+    int ploidy/*, float *fnut*//*, float *CpG*/)
 {
     int  aa = 0;
     int  bb = 0;
@@ -1193,7 +1361,8 @@ int var_char(FILE *file_input, SGZip *file_input_gz,FILE *file_logerr, SGZip *fi
                 }
 				*/
                 if((*DNA_matr = realloc(*DNA_matr,((long int)dd+(long int)1)*(long int)1e6*sizeof(char))) == 0) {
-                    puts("Error: realloc error varchar.1\n");
+                    // puts("Error: realloc error varchar.1\n");
+                    log_error("Error: realloc error varchar.1\n");
                     return(0);
                 }    
             }
@@ -1456,8 +1625,9 @@ int var_char(FILE *file_input, SGZip *file_input_gz,FILE *file_logerr, SGZip *fi
 					/*Cp = 0.0;*/
                     break;
 				default:
-                    fzprintf(file_logerr,file_logerr_gz,"Unexpected value in file");
-                    fzprintf(file_logerr,file_logerr_gz,"%d",*c);
+                    //fzprintf(file_logerr,file_logerr_gz,"Unexpected value in file");
+                    log_error("Unexpected value in file %d" , *c);
+                    // fzprintf(file_logerr,file_logerr_gz,"%d",*c);
                     return(0);
                     break;
             }
@@ -1466,7 +1636,8 @@ int var_char(FILE *file_input, SGZip *file_input_gz,FILE *file_logerr, SGZip *fi
         *n_sam += 1;
         if(*n_site == 0) *n_site = *n_sit;
         else if(*n_site != *n_sit) {
-            fzprintf(file_logerr,file_logerr_gz,"The number of sites are not equal in all lines in the alignment.");
+            //fzprintf(file_logerr,file_logerr_gz,"The number of sites are not equal in all lines in the alignment.");
+            log_error("The number of sites are not equal in all lines in the alignment.");
             return(0);
         }
     }
@@ -1516,16 +1687,19 @@ int assigna(FILE *file_input, SGZip *file_input_gz,int *c,int *nseq,int *maxsam,
         if(*nseq == *maxsam) {
             *maxsam += 32;
             if(*maxsam > 32767) {
-                puts("\n Sorry, no more samples are allowed.");
+                // puts("\n Sorry, no more samples are allowed.");
+                log_error("Sorry, no more samples are allowed.");
 				return 0;
             }
             if ((*names = (char **)realloc(*names,*maxsam*sizeof(char *))) == 0) {
-                puts("\nError: memory not reallocated. assigna.1 \n");
+                // puts("\nError: memory not reallocated. assigna.1 \n");
+                log_error("Error: memory not reallocated. assigna.1");
                 return(0);
             }
             for(x=*nseq;x<*maxsam;x++) {
                 if ((names[0][x] = (char *)calloc(50,sizeof(char))) == 0) {
-                    puts("\nError: memory not reallocated. assigna.2 \n");
+                    // puts("\nError: memory not reallocated. assigna.2 \n");
+                    log_error("Error: memory not reallocated. assigna.2");
                     return(0);
                 }
             }
@@ -1540,14 +1714,16 @@ int assigna(FILE *file_input, SGZip *file_input_gz,int *c,int *nseq,int *maxsam,
         while(*c != 10 && *c != 13 && *c != -1 && c != 0) 
             *c = fzgetc(file_input, file_input_gz);
         if(*c == -1 || *c == 0) {
-            puts("\n Unexpected end of file");
+            // puts("\n Unexpected end of file");
+            log_error("Unexpected end of file");
             return(0);
         }
         c0 = *c;
         *c = fzgetc(file_input, file_input_gz);
         if(c0 == 13 && *c == 10) *c = fzgetc(file_input, file_input_gz);
         if(*c == -1 || *c == 0) {
-            puts("\n Unexpected end of file");
+            // puts("\n Unexpected end of file");
+            log_error("Unexpected end of file");
             return(0);
         }
         /*use unix or macos or dos format. end*/
@@ -1569,16 +1745,19 @@ int assigna(FILE *file_input, SGZip *file_input_gz,int *c,int *nseq,int *maxsam,
             if(*nseq == *maxsam) {
                 *maxsam += 32;
                 if(*maxsam > 32767) {
-                    puts("\n Sorry, no more samples are allowed.");
+                    // puts("\n Sorry, no more samples are allowed.");
+                    log_error("Sorry, no more samples are allowed.");
 					return 0;
                 }
                 if ((*names = (char **)realloc(*names,*maxsam*sizeof(char *))) == 0) {
-                    puts("\nError: memory not reallocated. assigna.1 \n");
+                    //puts("\nError: memory not reallocated. assigna.1 \n"); 
+                    log_error("Error: memory not reallocated. assigna.1");
                     return(0);
                 }
                 for(x=*nseq;x<*maxsam;x++) {
                     if ((names[0][x] = (char *)calloc(50,sizeof(char))) == 0) {
-                        puts("\nError: memory not reallocated. assigna.2 \n");
+                        // puts("\nError: memory not reallocated. assigna.2 \n");
+                        log_error("Error: memory not reallocated. assigna.2");
                         return(0);
                     }
                 }
@@ -1591,7 +1770,8 @@ int assigna(FILE *file_input, SGZip *file_input_gz,int *c,int *nseq,int *maxsam,
             *c = fzgetc(file_input, file_input_gz);
             if(c0 == 13 && *c == 10) *c = fzgetc(file_input, file_input_gz);
             if(*c == -1 || *c == 0) {
-                puts("\n Unexpected end of file");
+                //puts("\n Unexpected end of file");
+                log_error("Unexpected end of file");
                 return 0;
             }
             /*use Unix / MacOS / DOS format. end*/
@@ -1603,7 +1783,15 @@ int assigna(FILE *file_input, SGZip *file_input_gz,int *c,int *nseq,int *maxsam,
 }
 
 
-int read_coordinates(FILE *file_wcoor, SGZip *file_wcoor_gz, FILE *file_output, SGZip *file_output_gz, FILE *file_logerr, SGZip *file_logerr_gz, long int **wgenes, long int *nwindows,char *chr_name) {
+int read_coordinates(
+    FILE *file_wcoor, 
+    SGZip *file_wcoor_gz, 
+    FILE *file_output, 
+    SGZip *file_output_gz, 
+    // FILE *file_logerr, SGZip *file_logerr_gz, 
+    long int **wgenes, 
+    long int *nwindows,
+    char *chr_name) {
     
     char *valn=0;
     int c;
@@ -1615,14 +1803,17 @@ int read_coordinates(FILE *file_wcoor, SGZip *file_wcoor_gz, FILE *file_output, 
     
     /*printf("\nReading coordinates file...");*/
     fflush(stdout);
-    fzprintf(file_logerr,file_logerr_gz,"\nReading coordinates file...");
+    //fzprintf(file_logerr,file_logerr_gz,"\nReading coordinates file...");
+    log_info("Reading coordinates file...");
    
     if((valn = (char *)calloc(100,sizeof(char))) == 0) {
-        fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_coordinates.00 \n");
+        // fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_coordinates.00 \n");
+        log_error("Error: memory not reallocated. read_coordinates.00");
         return(0);
     }
     if((*wgenes = (long int *)calloc(10000,sizeof(long int))) == 0) {
-        fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_coordinates.0 \n");
+        // fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_coordinates.0 \n");
+        log_error("Error: memory not reallocated. read_coordinates.0");
         free(valn);
         return(0);
     }
@@ -1631,7 +1822,8 @@ int read_coordinates(FILE *file_wcoor, SGZip *file_wcoor_gz, FILE *file_output, 
     c = fzgetc(file_wcoor, file_wcoor_gz);
     
     if(check_comment(&c,file_wcoor,file_wcoor_gz) == 0) {
-        fzprintf(file_logerr,file_logerr_gz,"\nWarning: no coordinates assigned. \n");
+        //fzprintf(file_logerr,file_logerr_gz,"\nWarning: no coordinates assigned. \n");
+        log_warn("Warning: no coordinates assigned.");
         free(valn);
         return(0);
     }
@@ -1739,7 +1931,8 @@ int read_coordinates(FILE *file_wcoor, SGZip *file_wcoor_gz, FILE *file_output, 
             }
         }
         if(xx == 0) {
-            fzprintf(file_logerr,file_logerr_gz,"\nError: no coordinates assigned, read_coordinates.2 \n");
+            //fzprintf(file_logerr,file_logerr_gz,"\nError: no coordinates assigned, read_coordinates.2 \n");
+            log_error("Error: no coordinates assigned, read_coordinates.2");
             /*free(*wgenes);
             file_wcoor=0;*/
             return(0);
@@ -1750,7 +1943,14 @@ int read_coordinates(FILE *file_wcoor, SGZip *file_wcoor_gz, FILE *file_output, 
     return 1;
 }
 
-int read_weights_positions_file(FILE *file_ws, SGZip *file_ws_gz,FILE *file_output, SGZip *file_output_gz, FILE *file_logerr, SGZip *file_logerr_gz, float **wP, float **wPV, float **wV,char *chr_name,unsigned long first) {
+int read_weights_positions_file(
+    FILE *file_ws, 
+    SGZip *file_ws_gz,
+    FILE *file_output, 
+    SGZip *file_output_gz, 
+    // FILE *file_logerr, 
+    // SGZip *file_logerr_gz, 
+    float **wP, float **wPV, float **wV,char *chr_name,unsigned long first) {
     
 	/*!--- Not used long int position; */
     static char *valn=0;
@@ -1764,24 +1964,29 @@ int read_weights_positions_file(FILE *file_ws, SGZip *file_ws_gz,FILE *file_outp
     /*read weights file*/
     /*printf("\nReading weight file...");*/
     fflush(stdout);
-    fzprintf(file_logerr,file_logerr_gz,"\nReading weight file...");
+    //fzprintf(file_logerr,file_logerr_gz,"\nReading weight file...");
+    log_info("Reading weight file...");
 
     /*keep wP, wPV, wV (not used yet) for all positions, do not need to keep positions: all are correlative*/
     if(file_ws != 0) {
         if((*wP = (float *)calloc(1000,sizeof(float))) == 0) {
-            fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.14 \n");
+            //fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.14 \n");
+            log_error("Error: memory not reallocated. get_obsdata.14");
             return(0);
         }
         if((*wPV = (float *)calloc(1000,sizeof(float))) == 0) {
-            fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.25 \n");
+            //fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.25 \n");
+            log_error("Error: memory not reallocated. get_obsdata.25");
             return(0);
         }
         if((*wV = (float *)calloc(1000,sizeof(float))) == 0) {
-            fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.23 \n");
+            //fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.23 \n");
+            log_error("Error: memory not reallocated. get_obsdata.23");
             return(0);
         }
         if((valn = (char *)calloc(100,sizeof(char))) == 0) {
-            fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.34 \n");
+            //fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.34 \n");
+            log_error("Error: memory not reallocated. get_obsdata.34");
             return(0);
         }
         if(first == 0) {
@@ -1795,7 +2000,8 @@ int read_weights_positions_file(FILE *file_ws, SGZip *file_ws_gz,FILE *file_outp
             if(c==0 || c==-1 || c < 1) {
                 file_ws=0;*wP=0;*wPV=0;*wV=0;
                 free(*wP);free(*wPV);free(*wV);free(valn);
-                fzprintf(file_logerr,file_logerr_gz,"\nError: no weights assigned for %s scaffold \n",chr_name);
+                //fzprintf(file_logerr,file_logerr_gz,"\nError: no weights assigned for %s scaffold \n",chr_name);
+                log_error("Error: no weights assigned for %s scaffold", chr_name);
                 return(0);
             }
             while(c == 32 || c == 9 || c == 13 || c == 10)
@@ -1806,7 +2012,8 @@ int read_weights_positions_file(FILE *file_ws, SGZip *file_ws_gz,FILE *file_outp
             if(c==0 || c==-1 || c < 1) {
                 file_ws=0;*wP=0;*wPV=0;*wV=0;
                 free(*wP);free(*wPV);free(*wV);free(valn);
-                fzprintf(file_logerr,file_logerr_gz,"\nError: no weights assigned for %s scaffold \n",chr_name);
+                //fzprintf(file_logerr,file_logerr_gz,"\nError: no weights assigned for %s scaffold \n",chr_name);
+                log_error("Error: no weights assigned for %s scaffold", chr_name);
                 return(0);
             }
             x=0;
@@ -1821,7 +2028,8 @@ int read_weights_positions_file(FILE *file_ws, SGZip *file_ws_gz,FILE *file_outp
         if(c==0 || c==-1 || c < 1) {
             file_ws=0;*wP=0;*wPV=0;*wV=0;
             free(*wP);free(*wPV);free(*wV);free(valn);
-            fzprintf(file_logerr,file_logerr_gz,"\nError: no weights assigned for %s scaffold \n",chr_name);
+            //fzprintf(file_logerr,file_logerr_gz,"\nError: no weights assigned for %s scaffold \n",chr_name);
+            log_error("Error: no weights assigned for %s scaffold", chr_name);
             return(0);
         }
         else {
@@ -1961,7 +2169,8 @@ int read_weights_positions_file(FILE *file_ws, SGZip *file_ws_gz,FILE *file_outp
                 valn[x] = '\0';
             }
             if(inside_chr == 0) {
-                fzprintf(file_logerr,file_logerr_gz,"\nError: no weights assigned for %s scaffold \n",chr_name);
+                //fzprintf(file_logerr,file_logerr_gz,"\nError: no weights assigned for %s scaffold \n",chr_name);
+                log_error("Error: no weights assigned for %s scaffold", chr_name);
                 return(0);
             }
         }
@@ -1973,7 +2182,17 @@ int read_weights_positions_file(FILE *file_ws, SGZip *file_ws_gz,FILE *file_outp
 }
 
 /*deprecated*/
-int read_weights_file(FILE *file_es, SGZip *file_es_gz, FILE *file_output, SGZip *file_output_gz, FILE *file_logerr, SGZip *file_logerr_gz, float **wV, long int **Pp, long int *nV, char *chr_name) {
+int read_weights_file(
+    FILE *file_es, 
+    SGZip *file_es_gz, 
+    FILE *file_output, 
+    SGZip *file_output_gz, 
+    //FILE *file_logerr, 
+    //SGZip *file_logerr_gz, 
+    float **wV, 
+    long int **Pp, 
+    long int *nV, 
+    char *chr_name) {
 
 	long int *effsz_site=0; /*positions*/
 	float    *effsz_wght=0; /*effect sizes*/
@@ -1988,19 +2207,23 @@ int read_weights_file(FILE *file_es, SGZip *file_es_gz, FILE *file_output, SGZip
 
     /*printf("\nReading Effect sizes file...");*/
     fflush(stdout);
-    fzprintf(file_logerr,file_logerr_gz,"\nReading Effect sizes file...");
+    //fzprintf(file_logerr,file_logerr_gz,"\nReading Effect sizes file...");
+    log_info("Reading Effect sizes file...");
     
     if(file_es != 0) {
 		if((effsz_site = (long int *)calloc(1000,sizeof(long int))) == 0) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.1 \n");
+			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.1 \n");
+            log_error("Error: memory not reallocated. get_obsdata.1");
 			return(0);
 		}
 		if((effsz_wght = (float *)calloc(1000,sizeof(float))) == 0) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.2 \n");
+			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.2 \n");
+            log_error("Error: memory not reallocated. get_obsdata.2");
 			return(0);
 		}
 		if((valn = (char *)calloc(100,sizeof(char))) == 0) {
-			fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.3 \n");
+			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.3 \n");
+            log_error("Error: memory not reallocated. get_obsdata.3");
 			return(0);
 		}
 
@@ -2019,7 +2242,8 @@ int read_weights_file(FILE *file_es, SGZip *file_es_gz, FILE *file_output, SGZip
 			*wV=0;
 			free(effsz_site);
 			free(effsz_wght);
-            fzprintf(file_logerr,file_logerr_gz,"\nError: no effect sizes assigned \n");
+            //fzprintf(file_logerr,file_logerr_gz,"\nError: no effect sizes assigned \n");
+            log_error("Error: no effect sizes assigned");
             return(0);
 		}
 		else {
@@ -2113,13 +2337,15 @@ int read_weights_file(FILE *file_es, SGZip *file_es_gz, FILE *file_output, SGZip
 				if((*Pp = (long int *)calloc(xx,sizeof(long int))) == 0) {
                     file_es=0;*wV=0;
                     free(effsz_site);free(effsz_wght);
-                    fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.3 \n");
+                    //fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.3 \n");
+                    log_error("Error: memory not reallocated. get_obsdata.3");
 					return(0);
 				}
 				if((*wV = (float *)calloc(xx,sizeof(float))) == 0) {
                     file_es=0;*wV=0;
                     free(effsz_site);free(effsz_wght);
-                    fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.2 \n");
+                    //fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.2 \n");
+                    log_error("Error: memory not reallocated. get_obsdata.2");
 					return(0);
 				}
 				for( x = 0; x < (int)xx; x++ ) {
@@ -2138,7 +2364,11 @@ int read_weights_file(FILE *file_es, SGZip *file_es_gz, FILE *file_output, SGZip
 }
 
 
-int function_read_tfasta(FILE *file_input, SGZip *file_input_gz, FILE *file_logerr, SGZip *file_logerr_gz, long int init_site,long int end_site,int *n_sam, long int *n_site, char ***names, char **DNA_matr,char *chr_name, unsigned long first)
+int function_read_tfasta(
+    FILE *file_input, 
+    SGZip *file_input_gz, 
+    // FILE *file_logerr, SGZip *file_logerr_gz, 
+    long int init_site,long int end_site,int *n_sam, long int *n_site, char ***names, char **DNA_matr,char *chr_name, unsigned long first)
 {
     static int c[1];
     static char line[32767*2];
@@ -2175,7 +2405,8 @@ int function_read_tfasta(FILE *file_input, SGZip *file_input_gz, FILE *file_loge
             col++;
         }
         if(*c==0 || *c==-1 || *c < 1  || *c=='\xff' || *c=='\xfe') {
-            fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
+            // fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
+            log_error("Error: no sequence assigned for %s scaffold", chr_name);
             *c=0;break;
         }
         line[col] = '\0';
@@ -2191,16 +2422,19 @@ int function_read_tfasta(FILE *file_input, SGZip *file_input_gz, FILE *file_loge
                     if(nseq == maxsam) {
                         maxsam += 32;
                         if(maxsam > 32767) {
-                            puts("\n Sorry, no more than 32767 samples are allowed.");
+                            //puts("\n Sorry, no more than 32767 samples are allowed.");
+                            log_error("Sorry, no more than 32767 samples are allowed.");
                             return 0;
                         }
                         if ((*names = (char **)realloc(*names,maxsam*sizeof(char *))) == 0) {
-                            puts("\nError: memory not reallocated. assigna.1 \n");
+                            //puts("\nError: memory not reallocated. assigna.1 \n");
+                            log_error("Error: memory not reallocated. assigna.1");
                             return(0);
                         }
                         for(x=nseq;x<maxsam;x++) {
                             if ((names[0][x] = (char *)calloc(50,sizeof(char))) == 0) {
-                                puts("\nError: memory not reallocated. assigna.2 \n");
+                                //puts("\nError: memory not reallocated. assigna.2 \n");
+                                log_error("Error: memory not reallocated. assigna.2");
                                 return(0);
                             }
                         }
@@ -2213,7 +2447,8 @@ int function_read_tfasta(FILE *file_input, SGZip *file_input_gz, FILE *file_loge
         while(*c==10 || *c==13 || *c <= -1 || *c == 0 || *c=='\xff' || *c=='\xfe')
             *c = fzgetc(file_input, file_input_gz);
         if(*c==0 || *c==-1 || *c < 1  || *c=='\xff' || *c=='\xfe') {
-            fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
+            //fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
+            log_error("Error: no sequence assigned for %s scaffold", chr_name);
             return(0);
         }
         col=0;
@@ -2229,7 +2464,8 @@ int function_read_tfasta(FILE *file_input, SGZip *file_input_gz, FILE *file_loge
     if(end_site == -1) end_position = init_site + 1;
     /**/
     if(*c==0 || *c==-1 || *c < 1  || *c=='\xff' || *c=='\xfe') {
-        fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
+        //fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
+        log_error("Error: no sequence assigned for %s scaffold", chr_name);
         return(0);
     }
     if(chr_defined == 0) {
@@ -2240,7 +2476,8 @@ int function_read_tfasta(FILE *file_input, SGZip *file_input_gz, FILE *file_loge
             *c = fzgetc(file_input, file_input_gz);
         }
         if(*c == 0 || *c==-1  || *c=='\xff' || *c=='\xfe') {
-            fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
+            //fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
+            log_error("Error: no sequence assigned for %s scaffold", chr_name);
             return(0);
         }
         line[col] = '\0';
@@ -2255,7 +2492,8 @@ int function_read_tfasta(FILE *file_input, SGZip *file_input_gz, FILE *file_loge
                 *c = fzgetc(file_input, file_input_gz);
             }
             if(*c == 0 || *c==-1  || *c=='\xff' || *c=='\xfe') {
-                fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
+                //fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
+                log_error("Error: no sequence assigned for %s scaffold", chr_name);
                 return(0);
             }
             line2[col2] = '\0';
@@ -2326,7 +2564,8 @@ int function_read_tfasta(FILE *file_input, SGZip *file_input_gz, FILE *file_loge
                     ee = (double)count/(double)1e6;
                     if((double)dd == ee/* && dd>0*/) {
                         if((*DNA_matr = realloc(*DNA_matr,((long int)/*count+1*//**/dd+(long int)1/**/)/**/*(long int)1e6* /**/sizeof(char))) == 0) {
-                            puts("Error: realloc error varchar.1\n");
+                            //puts("Error: realloc error varchar.1\n");
+                            log_error("Error: realloc error varchar.1");
                             return(0);
                         }
                     }
@@ -2526,8 +2765,9 @@ int function_read_tfasta(FILE *file_input, SGZip *file_input_gz, FILE *file_loge
                 count += 1;
                 break;
             default:
-                fzprintf(file_logerr,file_logerr_gz,"Unexpected value in tfa file: position %ld, sample %d: ",position,col);
-                fzprintf(file_logerr,file_logerr_gz,"%c\n",*c);
+                //fzprintf(file_logerr,file_logerr_gz,"Unexpected value in tfa file: position %ld, sample %d: ",position,col);
+                //fzprintf(file_logerr,file_logerr_gz,"%c\n",*c);
+                log_error("Unexpected value in tfa file: position %ld, sample %d: %c",position,col,*c);
                 return(0);
                 break;
         }
@@ -2635,11 +2875,13 @@ int read_index_file(char *chr_name_all, unsigned long *nscaffolds,char ***chr_na
     chr_length_array[0][0] = (char *)calloc(MSP_MAX_NAME,sizeof(char));
     
     if (!(file_scaffolds = fopen(chr_name_all,"r"))) {
-        printf("Error reading the input file %s\n",chr_name_all);
+         // printf("Error reading the input file %s\n",chr_name_all);
+        log_error("Error reading the input file %s",chr_name_all);
         return(1);
     }
     if(!(buf = (char *)malloc(BUFSIZ))) {
-        puts("\nError: Not enough memory to read  the input file.\n");
+        //puts("\nError: Not enough memory to read  the input file.\n");
+        log_error("Error: Not enough memory to read  the input file.");
         return(1);
     }
     setbuf(file_scaffolds,buf);
@@ -2652,14 +2894,16 @@ int read_index_file(char *chr_name_all, unsigned long *nscaffolds,char ***chr_na
         }
         chr_name_array[0][*nscaffolds-1][k] = '\0';
         if(c!= 9 && c!= 32) {
-            printf("Error reading the input file %s:\n scaffold (%s) without length information.\n",chr_name_all, chr_name_array[0][*nscaffolds-1]);
+            //printf("Error reading the input file %s:\n scaffold (%s) without length information.\n",chr_name_all, chr_name_array[0][*nscaffolds-1]);
+            log_error("Error reading the input file %s:\n scaffold (%s) without length information.",chr_name_all, chr_name_array[0][*nscaffolds-1]);
             return(1);
         }
         do {
             c=fgetc(file_scaffolds);
         }while(!(c!= 9 && c!= 32 && c!= 10 && c!=13 && c!=-1 && c!=EOF));
         if(c==EOF) {
-            printf("Error reading the input file %s:\n scaffold (%s) without length information.\n",chr_name_all, chr_name_array[0][*nscaffolds-1]);
+            //printf("Error reading the input file %s:\n scaffold (%s) without length information.\n",chr_name_all, chr_name_array[0][*nscaffolds-1]);
+            log_error("Error reading the input file %s:\n scaffold (%s) without length information.",chr_name_all, chr_name_array[0][*nscaffolds-1]);
             return(1);
         }
         k=0;

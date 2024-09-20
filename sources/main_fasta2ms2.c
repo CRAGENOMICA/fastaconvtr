@@ -1,14 +1,24 @@
 #include "main_fasta2ms2.h"
 #include "zutil.h"
 #include "zindex.h"
+#include "log.h"
 
 int main(int argc, const char * argv[]) {
+	//log_set_level(LOG_DEBUG);
+	//log_trace("Hello %s", "world");
+	//log_debug("Hello %s %d", "world",1);
+
+	// struct to hold all command line arguments
+	fastaconvtr_args_t args;
+	// set all values to 0
+	memset(&args, 0, sizeof(fastaconvtr_args_t));
+	// set the number of arguments
+	args.argc = argc;
 
 	int x;
-    char format[1];
-    char input_format[10];
-	int ploidy,outgroup;
-	long int slide,window;
+
+	// int ploidy,outgroup;
+	// long int slide,window;
 	int arg = 0;
 	char *f;
 	char msformat[10];
@@ -23,10 +33,10 @@ int main(int argc, const char * argv[]) {
 	float summatrix_sizepos;
 	int *mis_pos; /*vector with the number of Ns in each position*/
 	float *fnut;
-	int Physical_length;
-    int include_unknown;
-	int refasta;
-	int tfasta;
+	// int Physical_length;
+    // int include_unknown;
+	//int refasta;
+	//int tfasta;
     long int *wgenes;
     long int nwindows;
     long int *masked_wgenes;
@@ -53,16 +63,17 @@ int main(int argc, const char * argv[]) {
 	double **nsites3_pop_outg;
 
     char *chr_name;
-    char chr_name_all[ MSP_MAX_NAME];
+    // char chr_name_all[ MSP_MAX_NAME];
 
-	char file_in[ MSP_MAX_FILENAME];
-	char file_out[MSP_MAX_FILENAME];
-	char file_GFF[MSP_MAX_FILENAME];
-	char file_effsz[MSP_MAX_FILENAME];
-	char file_Wcoord[MSP_MAX_FILENAME];
-    char file_wps[MSP_MAX_FILENAME];
-    char file_masked[MSP_MAX_FILENAME];
-    char file_log[MSP_MAX_FILENAME];
+	// char file_in[ MSP_MAX_FILENAME];
+	// char file_out[MSP_MAX_FILENAME];
+	// char file_GFF[MSP_MAX_FILENAME];
+	// char file_effsz[MSP_MAX_FILENAME];
+	// char file_Wcoord[MSP_MAX_FILENAME];
+    // char file_wps[MSP_MAX_FILENAME];
+    // char file_masked[MSP_MAX_FILENAME];
+    
+	char file_log[MSP_MAX_FILENAME];
 	
 	FILE *file_input	= 	0;
 //	FILE *file_es   	= 	0;
@@ -70,7 +81,10 @@ int main(int argc, const char * argv[]) {
 	FILE *file_wcoor    =   0;
     FILE *file_ws   	= 	0;
     FILE *file_msk   	= 	0;
-    FILE *file_logerr   =   stdout;
+
+    FILE *file_logerr   =   stdout; // TODO :: Better use stderr
+	FILE *error_log_file = 0; // file_logerr
+
 
     SGZip file_input_gz;
 //  SGZip file_es_gz;
@@ -84,21 +98,26 @@ int main(int argc, const char * argv[]) {
     init_gzindex_structure(&file_output_gz_index); /* IMPORTANT TO INITIALIZE!*/
 
 	/* GFF variables */
-	int 	gfffiles			= 0;
-	char 	subset_positions[ MSP_MAX_GFF_WORDLEN ];		
-	char 	code_name[ MSP_GENETIC_CODETYPE_LEN ];
+	// int 	args.gfffiles			= 0;
+	args.gfffiles			= 0;
+	// char 	subset_positions[ MSP_MAX_GFF_WORDLEN ];		
+	// char 	code_name[ MSP_GENETIC_CODETYPE_LEN ];
 	char 	genetic_code[ MSP_GENCODE_COMBINATIONS ];
-	char 	criteria_transcript[ MSP_GFF_CRITERIA_MSG_LEN ];
+	// char 	criteria_transcript[ MSP_GFF_CRITERIA_MSG_LEN ];
 	
 	/*sort samples*/
-	int int_total_nsam_order=0; /*number of samples. value for ordering the samples in populations in case they are not consecutive*/
-	int *sort_nsam=0; /*vector with the position in the file*/
+	// int 
+	args.int_total_nsam_order=0; /*number of samples. value for ordering the samples in populations in case they are not consecutive*/
+	// int *
+	args.sort_nsam=0; /*vector with the position in the file*/
 	int sort_index;/*used in the loop*/
 	
 	/* variables defining more data*/
-	int npops = 0;
+	// int 
+	args.npops = 0;
 	/* Number of samples for each population, each element a population */
-	int *	vint_perpop_nsam = NULL;
+	// int *	
+	args.vint_perpop_nsam = NULL;
 	/* Population index */
 	int pop_index = 0;
 	/* Sum of all nsam of all populations */
@@ -109,37 +128,50 @@ int main(int argc, const char * argv[]) {
     char **chr_name_array;
     char **chr_length_array;
 
-    memset( chr_name_all, 0, MSP_MAX_NAME);
-	memset( file_in,  0, MSP_MAX_FILENAME);
-	memset( file_out, 0, MSP_MAX_FILENAME);
-	memset( file_GFF, 0, MSP_MAX_FILENAME);
-	memset( file_effsz,  0, MSP_MAX_FILENAME);
-    memset( file_Wcoord, 0, MSP_MAX_FILENAME);
-    memset( file_wps, 0, MSP_MAX_FILENAME);
-    memset( file_masked, 0, MSP_MAX_FILENAME);
+    memset( args.chr_name_all, 0, MSP_MAX_NAME);
+
+	memset( args.file_in,  0, MSP_MAX_FILENAME);
+	memset( args.file_out, 0, MSP_MAX_FILENAME);
+	
+	memset( args.file_GFF, 0, MSP_MAX_FILENAME);
+	memset( args.file_effsz,  0, MSP_MAX_FILENAME);
+    memset( args.file_Wcoord, 0, MSP_MAX_FILENAME);
+    memset( args.file_wps, 0, MSP_MAX_FILENAME);
+    memset( args.file_masked, 0, MSP_MAX_FILENAME);
+
     memset( file_log, 0, MSP_MAX_FILENAME);
 	
 
 	/*defaults*/
-	format[0] = 't';
-	ploidy = 1;
-	outgroup = 0;
-	slide = 0;
-	window = 0;
-	refasta = 0;
-	tfasta = 0;
+	args.format[0] = 't'; /*default tfasta*/
+	args.ploidy = 1;
+	args.outgroup = 0;
+	args.slide = 0;
+	args.window = 0;
+	args.refasta = 0;
+	args.tfasta = 0;
     nwindows = 0;
 	wgenes = 0;
     masked_nwindows = 0;
     masked_wgenes = 0;
-	Physical_length = 1;
-    include_unknown = 0;
-	strcpy( criteria_transcript,"long\0");
-	strcpy( subset_positions,"\0");
-    strcpy( input_format,"fasta\0");
+	args.Physical_length = 1;
+    args.include_unknown = 0;
+	strcpy( args.criteria_transcript,"long\0");
+	strcpy( args.subset_positions,"\0");
+    strcpy( args.input_format,"fasta\0");
     strcpy( msformat,"tfasta\0");
     
-    if((vint_perpop_nsam = (int *) calloc( (unsigned long)1, sizeof(int) )) == 0) {
+	#ifdef DEBUG
+	log_set_level(LOG_TRACE);
+	#else
+	log_set_level(LOG_INFO);
+	#endif
+	// set program name as fastaconvtr
+  	const char *program_name = "fastaconvtr";
+	log_start(program_name, argc, argv);
+
+
+    if((args.vint_perpop_nsam = (int *) calloc( (unsigned long)1, sizeof(int) )) == 0) {
         printf("Error allocating memory");
         exit(1);
     }
@@ -154,7 +186,8 @@ int main(int argc, const char * argv[]) {
 			{
                 if(argv[arg][0] == '>')
                     break;
-                printf(" argument should be -%s ?\n", argv[arg]);
+                // printf(" argument should be -%s ?\n", argv[arg]);
+				log_error(" argument should be -%s ?\n", argv[arg]);
                 usage();
                 exit(1);
 			}
@@ -163,60 +196,70 @@ int main(int argc, const char * argv[]) {
 			{
                 case 'i' : /* input file*/
                     arg++;
-                    strcpy( file_in, argv[arg] );
+                    strcpy( args.file_in, argv[arg] );
                     break;
                 case 'o' : /* output file */
                     arg++;
-                    strcpy( file_out, argv[arg] );
-                    if( (file_output = fzopen( file_out, "w", &file_output_gz)) == 0) {
-                        fprintf(stdout,"\n It is not possible to write in the output file %s\n", file_out);
+                    strcpy( args.file_out, argv[arg] );
+                    if( (file_output = fzopen( args.file_out, "w", &file_output_gz)) == 0) {
+                        // fprintf(stdout,"\n It is not possible to write in the output file %s\n", file_out);
+						log_error("It is not possible to write in the output file %s\n", args.file_out);
                         exit(1);
                     }
                     file_output_gz.index = &file_output_gz_index;
                     /* Here, after openning the GZ file, the index is assigned to its output gz file. */
                     
-                    strcpy(file_log, file_out);
+                    strcpy(file_log, args.file_out);
                     strcat(file_log,".log");
-                    if( (file_logerr = fzopen( file_log, "w", &file_logerr_gz)) == 0) {
-                        fprintf(stdout,"\n It is not possible to write the log file %s.", file_log);
+                    // if( (file_logerr = fzopen( file_log, "w", &file_logerr_gz)) == 0) {
+					if ((error_log_file = fopen(file_log, "w")) == 0) {
+
+                        // fprintf(stdout,"\n It is not possible to write the log file %s.", file_log);
+						log_error("It is not possible to write the log file %s.", file_log);
                         exit(1);
                     }
 
                     /*printf("\nOpen log file...");*/
-                    fzprintf(file_logerr,&file_logerr_gz,"\nOpen log file...");
+                    // fzprintf(file_logerr,&file_logerr_gz,"\nOpen log file...");
+					// TODO :: set log level from command line
+      				log_add_fp(error_log_file, LOG_DEBUG);
+					log_debug("Open log file...");
                     break;
                 case 'F' : /* F fa or tfa */
                     arg++;
-                    input_format[0] = argv[arg][0];
-                    if(input_format[0] == 'f') strcpy(input_format,"fasta\0");
-                    if(input_format[0] == 't') strcpy(input_format,"tfasta\0");
+                    args.input_format[0] = argv[arg][0];
+                    if(args.input_format[0] == 'f') strcpy(args.input_format,"fasta\0");
+                    if(args.input_format[0] == 't') strcpy(args.input_format,"tfasta\0");
                     
-                    if(input_format[0] != 'f' && input_format[0] != 't') {
-                        printf("\n Error in -r argument: only the values 'f' (fasta) and 't' (tfasta) are allowed");
+                    if(args.input_format[0] != 'f' && args.input_format[0] != 't') {
+                        //printf("\n Error in -r argument: only the values 'f' (fasta) and 't' (tfasta) are allowed");
+						log_error("Error in -F argument: only the values 'f' (fasta) and 't' (tfasta) are allowed");
                         usage();
                         exit(1);
                     }
                     break;
 				case 'f' : /*output format: f fasta, t tfasta, m ms format  */
 					arg++;
-					format[0] = argv[arg][0];
-					if(format[0] == 'm') strcpy(msformat,"ms\0");
-					if(format[0] == 'x') strcpy(msformat,"x\0");
-					if(format[0] == 't') strcpy(msformat,"tfasta\0");
-                    if(format[0] == 'f') {strcpy(msformat,"fasta\0");refasta=1;}
-					if(format[0] == '0') strcpy(msformat,"null\0");
+					args.format[0] = argv[arg][0];
+					if(args.format[0] == 'm') strcpy(msformat,"ms\0");
+					if(args.format[0] == 'x') strcpy(msformat,"x\0");
+					if(args.format[0] == 't') strcpy(msformat,"tfasta\0");
+                    if(args.format[0] == 'f') {strcpy(msformat,"fasta\0");args.refasta=1;}
+					if(args.format[0] == '0') strcpy(msformat,"null\0");
 						
-					if(format[0] != 'm' && format[0] != 'x' && format[0] != 't' && format[0] != 'f' && format[0] != '0') {
-						printf("\n Error in -f argument: only the values 'm' (ms), 'f' (fasta), t (tfasta) or 0(nothing) are allowed");
+					if(args.format[0] != 'm' && args.format[0] != 'x' && args.format[0] != 't' && args.format[0] != 'f' && args.format[0] != '0') {
+						// printf("\n Error in -f argument: only the values 'm' (ms), 'f' (fasta), t (tfasta) or 0(nothing) are allowed");
+						log_error("Error in -f argument: only the values 'm' (ms), 'f' (fasta), t (tfasta) or 0(nothing) are allowed");
 						usage();
 						exit(1);
 					}
 					break;
 				case 'p' : /* p Ploidy, 1: haploid, 2: diploid */
 					arg++;
-					ploidy = (int)atoi(argv[arg]);
-					if(ploidy != 1 && ploidy != 2) {
-						printf("\n Error in -p argument: only the values 1 or 2 are allowed.");
+					args.ploidy = (int)atoi(argv[arg]);
+					if(args.ploidy != 1 && args.ploidy != 2) {
+						// printf("\n Error in -p argument: only the values 1 or 2 are allowed.");
+						log_error("Error in -p argument: only the values 1 or 2 are allowed.");
 						usage();
 						exit(1);
 					}
@@ -228,21 +271,21 @@ int main(int argc, const char * argv[]) {
 						   * Check order. 
 						   */
 					arg++;
-					strcpy( file_GFF, argv[arg]);					
+					strcpy( args.file_GFF, argv[arg]);					
 					arg++;
-					strcpy( subset_positions, argv[arg] );
+					strcpy( args.subset_positions, argv[arg] );
 					
-					gfffiles = 1;	
+					args.gfffiles = 1;	
 					
 					/* Go if known coding option - */
-					if( ( strcmp(subset_positions,"synonymous")==0 || 
-						 strcmp(subset_positions,"nonsynonymous")==0 || 
-						 strcmp(subset_positions,"silent")==0)) 
+					if( ( strcmp(args.subset_positions,"synonymous")==0 || 
+						 strcmp(args.subset_positions,"nonsynonymous")==0 || 
+						 strcmp(args.subset_positions,"silent")==0)) 
 					{
 						arg++;
-						strcpy( code_name,argv[arg] ); 
+						strcpy( args.code_name,argv[arg] ); 
 						
-						if( strcmp(code_name, "Nuclear_Universal") == 0 ) 
+						if( strcmp(args.code_name, "Nuclear_Universal") == 0 ) 
 						{
 							genetic_code[0] = 'F';
 							genetic_code[1] = 'F';
@@ -309,7 +352,7 @@ int main(int argc, const char * argv[]) {
 							genetic_code[62] = 'G';
 							genetic_code[63] = 'G';
 						}
-						else if(strcmp(code_name,"mtDNA_Drosophila")==0) 
+						else if(strcmp(args.code_name,"mtDNA_Drosophila")==0) 
 						{
 							genetic_code[0] = 'F';
 							genetic_code[1] = 'F';
@@ -376,7 +419,7 @@ int main(int argc, const char * argv[]) {
 							genetic_code[62] = 'G';
 							genetic_code[63] = 'G';
 						}
-						else if( strcmp(code_name,"mtDNA_Mammals") == 0 ) 
+						else if( strcmp(args.code_name,"mtDNA_Mammals") == 0 ) 
 						{
 							genetic_code[0] = 'F';
 							genetic_code[1] = 'F';
@@ -443,11 +486,12 @@ int main(int argc, const char * argv[]) {
 							genetic_code[62] = 'G';
 							genetic_code[63] = 'G';
 						}
-						else if( strcmp(code_name,"Other") == 0 ) {
+						else if( strcmp(args.code_name,"Other") == 0 ) {
 							for(x=0;x<64;x++) {
 								arg++;
 								if(argv[arg][0] == '-') {
-									printf("\n Error in -g argument: In case use \"Other\", include the genetic code of the 64 aa values.");
+									// printf("\n Error in -g argument: In case use \"Other\", include the genetic code of the 64 aa values.");
+									log_error("Error in -g argument: In case use \"Other\", include the genetic code of the 64 aa values.");
 									usage();
 									exit(1);
 								}
@@ -455,7 +499,8 @@ int main(int argc, const char * argv[]) {
 							}
 						}
 						else {
-							printf(" %s: Unknown code, sorry", code_name);
+							// printf(" %s: Unknown code, sorry", code_name);
+							log_error(" %s: Unknown code, sorry", args.code_name);
 							exit(1);
 						}	
 					}
@@ -463,39 +508,42 @@ int main(int argc, const char * argv[]) {
 				case 'c' : /* c Criteria used for analyzing the transcripts */
 					/* Basically, max or min */
 					arg++;
-					strcpy(criteria_transcript,argv[arg]);
-					if(strcmp( criteria_transcript, "max")!=0  && 
-					   strcmp( criteria_transcript, "min")!=0  && 
-					   strcmp( criteria_transcript, "first")!=0   && 
-					   strcmp( criteria_transcript, "long")!=0  ) 
+					strcpy(args.criteria_transcript,argv[arg]);
+					if(strcmp( args.criteria_transcript, "max")!=0  && 
+					   strcmp( args.criteria_transcript, "min")!=0  && 
+					   strcmp( args.criteria_transcript, "first")!=0   && 
+					   strcmp( args.criteria_transcript, "long")!=0  ) 
 					{
-						printf("\n Error: the argument -c has only the choices 'max', 'min', 'first' or 'long'.");
+						// printf("\n Error: the argument -c has only the choices 'max', 'min', 'first' or 'long'.");
+						log_error("Error: the argument -c has only the choices 'max', 'min', 'first' or 'long'.");
 						usage();
 						exit(1);
 					}
 					break;
 				case 'G' : /* outgroup present or not */
 					arg++;
-					outgroup = (int)atoi(argv[arg]);
-					if(outgroup != 0 && outgroup != 1) {
-						printf("\n Error in -o argument: only the values 0 or 1 are allowed.");
+					args.outgroup = (int)atoi(argv[arg]);
+					if(args.outgroup != 0 && args.outgroup != 1) {
+						// printf("\n Error in -o argument: only the values 0 or 1 are allowed.");
+						log_error("Error in -o argument: only the values 0 or 1 are allowed.");
 						usage();
 						exit(1);
 					}
 					break;
 				case 'w' : /* window size (ms format)*/
 					arg++;
-					window = (long int)atol(argv[arg]);
+					args.window = (long int)atol(argv[arg]);
 					break;
 				case 's' : /* slide size (ms format)*/
 					arg++;
-					slide = (long int)atol(argv[arg]);
+					args.slide = (long int)atol(argv[arg]);
 					break;					
 				case 'P' : /* physical length or effective length (only valid positions) */
 					arg++;
-					Physical_length = (int)atoi(argv[arg]);
-					if(Physical_length != 0 && Physical_length != 1) {
-						printf("\n Error in -P argument: only the values 0 or 1 are allowed.");
+					args.Physical_length = (int)atoi(argv[arg]);
+					if(args.Physical_length != 0 && args.Physical_length != 1) {
+						// printf("\n Error in -P argument: only the values 0 or 1 are allowed.");
+						log_error("Error in -P argument: only the values 0 or 1 are allowed.");
 						usage();
 						exit(1);
 					}
@@ -513,34 +561,36 @@ int main(int argc, const char * argv[]) {
 							O numbers indicating the order (0 is the first) in case samples are not consecutive. Only for fasta data!
 							*/
 					arg++;
-					int_total_nsam_order = atoi(argv[arg]);
-					if((sort_nsam = (int *) calloc( (unsigned long)int_total_nsam_order, sizeof(int) )) == 0) {
-						printf("Error allocating memory");
+					args.int_total_nsam_order = atoi(argv[arg]);
+					if((args.sort_nsam = (int *) calloc( (unsigned long)args.int_total_nsam_order, sizeof(int) )) == 0) {
+						// printf("Error allocating memory");
+						log_error("Error allocating memory for sort_nsam");
 						exit(1);
 					}
-					for( sort_index = 0; sort_index < int_total_nsam_order; sort_index++ ) 
+					for( sort_index = 0; sort_index < args.int_total_nsam_order; sort_index++ ) 
 					{
 						arg++;
-						sort_nsam[ sort_index ] = atoi( argv[arg] );
+						args.sort_nsam[ sort_index ] = atoi( argv[arg] );
 					}					
 					break;
 				case 'N' : /* N number of populations, Warning!, followed by
 							N numbers indicating the sample size of each population
 							*/
-                    free(vint_perpop_nsam);
+                    free(args.vint_perpop_nsam);
 
                     arg++;
-					npops = atoi(argv[arg]);
-					if((vint_perpop_nsam = (int *) calloc( (unsigned long)npops, sizeof(int) )) == 0) {
-						printf("Error allocating memory");
+					args.npops = atoi(argv[arg]);
+					if((args.vint_perpop_nsam = (int *) calloc( (unsigned long)args.npops, sizeof(int) )) == 0) {
+						//printf("Error allocating memory");
+						log_error("Error allocating memory for vint_perpop_nsam");
 						exit(1);
 					}
 					int_total_nsam = 0;
-					for( pop_index = 0; pop_index < npops; pop_index++ ) 
+					for( pop_index = 0; pop_index < args.npops; pop_index++ ) 
 					{
 						arg++;
-						vint_perpop_nsam[ pop_index ] = atoi( argv[arg] );
-						int_total_nsam += vint_perpop_nsam[ pop_index ];
+						args.vint_perpop_nsam[ pop_index ] = atoi( argv[arg] );
+						int_total_nsam += args.vint_perpop_nsam[ pop_index ];
 					}					
 					break;
 				/*case 't' : 
@@ -554,32 +604,33 @@ int main(int argc, const char * argv[]) {
 					break;*/
                 case 'u' : /* -u missing data considered  */
                     arg++;
-                    include_unknown = (int)atoi(argv[arg]);
-                    if(include_unknown != 0 && include_unknown != 1) {
-                        printf("\n Error in -u argument: only the values 0 or 1 are allowed.");
+                    args.include_unknown = (int)atoi(argv[arg]);
+                    if(args.include_unknown != 0 && args.include_unknown != 1) {
+                        //printf("\n Error in -u argument: only the values 0 or 1 are allowed.");
+						log_error("Error in -u argument: only the values 0 or 1 are allowed.");
                         usage();
                         exit(1);
                     }
                     break;
 				case 'W' : /* file with the coordinates of each window [init end](overwrite options -w and -s)*/
 					arg++;
-					strcpy(file_Wcoord, argv[arg] );					
+					strcpy(args.file_Wcoord, argv[arg] );					
 					break;
                 case 'E' : /*file with the weight for each position */
                     arg++;
-                    strcpy(file_wps, argv[arg]);
+                    strcpy(args.file_wps, argv[arg]);
                     break;
 				case 'e' : /*file with the effect size of each variant */ /*NOT YET INCLUDED IN THE PROGRAM!!!!!*/
 					arg++;
-					strcpy(file_effsz, argv[arg]);
+					strcpy(args.file_effsz, argv[arg]);
 					break;
                 case 'm' : /* file with the coordinates of each window [init end] to be masked by Ns*/
                     arg++;
-                    strcpy(file_masked, argv[arg] );
+                    strcpy(args.file_masked, argv[arg] );
                     break;
                 case 'n' : /* name of the scaffold to analyze*/
                     arg++;
-                    strcpy( chr_name_all, argv[arg] );
+                    strcpy( args.chr_name_all, argv[arg] );
                     break;
 				case 'h' : /* h HELP */
 					usage();
@@ -590,8 +641,9 @@ int main(int argc, const char * argv[]) {
 		}
 	}
 	else {
+		// Print Usage and return an error
 		usage();
-		exit(0);
+		exit(1);
 	}
     
     /*default*/
@@ -604,14 +656,16 @@ int main(int argc, const char * argv[]) {
     # [-f fasta]  + [-w -s]
     # [-W] + [-w -s]
      */
-    if(input_format[0] != 'f' && ploidy != 1) {
-        fzprintf(file_logerr,&file_logerr_gz,"\n the option -p 2 is only available with fasta IUPAC input format");
-        printf("\nError: The option -p 2 is only available with fasta IUPAC input format\n");
+    if(args.input_format[0] != 'f' && args.ploidy != 1) {
+        // fzprintf(file_logerr,&file_logerr_gz,"\n the option -p 2 is only available with fasta IUPAC input format");
+        // printf("\nError: The option -p 2 is only available with fasta IUPAC input format\n");
+		log_error("The option -p 2 is only available with fasta IUPAC input format");
         exit(1);
     }
-	if(file_Wcoord[0]!=0 && (slide > 0 && window>0)) {
-        fzprintf(file_logerr,&file_logerr_gz,"\n the option -W (coordinates file) is incompatible with definitions of -w (slide) and -s (slide)");
-        printf("\nError: The option -W (coordinates file) is incompatible with definitions of -w (slide) and -s (slide)\n");
+	if(args.file_Wcoord[0]!=0 && (args.slide > 0 && args.window>0)) {
+        // fzprintf(file_logerr,&file_logerr_gz,"\n the option -W (coordinates file) is incompatible with definitions of -w (slide) and -s (slide)");
+        // printf("\nError: The option -W (coordinates file) is incompatible with definitions of -w (slide) and -s (slide)\n");
+		log_error("The option -W (coordinates file) is incompatible with definitions of -w (slide) and -s (slide)");
         exit(1);
 	}/*
 	if(file_Wcoord[0]!=0 && (format[0] == 'f')) {
@@ -622,80 +676,101 @@ int main(int argc, const char * argv[]) {
         fzprintf(file_output,&file_output_gz,"\n the options -w (slide) and -s (slide) is only compatible with the output -f m");
         exit(1);
 	}*/
-    if(file_wps[0]!=0 && file_GFF[0]!=0) {
-        fzprintf(file_logerr,&file_logerr_gz,"\n the option -g (gff file) is incompatible with option -E (weighting file)\n");
+    if(args.file_wps[0]!=0 && args.file_GFF[0]!=0) {
+        // fzprintf(file_logerr,&file_logerr_gz,"\n the option -g (gff file) is incompatible with option -E (weighting file)\n");
+		log_error("The option -g (gff file) is incompatible with option -E (weighting file)");
         exit(1);
     }
-    if((format[0]=='t') && (/**/file_Wcoord[0]!=0 || /**/(slide > 0 && window>0) || Physical_length == 0)) {
-        fzprintf(file_logerr,&file_logerr_gz,"\nError: The options -W or -w -s or -P are not effective using the output format -f tfasta\n");
-        printf("\nError: The options -W or -w -s or -P are not effective using the output format -f tfasta\n");
-        exit(0);
+    if((args.format[0]=='t') && (/**/args.file_Wcoord[0]!=0 || /**/(args.slide > 0 && args.window>0) || args.Physical_length == 0)) {
+        //fzprintf(file_logerr,&file_logerr_gz,"\nError: The options -W or -w -s or -P are not effective using the output format -f tfasta\n");
+        //printf("\nError: The options -W or -w -s or -P are not effective using the output format -f tfasta\n");
+		log_error("The options -W or -w -s or -P are not effective using the output format -f tfasta");
+		exit(0);
     }
-    if((format[0]=='f') && ((slide > 0 && window>0) || Physical_length == 0)) {
-        fzprintf(file_logerr,&file_logerr_gz,"\nError: The options -w -s or -P are not effective using the output format -f fasta\n");
-        printf("\nError: The options -w -s or -P are not effective using the output format -f fasta\n");
-        exit(0);
+    if((args.format[0]=='f') && ((args.slide > 0 && args.window>0) || args.Physical_length == 0)) {
+        // fzprintf(file_logerr,&file_logerr_gz,"\nError: The options -w -s or -P are not effective using the output format -f fasta\n");
+        //printf("\nError: The options -w -s or -P are not effective using the output format -f fasta\n");
+        log_error("The options -w -s or -P are not effective using the output format -f fasta");
+		exit(0);
     }
-    if(outgroup==1 && npops==0) {
-        fzprintf(file_logerr,&file_logerr_gz,"\nError:  the option -G (outgroup) needs to define option -N: the population samples of at least two pops\n");
-        printf("\nError:  the option -G (outgroup) needs to define option -N: the population samples of at least two pops\n");
-        exit(1);
+    if(args.outgroup==1 && args.npops==0) {
+        //fzprintf(file_logerr,&file_logerr_gz,"\nError:  the option -G (outgroup) needs to define option -N: the population samples of at least two pops\n");
+        //printf("\nError:  the option -G (outgroup) needs to define option -N: the population samples of at least two pops\n");
+        log_error("The option -G (outgroup) needs to define option -N: the population samples of at least two pops");
+		exit(1);
     }	
-    if( format[0] == 'x' && npops==0) {
-        fzprintf(file_logerr,&file_logerr_gz,"\n the option -f x require the option -N ");
+    if( args.format[0] == 'x' && args.npops==0) {
+        //fzprintf(file_logerr,&file_logerr_gz,"\n the option -f x require the option -N ");
+		log_error("The option -f x require the option -N ");
         exit(1);
     }
-    if(include_unknown == 1 && format[0]=='m') {
-        include_unknown = 0;
-        fzprintf(file_logerr,&file_logerr_gz,"Warning: The option -u 1 is only allowed in case GFF file is defined and the output format is not ms\n");
-        printf("Warning: The option -u 1 is only allowed in case GFF file is defined and the output format is not ms\n");
+    if(args.include_unknown == 1 && args.format[0]=='m') {
+        args.include_unknown = 0;
+        //fzprintf(file_logerr,&file_logerr_gz,"Warning: The option -u 1 is only allowed in case GFF file is defined and the output format is not ms\n");
+        //printf("Warning: The option -u 1 is only allowed in case GFF file is defined and the output format is not ms\n");
+		log_warn("The option -u 1 is only allowed in case GFF file is defined and the output format is not ms");
     }
-    if(strcmp(chr_name_all,"") == 0 &&
-       ((input_format[0] == 'f' && (file_GFF[0] != '\0' || file_effsz[0] != '\0' || file_Wcoord[0] != '\0' || file_wps[0] != '\0' || file_masked[0] != '\0')) ||
-        (input_format[0] == 't' || format[0] == 't'))) {
-        fzprintf(file_logerr,&file_logerr_gz,"\nError: the name of the scaffold (option -n) must be defined\n");
-        printf("\nError: the name of the scaffold (option -n) must be defined\n");
-        exit(1);
+    if(strcmp(args.chr_name_all,"") == 0 &&
+       ((args.input_format[0] == 'f' && (args.file_GFF[0] != '\0' || args.file_effsz[0] != '\0' || args.file_Wcoord[0] != '\0' || args.file_wps[0] != '\0' || args.file_masked[0] != '\0')) ||
+        (args.input_format[0] == 't' || args.format[0] == 't'))) {
+        //fzprintf(file_logerr,&file_logerr_gz,"\nError: the name of the scaffold (option -n) must be defined\n");
+        //printf("\nError: the name of the scaffold (option -n) must be defined\n");
+        log_error("The name of the scaffold (option -n) must be defined");
+		exit(1);
     }
-    if(vint_perpop_nsam[0]==0) {
-        npops = 1;
+    if(args.vint_perpop_nsam[0]==0) {
+        args.npops = 1;
     }
     
     /*Define arrays and vectors*/
     
     if((fnut = (float *)calloc((unsigned long)4,sizeof(float))) == NULL) {
-        fzprintf(file_logerr,&file_logerr_gz,"\nError: memory not reallocated. get_obsdata.5 \n");
-        exit(1);
+        //fzprintf(file_logerr,&file_logerr_gz,"\nError: memory not reallocated. get_obsdata.5 \n");
+        log_error("Error: memory not reallocated. fnut");
+		exit(1);
     }
     /* Definition of a File Stream Buffer, for buffered IO */
     if( (f = (char *)malloc((unsigned long)BUFSIZ*10)) == NULL ) {
-        fzprintf(file_logerr,&file_logerr_gz,"\nError: memory not reallocated. get_obsdata.4 \n");
-        exit(1);
+        //fzprintf(file_logerr,&file_logerr_gz,"\nError: memory not reallocated. get_obsdata.4 \n");
+        log_error("Error: memory not reallocated for buffered IO f");
+		exit(1);
     }
 
     
     /*print all the argv. Header*/
-	fzprintf(file_output,&file_output_gz,"#fastaconvtr ");
-	for(x=1;x<arg;x++) {
-		fzprintf(file_output,&file_output_gz,"%s ",argv[x]);
-	}
-	fzprintf(file_output,&file_output_gz,"\n");
-	
+	// TODO :: This make it hard to make an automated test
+	// TODO :: can be disabled for debuging and testing and redirect that to the log file instead
+	#ifndef DEBUG
+		fzprintf(file_output,&file_output_gz,"#fastaconvtr ");
+		for(x=1;x<arg;x++) {
+			fzprintf(file_output,&file_output_gz,"%s ",argv[x]);
+		}
+		fzprintf(file_output,&file_output_gz,"\n");
+	#else
+		fzprintf(file_output,&file_output_gz,"#fastaconvtr ");
+		for(x=1;x<arg;x++) {
+			fzprintf(file_output,&file_output_gz,"%s ",argv[x]);
+		}
+		fzprintf(file_output,&file_output_gz,"\n");
+	#endif
 	/* Opening files */
-	if( file_in[0] == '\0' ) {
+	if( args.file_in[0] == '\0' ) {
 		file_input = stdin;
 	}
 	else {
-		if( (file_input = fzopen( file_in, "r", &file_input_gz)) == 0) {
-			fzprintf(file_logerr,&file_logerr_gz,"\n It is not possible to open the input file %s\n", file_in);
+		if( (file_input = fzopen( args.file_in, "r", &file_input_gz)) == 0) {
+			// fzprintf(file_logerr,&file_logerr_gz,"\n It is not possible to open the input file %s\n", file_in);
+			log_error("It is not possible to open the input file %s\n", args.file_in);
 			exit(1);
 		}
 	}
     setbuf(file_input,f);
 
    
-    if(read_index_file(chr_name_all,&nscaffolds,&chr_name_array,&chr_length_array)) {
-        printf("\nError reading the scaffold names file %s\n",chr_name_all);
+    if(read_index_file(args.chr_name_all,&nscaffolds,&chr_name_array,&chr_length_array)) {
+        // printf("\nError reading the scaffold names file %s\n",chr_name_all);
+		log_error("Error reading the scaffold names file %s\n",args.chr_name_all);
+
         exit(1);
     }
     /*separate all values of the list chr_name_all in chr_name_array: */
@@ -727,12 +802,13 @@ int main(int argc, const char * argv[]) {
     */
     
     /*open the file for weigth for positions, if included*/
-    if( file_wps[0] == '\0') {
+    if( args.file_wps[0] == '\0') {
         file_ws = 0;
     }
     else {
-        if( (file_ws = fzopen( file_wps, "r", &file_ws_gz)) == 0) {
-            fzprintf(file_logerr,&file_logerr_gz,"\n It is not possible to open the weighting file %s\n", file_wps);
+        if( (file_ws = fzopen( args.file_wps, "r", &file_ws_gz)) == 0) {
+            // fzprintf(file_logerr,&file_logerr_gz,"\n It is not possible to open the weighting file %s\n", file_wps);
+			log_error("It is not possible to open the weighting file %s\n", args.file_wps);
             exit(1);
         }
     }
@@ -753,24 +829,26 @@ int main(int argc, const char * argv[]) {
         }
         */
         /* Opening coordinates file */
-        if( file_Wcoord[0] == '\0' ) {
+        if( args.file_Wcoord[0] == '\0' ) {
             file_wcoor = 0;
             nwindows = 0;
         }
         else {
-            if( (file_wcoor = fzopen( file_Wcoord, "r", &file_wcoor_gz)) == 0) {
-                fzprintf(file_logerr,&file_logerr_gz,"\n It is not possible to open the coordinates file %s\n", file_Wcoord);
+            if( (file_wcoor = fzopen( args.file_Wcoord, "r", &file_wcoor_gz)) == 0) {
+                // fzprintf(file_logerr,&file_logerr_gz,"\n It is not possible to open the coordinates file %s\n", file_Wcoord);
+				log_error("It is not possible to open the coordinates file %s", args.file_Wcoord);
                 exit(1);
             }
         }
         /* Opening mask coordinates file */
-        if( file_masked[0] == '\0' ) {
+        if( args.file_masked[0] == '\0' ) {
             file_msk = 0;
             masked_nwindows = 0;
         }
         else {
-            if( (file_msk = fzopen( file_masked, "r", &file_msk_gz)) == 0) {
-                fzprintf(file_logerr,&file_logerr_gz,"\n It is not possible to open the masked coordinates file %s\n", file_masked);
+            if( (file_msk = fzopen( args.file_masked, "r", &file_msk_gz)) == 0) {
+                // fzprintf(file_logerr,&file_logerr_gz,"\n It is not possible to open the masked coordinates file %s\n", file_masked);
+				log_error("It is not possible to open the masked coordinates file %s", args.file_masked);
                 exit(1);
             }
         }
@@ -778,9 +856,10 @@ int main(int argc, const char * argv[]) {
         chr_name = chr_name_array[i];
         
         /*read the file for weigth for positions, if included*/
-        if( file_wps[0] != '\0') {
+        if( args.file_wps[0] != '\0') {
             if(read_weights_positions_file(file_ws,&file_ws_gz,file_output,&file_output_gz, file_logerr, &file_logerr_gz,&wP,&wPV,&wV,chr_name,i) == 0) {
-                fzprintf(file_logerr,&file_logerr_gz,"Error processing weighting file %s\n", file_wps);
+                //fzprintf(file_logerr,&file_logerr_gz,"Error processing weighting file %s\n", file_wps);
+				log_error("Error processing weighting file %s", args.file_wps);
                 exit(1);
             }
         }
@@ -795,55 +874,115 @@ int main(int argc, const char * argv[]) {
         fzclose(file_es, &file_es_gz);
          */
         /* read coordinates file */
-        if( file_Wcoord[0] != '\0' ) {
+        if( args.file_Wcoord[0] != '\0' ) {
             if(read_coordinates(file_wcoor,&file_wcoor_gz,file_output,&file_output_gz, file_logerr, &file_logerr_gz,&wgenes,&nwindows,chr_name) == 0) {
-                fzprintf(file_logerr,&file_logerr_gz,"Error processing coordinates file %s\n", file_Wcoord);
+                //fzprintf(file_logerr,&file_logerr_gz,"Error processing coordinates file %s\n", file_Wcoord);
+				log_error("Error processing coordinates file %s", args.file_Wcoord);
                 exit(1);
             }
-            window = -1;
-            slide = -1;
+            args.window = -1;
+            args.slide = -1;
             fzclose(file_wcoor, &file_wcoor_gz);
         }
         /* read mask coordinates file */
-        if( file_masked[0] != '\0' ) {
+        if( args.file_masked[0] != '\0' ) {
             if(read_coordinates(file_msk,&file_msk_gz,file_output,&file_output_gz, file_logerr, &file_logerr_gz,&masked_wgenes,&masked_nwindows,chr_name) == 0) {
-                fzprintf(file_logerr,&file_logerr_gz,"Error processing masked coordinates file %s\n", file_masked);
+                // fzprintf(file_logerr,&file_logerr_gz,"Error processing masked coordinates file %s\n", file_masked);
+				log_error("Error processing masked coordinates file %s", args.file_masked);
                 exit(1);
             }
             fzclose(file_msk, &file_msk_gz);
         }
 
-        if(format[0] == 't')
-            tfasta = 1;
-        if(read_fasta(file_input,&file_input_gz,file_output,&file_output_gz,file_logerr,
-                      &file_logerr_gz,input_format,&nsam,&lenR,&lenT,&lenP,&lenS,&vector_pos,
-                      &matrix_pol,ploidy,gfffiles,file_GFF,subset_positions,genetic_code,
-                      criteria_transcript,format,outgroup,&vector_sizepos,&svratio,
-                      &summatrix_sizepos,&nmissing,&mis_pos,fnut,&CpG,&GCs,wV,&svp,&pwmatrix_miss,
-                      /*file_es,&file_es_gz,*/file_in,file_out,refasta,tfasta,
-                      Pp,&CpGp,&Ap,&Cp,&Gp,&Tp,&GCp,&sort_nsam,&int_total_nsam_order,vint_perpop_nsam,
-                      npops,&sum_sam, &nsites1_pop, &nsites2_pop, &nsites3_pop,
-                      &nsites1_pop_outg, &nsites2_pop_outg, &nsites3_pop_outg,
-                      wP,wPV,file_ws,&file_ws_gz,wgenes,nwindows,include_unknown,
-                      masked_wgenes,masked_nwindows,
-                      chr_name,i,nscaffolds) == 0) {
+        if(args.format[0] == 't')
+            args.tfasta = 1;
+
+        if(read_fasta(	file_input,
+						&file_input_gz,
+						file_output,
+						&file_output_gz,
+						// file_logerr,
+                      	// &file_logerr_gz,
+						// input_format,
+						&nsam,
+						&lenR,
+						&lenT,
+						&lenP,
+						&lenS,
+						&vector_pos,
+                      	&matrix_pol,
+						// ploidy,
+						// gfffiles,
+						// file_GFF,
+						// subset_positions,
+						genetic_code,
+                      	// criteria_transcript,
+						// format,
+						//outgroup,
+						&vector_sizepos,
+						&svratio,
+                      	&summatrix_sizepos,
+						&nmissing,
+						&mis_pos,
+						fnut,
+						&CpG,
+						&GCs,
+						wV,
+						&svp,
+						&pwmatrix_miss,
+                      	/*file_es,&file_es_gz,*/
+						// file_in,
+						// file_out,
+						// refasta,
+						// tfasta,
+                      	Pp,
+						&CpGp,
+						&Ap,
+						&Cp,
+						&Gp,
+						&Tp,
+						&GCp,
+						// &sort_nsam,
+						// &int_total_nsam_order,
+						// vint_perpop_nsam,
+                      	// npops,
+						&sum_sam,
+						&nsites1_pop, 
+						&nsites2_pop, 
+						&nsites3_pop,
+                      	&nsites1_pop_outg, 
+						&nsites2_pop_outg, 
+						&nsites3_pop_outg,
+                      	wP,
+						wPV,
+						file_ws,
+						&file_ws_gz,
+						wgenes,
+						nwindows,
+						// include_unknown,
+                      	masked_wgenes,
+						masked_nwindows,
+                      	chr_name,
+						i,
+						nscaffolds,
+						&args) == 0) {
             fzprintf(file_logerr,&file_logerr_gz,"Error processing input data.\n");
             exit(1);
         }
 
-        if(format[0] == 'm') {
-            if(slide == 0 && window == 0) {
-                slide = lenR;
-                window = lenR;
+        if(args.format[0] == 'm') {
+            if(args.slide == 0 && args.window == 0) {
+                args.slide = lenR;
+                args.window = lenR;
             }
             if(write_msfile(file_output,&file_output_gz,file_logerr,&file_logerr_gz,
                             nsam,lenR,lenT,lenP,lenS,vector_pos,vector_sizepos,matrix_pol,
-                            slide,window,svratio,summatrix_sizepos,nmissing,mis_pos,format,
-                            fnut,Physical_length,CpG,GCs,wV,nV,svp,pwmatrix_miss,tfasta,
-                            Pp,CpGp,Ap,Cp,Gp,Tp,GCp,wgenes,nwindows,vint_perpop_nsam,npops,sum_sam,
+                            args.slide,args.window,svratio,summatrix_sizepos,nmissing,mis_pos,args.format,
+                            fnut,args.Physical_length,CpG,GCs,wV,nV,svp,pwmatrix_miss,args.tfasta,
+                            Pp,CpGp,Ap,Cp,Gp,Tp,GCp,wgenes,nwindows,args.vint_perpop_nsam,args.npops,sum_sam,
                             nsites1_pop, nsites2_pop,nsites3_pop,
                             nsites1_pop_outg,nsites2_pop_outg,nsites3_pop_outg,
-                            outgroup) == 0) {
+                            args.outgroup) == 0) {
                 fzprintf(file_logerr,&file_logerr_gz,"Error printing %s ms file.\n",msformat);
                 exit(1);
             }
@@ -861,7 +1000,7 @@ int main(int argc, const char * argv[]) {
         if(file_ws) free(wV);
 //        if(file_es) free(Pp);
         free(vector_sizepos);
-        if(format[0] == 'm') {
+        if(args.format[0] == 'm') {
             free(matrix_pol);
             free(vector_pos);
             free(mis_pos);
@@ -898,18 +1037,21 @@ int main(int argc, const char * argv[]) {
 	fzclose(file_input, &file_input_gz);
     if(file_ws) fzclose(file_ws, &file_ws_gz);
 
-    fzprintf(file_logerr,&file_logerr_gz,"\nProgram Ended\n");
-    fzclose(file_logerr, &file_logerr_gz);
+    //fzprintf(file_logerr,&file_logerr_gz,"\nProgram Ended\n");
+	log_info("Program Ended");
+    // fzclose(file_logerr, &file_logerr_gz);
 
     for(i=0;i<nscaffolds;i++) {
         free(chr_name_array[i]);
     }
     free(chr_name_array);
-    free(vint_perpop_nsam);
+    free(args.vint_perpop_nsam);
     free(fnut);
-    free(sort_nsam);
+    free(args.sort_nsam);
     free(f);
 
+	if (error_log_file)
+    	fclose(error_log_file);
     /*
      * Test the just created GZ and INDEX files:
      * -----------------------------------------
