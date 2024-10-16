@@ -15,7 +15,7 @@ extern "C" {
 #endif
 	
 #include "common.h"
-#include "zutil.h"
+
 #include "htslib/bgzf.h"
 
 	
