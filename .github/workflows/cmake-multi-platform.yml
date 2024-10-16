@@ -113,8 +113,9 @@ jobs:
     - name: Create release tarball
       run: |
         ls -al
-        rm -rf ${{ steps.strings.outputs.build-output-dir }}/Examples
+        rm -rf Examples
         cd ${{ steps.strings.outputs.build-output-dir }}
+        ls -al
         cpack -G TGZ
     - name: Upload release tarball
       uses: actions/upload-artifact@v3
