@@ -87,7 +87,8 @@ int read_fasta(
     char *chr_name,
     unsigned long first,
     unsigned long nscaffolds,
-    fastaconvtr_args_t *args)
+    fastaconvtr_args_t *args,
+    int printtfasta)
 {	
 	/*
 	 file_input: fasta file, tfasta gzip or not
@@ -100,7 +101,7 @@ int read_fasta(
 	 length_seg: pointer to the number of variants
 	 matrix_pos: pointer to a vector of the number position of each variant
 	 matrix_pol: pointer to a vector with the total variants per sample
-	 ploidy: 1 or 2
+	 ploidy: 1, 2 (4 if Ns are counted as lowercase a=AN, c=CN, g=GN, t=TN)
 	 gfffiles: 1 include, 0 not
 	 name_fileinputgff: name of the GFF file
 	 subset_positions: name of the subset in gff (synonymous, coding, etc.)
@@ -434,13 +435,14 @@ int read_fasta(
 	}
 	/*end option flag O*/
 	
-    if(args->ploidy==2)
+    if(args->ploidy>=2)
 		nsamtot *= 2; /*of ploidy=2 double samples*/
 	*nsam = nsamtot;
 
 	/*!--- Not used nsamuser_eff = (nsamtot)/ploidy ; */
 		
-	if(n_samp * args->ploidy < nsamtot) return(0);
+	if(args->ploidy>=2) if(n_samp * 2 < nsamtot) return(0);
+    if(args->ploidy==1) if(n_samp * 1 < nsamtot) return(0);
 	if(n_samp == 0 || n_site == 0) return(0);
 	else {
 		if(n_samp > 32167) {
@@ -484,7 +486,7 @@ int read_fasta(
 			matrix_sizepos[0][xx] = (double)1;
 			matrix_segrpos[xx] = (double)1;
 		}
-        if(args->ploidy==2 && args->input_format[0] == 'f'){
+        if(args->ploidy>=2 && args->input_format[0] == 'f'){
 			if ((DNA_matr2 = (char *)calloc(n_site*(long int)n_samp*2,sizeof(char))) == 0) {
 				//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. read_fasta.23 \n");
                 log_error("Error: memory not reallocated. read_fasta.DNA_matr2");
@@ -821,7 +823,7 @@ int read_fasta(
                         // if(outgroup_presence==1) strcat(file_weights_char,"_outg");
                         if(args->outgroup==1) strcat(file_weights_char,"_outg");
                         if(args->ploidy==1) strcat(file_weights_char,"_ploidy1");
-                        if(args->ploidy==2) strcat(file_weights_char,"_ploidy2");
+                        if(args->ploidy>2) strcat(file_weights_char,"_ploidy2");
                         strcat(file_weights_char,"_WEIGHTS.gz");
                         log_info("Writing weights file %s", file_weights_char);
                         if( (file_weights = bzopen( file_weights_char, "wb", &file_weights_gz)) == 0) {
@@ -880,7 +882,8 @@ int read_fasta(
             /*printf("\nWriting tfasta file...");*/
             fflush(stdout);
             // fzprintf(file_logerr,file_logerr_gz,"\nWriting tfasta file...");
-            log_info("Writing tfasta file...");
+            if(!(args->gfffiles == 1 && printtfasta==0))
+                log_info("Writing tfasta file...");
             /*
             memset(file_fas_char, 0, MSP_MAX_FILENAME);
             strcpy(file_fas_char, file_in);
@@ -891,14 +894,14 @@ int read_fasta(
             if(outgroup_presence==0) strcat(file_fas_char,"_outg0");
             if(outgroup_presence==1) strcat(file_fas_char,"_outg1");
             if(ploidy==1) strcat(file_fas_char,"_ploidy1");
-            if(ploidy==2) strcat(file_fas_char,"_ploidy2");
+            if(ploidy>=2) strcat(file_fas_char,"_ploidy2");
             strcat(file_fas_char,".tfa");
             if( (file_fas = fzopen( file_fas_char, "w", file_fas_gz)) == 0) {
                 fzprintf(file_output,file_output_gz,"\n It is not possible to write the tfasta file %s.", file_fas_char);
             }
             else {
             */
-
+           if(!(args->gfffiles == 1 && printtfasta==0)) {
             // output tfasta file must be compressed in gz format to be able to index it
             // args->file_out filename must be validated before
             file_tfas = file_output;
@@ -925,6 +928,7 @@ int read_fasta(
                 /*if(gfffiles == 0 && file_es == 0) */ bzprintf(file_tfas, file_tfas_gz, "#CHR\tPOSITION\tGENOTYPES");
                 bzprintf(file_tfas, file_tfas_gz, "\n");
             }
+           }
             if (args->gfffiles == 1 || file_es != 0)
             {
                 memset(file_weights_char, 0, MSP_MAX_FILENAME);
@@ -958,7 +962,7 @@ int read_fasta(
                     strcat(file_weights_char, "_outg");
                 if (args->ploidy == 1)
                     strcat(file_weights_char, "_ploidy1");
-                if (args->ploidy == 2)
+                if (args->ploidy >= 2)
                     strcat(file_weights_char, "_ploidy2");
                 strcat(file_weights_char, "_WEIGHTS.gz");
                 if (first == 0)
@@ -1070,7 +1074,8 @@ int read_fasta(
                 // bzprintf(file_tfas, file_tfas_gz, "\n");
                 ksprintf(&str_line, "\n");
                 // write the line to the file
-                bgzf_write(file_tfas_gz, str_line.s, str_line.l);
+                if(!(args->gfffiles == 1 && printtfasta==0))
+                    bgzf_write(file_tfas_gz, str_line.s, str_line.l);
                 // reset the line
                 str_line.l = 0;
                 if (args->gfffiles == 1 || file_es != 0)
@@ -1145,7 +1150,7 @@ int read_fasta(
         if(args->outgroup==0) strcat(mask_name,"_NOoutg");
         if(args->outgroup==1) strcat(mask_name,"_outg");
         if(args->ploidy==1) strcat(mask_name,"_ploidy1");
-        if(args->ploidy==2) strcat(mask_name,"_ploidy2");
+        if(args->ploidy>=2) strcat(mask_name,"_ploidy2");
         strcat(mask_name,"_MASK.txt"); 
         log_info("Writing mask file %s", mask_name); // TODO :: writing is too slow need to be optimized
         if((file_mask = bzopen(mask_name,"wu",&file_mask_gz)) == 0) {
@@ -1164,7 +1169,7 @@ int read_fasta(
                 else bzprintf(file_mask,file_mask_gz,"1");/*normal*/
             }
             bzprintf(file_mask,file_mask_gz,"\n");
-            if(args->ploidy==2) {
+            if(args->ploidy>=2) {
                 for(xx=0;xx<n_site;xx++) {
                     w = *(DNA_matr+(((long int)n_site*(unsigned long)x)+(unsigned long)xx));
                     if(w >= 48+5) bzprintf(file_mask,file_mask_gz,"0");/*missing*/
@@ -1396,7 +1401,7 @@ int read_fasta(
             if(args->outgroup==0) strcat(file_weights_char,"_NOoutg");
             if(args->outgroup==1) strcat(file_weights_char,"_outg");
             if(args->ploidy==1) strcat(file_weights_char,"_ploidy1");
-            if(args->ploidy==2) strcat(file_weights_char,"_ploidy2");
+            if(args->ploidy>=2) strcat(file_weights_char,"_ploidy2");
             strcat(file_weights_char,"_WEIGHTS.gz");
             log_info("Writing weights file %s", file_weights_char);
             if( (file_weights = bzopen( file_weights_char, "wb", &file_weights_gz)) == 0) {
@@ -1542,7 +1547,7 @@ int var_char(
                     break;
                 case 't':
                     DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = '1';
-					if(ploidy==2) 
+					if(ploidy==4)
 						DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = 't';
 					/*fnut[0] += 1;*/
                     *count += 1;
@@ -1558,7 +1563,7 @@ int var_char(
                     break;
                 case 'u':
                     DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = '1';
-					if(ploidy==2) 
+					if(ploidy==4)
 						DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = 't';
 					/*fnut[0] += 1;*/
                     *count += 1;
@@ -1574,7 +1579,7 @@ int var_char(
                     break;
                 case 'c':
                     DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = '2';
-					if(ploidy==2) 
+					if(ploidy==4)
 						DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = 'c';
  					/*fnut[1] += 1;*/
                    *count += 1;
@@ -1591,7 +1596,7 @@ int var_char(
                     break;
                 case 'g':
                     DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = '3';
-					if(ploidy==2) 
+					if(ploidy==4)
 						DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = 'g';
  					/*fnut[2] += 1;*/
 					*count += 1;
@@ -1608,7 +1613,7 @@ int var_char(
                     break;
                 case 'a':
                     DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = '4';
-					if(ploidy==2) 
+					if(ploidy==4)
 						DNA_matr[0][(((long int)*n_site*(unsigned long)*n_sam)+(unsigned long)*n_sit)] = 'a';
 					/*fnut[3] += 1;*/
                     *count += 1;

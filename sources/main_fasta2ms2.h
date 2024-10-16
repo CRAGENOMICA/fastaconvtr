@@ -88,7 +88,8 @@ extern "C" {
     char *chr_name,
     unsigned long first,
     unsigned long nscaffolds,
-    fastaconvtr_args_t *args);
+    fastaconvtr_args_t *args,
+	int printtfasta);
 	
 int write_msfile(
 	FILE *file_output,

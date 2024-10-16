@@ -99,6 +99,7 @@ int main(int argc, const char * argv[]) {
 	int arg = 0;
 	char *f;
 	char msformat[10];
+    int printtfasta;
 	
 	int nsam;
 	long int lenR,lenT,lenS;
@@ -223,6 +224,7 @@ int main(int argc, const char * argv[]) {
 	
 
 	/*defaults*/
+    printtfasta = 1;
 	args.format[0] = 't'; /*default tfasta*/
 	args.ploidy = 1;
 	args.outgroup = 0;
@@ -336,17 +338,27 @@ int main(int argc, const char * argv[]) {
 						exit(1);
 					}
 					break;
-				case 'p' : /* p Ploidy, 1: haploid, 2: diploid */
-					arg++;
-					args.ploidy = (int)atoi(argv[arg]);
-					if(args.ploidy != 1 && args.ploidy != 2) {
-						// printf("\n Error in -p argument: only the values 1 or 2 are allowed.");
-						log_error("Error in -p argument: only the values 1 or 2 are allowed.");
+                case 'p' : /* p Ploidy, 1: haploid, 2: diploid 4: diploid. lowercase is half N*/
+                    arg++;
+                    args.ploidy = (int)atoi(argv[arg]);
+                    if(args.ploidy != 1 && args.ploidy != 2 && args.ploidy != 4) {
+                        // printf("\n Error in -p argument: only the values 1 or 2 or 4 (if Ns are counted as lowercase a=AN, c=CN, g=GN, t=TN) are allowed.");
+                        log_error("Error in -p argument: only the values 1 or 2 or 4 (if Ns are counted as lowercase a=AN, c=CN, g=GN, t=TN) are allowed.");
 						usage();
-						exit(1);
-					}
-					break;
-				case 'g': /* g GFF file name, AND more words 
+                        exit(1);
+                    }
+                    break;
+                case 'T' : /* print DNA sequence*/
+                    arg++;
+                    printtfasta = (int)atoi(argv[arg]);
+                    if(printtfasta != 0 && printtfasta != 1) {
+                        // printf("\n Error in -T argument: only the values 0 or 1 are allowed.");
+						
+                        usage();
+                        exit(1);
+                    }
+                    break;
+				case 'g': /* g GFF file name, AND more words
 						   2nd : synonymous, nonsynonymous, silent or whatever
 						   3rd : selected genetic code name or "Other"
 						   next 64th's : in case of 'Other', provide 64 IUPAC letters of each codon. 
@@ -1415,7 +1427,7 @@ void usage(void)
     printf("     Inputing fasta format:\n");
     printf("      -p [if fasta input,\n");
     printf("             haplotype: 1 (single sequence)\n");
-    printf("             genotype:  2 (two diploid mixed sequences in IUPAC format. WARNING! lowercase will be considered as one haplotype missing!). DEFAULT: 1\n");
+    printf("             genotype:  2 or 4 (two diploid mixed sequences in IUPAC format. If p=4 lowercase will be considered as one haplotype missing!). DEFAULT: 1\n");
     printf("     Annotation file and weight options:\n");
     printf("      -g [GFF_file]\n");
     printf("         [add also: coding,noncoding,synonymous,nonsynonymous,silent, others (whatever annotated)]\n");
@@ -1423,6 +1435,7 @@ void usage(void)
     printf("         [if 'Other', introduce the single letter code for the 64 triplets in the order UUU UUC UUA UUG ... etc.]\n");
     printf("      -c [in case use coding regions, criteria to consider transcripts (max/min/first/long)]. DEFAULT: long\n");
     printf("      -E [instead -g & -c, input file with weights for positions: include three columns with a header, first the physical positions (1...end), second the weight for positions and third a boolean weight for the variant (eg. syn variant but nsyn position)]\n");
+    printf("      -T [in case define -g and -c and output is TFasta, option to print (1) or not (0) the DNA sequence]. DEFAULT: 1 (print)\n");
     /*printf("      -r [rewrite the fasta file for selected region (not valid for silent/syn/nsyn) (1/0)]\n");*/
     /*printf("      -t [rewrite the fasta transposed file including the weight of each position and variant, if available) (1/0)]\n");*//*new!*/
     /*printf("\     -e [input file with effect sizes for variants: include two columns with a header, first the physical positions and second the weight]\n");*/
