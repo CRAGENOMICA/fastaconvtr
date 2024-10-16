@@ -98,4 +98,4 @@ install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 
 install(FILES README.md DESTINATION .)
 include(CPack)
-include(CPack)
+
