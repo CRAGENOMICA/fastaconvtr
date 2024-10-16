@@ -19,7 +19,7 @@
             // "args": ["-F", "fasta", "-f", "fasta","-i", "./Examples/100Kchr10.fa",  "-o", "./test_output.fa.qz",    "-n", "./Examples/chr10.txt"],
 
             // ../bin/fastaconvtr -F fasta -f tfasta  -i ./100Kchr10.fa -o ./100Kchr10.tfa.gz -n ./chr10.txt
-            // "args": ["-F", "fasta", "-f", "tfasta","-i", "./100Kchr10.fa",  "-o", "../debug_test/100Kchr10.tfa.gz",    "-n", "./chr10.txt"],
+            "args": ["-F", "fasta", "-f", "tfasta","-i", "./100Kchr10.fa",  "-o", "../debug_test/100Kchr10.tfa.gz",    "-n", "./chr10.txt" , "-T" , "0"],
 
 
           
@@ -192,7 +192,7 @@
             // "args" : ["-F", "fasta", "-f", "fasta", "-i", "./100Kchr10.fa", "-o", "./100Kchr10_fa2fa_04.fa", "-W", "./coord_100Kb.txt", "-n", "./chr10.txt"],
 
             // ../bin/fastaconvtr -F tfasta -f fasta  -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2fa_01.fa -n ./chr10.txt
-            "args" : ["-F", "tfasta", "-f", "fasta", "-i", "./100Kchr10.tfa.gz", "-o", "./100Kchr10_tfa2fa_01.fa", "-n", "./chr10.txt"],
+            // "args" : ["-F", "tfasta", "-f", "fasta", "-i", "./100Kchr10.tfa.gz", "-o", "./100Kchr10_tfa2fa_01.fa", "-n", "./chr10.txt"],
 
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/Examples",

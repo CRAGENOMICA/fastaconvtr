@@ -78,6 +78,7 @@ extern "C" {
 		int npops ;
 		/* Number of samples for each population, each element a population */
 		int *	vint_perpop_nsam ;
+		int printtfasta;
 		int argc;
 	} fastaconvtr_args_t;
 

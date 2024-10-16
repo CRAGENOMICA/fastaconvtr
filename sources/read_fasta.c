@@ -87,8 +87,7 @@ int read_fasta(
     char *chr_name,
     unsigned long first,
     unsigned long nscaffolds,
-    fastaconvtr_args_t *args,
-    int printtfasta)
+    fastaconvtr_args_t *args)
 {	
 	/*
 	 file_input: fasta file, tfasta gzip or not
@@ -882,7 +881,7 @@ int read_fasta(
             /*printf("\nWriting tfasta file...");*/
             fflush(stdout);
             // fzprintf(file_logerr,file_logerr_gz,"\nWriting tfasta file...");
-            if(!(args->gfffiles == 1 && printtfasta==0))
+            if(!(args->gfffiles == 1 && args->printtfasta==0))
                 log_info("Writing tfasta file...");
             /*
             memset(file_fas_char, 0, MSP_MAX_FILENAME);
@@ -901,34 +900,35 @@ int read_fasta(
             }
             else {
             */
-           if(!(args->gfffiles == 1 && printtfasta==0)) {
-            // output tfasta file must be compressed in gz format to be able to index it
-            // args->file_out filename must be validated before
-            file_tfas = file_output;
-            file_tfas_gz = file_output_gz;
-
-            if (first == 0)
+            if (!(args->gfffiles == 1 && args->printtfasta == 0))
             {
-                // bgzf_write
-                // Write the TFAv2.0 header to the output file
-                // char *v2_header = "##fileformat=TFAv2.0\n";   
-                // bzprintf(file_tfas,file_tfas_gz, v2_header);
-                /*fzprintf(file_tfas,file_tfas_gz,"#PLOIDY: ");
-                for(x=0;x<n_samp;x++) {
-                    fzprintf(file_tfas,file_tfas_gz,"%d ",ploidy);
-                }
-                fzprintf(file_tfas,file_tfas_gz,"\n");*/
-                //fzprintf(file_tfas, file_tfas_gz, "#NAMES: ");
-                bzprintf(file_tfas,file_tfas_gz, "#NAMES: ");
-                for (x = 0; x < n_samp; x++)
+                // output tfasta file must be compressed in gz format to be able to index it
+                // args->file_out filename must be validated before
+                file_tfas = file_output;
+                file_tfas_gz = file_output_gz;
+
+                if (first == 0)
                 {
-                    bzprintf(file_tfas, file_tfas_gz, ">%s ", names2[x]);
+                    // bgzf_write
+                    // Write the TFAv2.0 header to the output file
+                    // char *v2_header = "##fileformat=TFAv2.0\n";
+                    // bzprintf(file_tfas,file_tfas_gz, v2_header);
+                    /*fzprintf(file_tfas,file_tfas_gz,"#PLOIDY: ");
+                    for(x=0;x<n_samp;x++) {
+                        fzprintf(file_tfas,file_tfas_gz,"%d ",ploidy);
+                    }
+                    fzprintf(file_tfas,file_tfas_gz,"\n");*/
+                    // fzprintf(file_tfas, file_tfas_gz, "#NAMES: ");
+                    bzprintf(file_tfas, file_tfas_gz, "#NAMES: ");
+                    for (x = 0; x < n_samp; x++)
+                    {
+                        bzprintf(file_tfas, file_tfas_gz, ">%s ", names2[x]);
+                    }
+                    bzprintf(file_tfas, file_tfas_gz, "\n");
+                    /*if(gfffiles == 0 && file_es == 0) */ bzprintf(file_tfas, file_tfas_gz, "#CHR\tPOSITION\tGENOTYPES");
+                    bzprintf(file_tfas, file_tfas_gz, "\n");
                 }
-                bzprintf(file_tfas, file_tfas_gz, "\n");
-                /*if(gfffiles == 0 && file_es == 0) */ bzprintf(file_tfas, file_tfas_gz, "#CHR\tPOSITION\tGENOTYPES");
-                bzprintf(file_tfas, file_tfas_gz, "\n");
             }
-           }
             if (args->gfffiles == 1 || file_es != 0)
             {
                 memset(file_weights_char, 0, MSP_MAX_FILENAME);
@@ -1074,7 +1074,7 @@ int read_fasta(
                 // bzprintf(file_tfas, file_tfas_gz, "\n");
                 ksprintf(&str_line, "\n");
                 // write the line to the file
-                if(!(args->gfffiles == 1 && printtfasta==0))
+                if(!(args->gfffiles == 1 && args->printtfasta==0))
                     bgzf_write(file_tfas_gz, str_line.s, str_line.l);
                 // reset the line
                 str_line.l = 0;

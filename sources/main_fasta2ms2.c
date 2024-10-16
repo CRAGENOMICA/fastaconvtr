@@ -99,7 +99,7 @@ int main(int argc, const char * argv[]) {
 	int arg = 0;
 	char *f;
 	char msformat[10];
-    int printtfasta;
+    // int printtfasta;
 	
 	int nsam;
 	long int lenR,lenT,lenS;
@@ -224,7 +224,7 @@ int main(int argc, const char * argv[]) {
 	
 
 	/*defaults*/
-    printtfasta = 1;
+    args.printtfasta = 1;
 	args.format[0] = 't'; /*default tfasta*/
 	args.ploidy = 1;
 	args.outgroup = 0;
@@ -350,10 +350,10 @@ int main(int argc, const char * argv[]) {
                     break;
                 case 'T' : /* print DNA sequence*/
                     arg++;
-                    printtfasta = (int)atoi(argv[arg]);
-                    if(printtfasta != 0 && printtfasta != 1) {
+                    args.printtfasta = (int)atoi(argv[arg]);
+                    if(args.printtfasta != 0 && args.printtfasta != 1) {
                         // printf("\n Error in -T argument: only the values 0 or 1 are allowed.");
-						
+						log_error("Error in -T argument: only the values 0 or 1 are allowed.");
                         usage();
                         exit(1);
                     }
@@ -1317,27 +1317,26 @@ int main(int argc, const char * argv[]) {
 	// Close the BGZF stream and the original file stream
     bgzf_close(file_output_gz);
 	// create an index file for the output file
-	if (args.tfasta) {
-		log_info("Creating index file for the output file %s", args.file_out);
-		BGZF *output_fp = bgzf_open(args.file_out, "r");
-		tbx_t *tbx;
-		
+	if (args.tfasta)
+	{
+		if (!(args.gfffiles == 1 && args.printtfasta == 0))
+		{
+			log_info("Creating index file for the output file %s", args.file_out);
+			BGZF *output_fp = bgzf_open(args.file_out, "r");
+			tbx_t *tbx;
 
-		tbx = tbx_index(output_fp, 0, &tfasta_conf);
-		bgzf_close(output_fp);
-		if (!tbx)
-			 {
+			tbx = tbx_index(output_fp, 0, &tfasta_conf);
+			bgzf_close(output_fp);
+			if (!tbx)
+			{
 				log_error("Failed to create index file for the output file %s", args.file_out);
 				exit(1);
-
-			 }
-		int ret = hts_idx_save_as(tbx->idx, args.file_out, NULL, HTS_FMT_TBI);
-		tbx_destroy(tbx);
-
+			}
+			int ret = hts_idx_save_as(tbx->idx, args.file_out, NULL, HTS_FMT_TBI);
+			tbx_destroy(tbx);
+		}
 	}
-    fclose(file_output);
-
-
+	fclose(file_output);
 
 	// fzclose(file_input, &file_input_gz);
     
