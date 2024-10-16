@@ -112,6 +112,8 @@ jobs:
     ## make release
     - name: Create release tarball
       run: |
+        ls -al
+        rm -rf ${{ steps.strings.outputs.build-output-dir }}/Examples
         cd ${{ steps.strings.outputs.build-output-dir }}
         cpack -G TGZ
     - name: Upload release tarball
