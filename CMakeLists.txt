@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5.0)
-project(fastaconvtr VERSION 0.1.0 LANGUAGES C)
+project(fastaconvtr VERSION 1.0.0 LANGUAGES C)
 
 #include(CTest)
 #enable_testing()
@@ -44,6 +44,7 @@ file (GLOB_RECURSE SOURCE_FILE CONFIGURE_DEPENDS  "sources/*.c*")
 
 # log library
 add_library(logging "lib/log.c")
+add_library(tfasta "lib/tfasta.c" "lib/files_util.c")
 
 
 # Assuming HTSlib was installed in /usr/local
@@ -78,12 +79,14 @@ endif()
 
 include_directories(${HTSLIB_INCLUDE_DIR} )
 
+target_link_libraries(tfasta  ${HTSLIB_LIBRARY}   logging )
+
 
 add_executable(${PROJECT_NAME} ${SOURCE_FILE})
 target_include_directories(${PROJECT_NAME} PRIVATE "lib")
 # target_link_libraries(${PROJECT_NAME} -lz)
 # target_link_libraries(${PROJECT_NAME} -lm)
-target_link_libraries(${PROJECT_NAME}  ${HTSLIB_LIBRARY}  -lm  -lz logging )
+target_link_libraries(${PROJECT_NAME}  ${HTSLIB_LIBRARY}  -lm  -lz logging tfasta)
 
 
 

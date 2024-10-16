@@ -8,13 +8,21 @@
 
 #include "read_fasta.h"
 #include "log.c"
+#include "tfasta.h"
 int file_es = 0;
+
+
+
+
+
+
 // require a better refactor
-int read_fasta( 
-    FILE *file_input, 
-    SGZip *file_input_gz, 
-    FILE *file_output, 
-    SGZip *file_output_gz,
+int read_fasta(
+    tfasta_file *tfasta, // only for reading input tfasta file format
+    // FILE *file_input, 
+    // SGZip *file_input_gz, 
+    FILE *file_output,  // for reading fasta file input format 
+    BGZF *file_output_gz,
     // FILE *file_logerr, 
     // SGZip *file_logerr_gz, 
     // char *input_format,
@@ -70,7 +78,7 @@ int read_fasta(
 	float *wP,
     float *wPV, 
     FILE *file_ws, 
-    SGZip *file_ws_gz,
+    BGZF *file_ws_gz,
     long int *wgenes, 
     long int nwindows, 
     // int include_unknown,
@@ -129,15 +137,16 @@ int read_fasta(
 	*/
 		
     FILE  *file_fas = 0;
-    SGZip file_fas_gz;
+    BGZF *file_fas_gz;
     FILE  *file_tfas = 0;
-    SGZip *file_tfas_gz = 0;
+    BGZF *file_tfas_gz = 0;
 
     char file_fas_char[MSP_MAX_FILENAME];
     char file_fas_char2[MSP_MAX_FILENAME];
     static FILE *file_weights	=	0;
-    static SGZip file_weights_gz;
-    static struct SGZIndex file_weights_gz_index;          /* This is the index for the output gz file. */
+    static BGZF *file_weights_gz;
+    const char *wv2_header = "##fileformat=wTFAv2.0\n";
+    //static struct SGZIndex file_weights_gz_index;          /* This is the index for the output gz file. */
 
     char file_weights_char[MSP_MAX_FILENAME];
 
@@ -160,7 +169,7 @@ int read_fasta(
 	int maxsam;
 	int n_excl = 0;
 	int n_samp;
-	long int n_site;
+	long long int n_site;
     long int max_nsite;
 	
 	int x;
@@ -182,7 +191,7 @@ int read_fasta(
     long int yy;
   	
     FILE *file_mask;
-    SGZip file_mask_gz;
+    BGZF *file_mask_gz;
 
     char mask_name[MSP_MAX_FILENAME];
     char w;
@@ -231,35 +240,85 @@ int read_fasta(
             return(0);
         }
     }
-        
-    if(args->input_format[0] == 'f') {
+
+    if (args->input_format[0] == 'f') // reading fasta file into memory
+    {
+        FILE *file_input = 0;
+        BGZF *file_input_gz;
+        char *f_buffer;
+        /* Definition of a File Stream Buffer, for buffered IO */
+        if( (f_buffer = (char *)malloc((unsigned long)BUFSIZ*10)) == NULL ) {
+            //fzprintf(file_logerr,&file_logerr_gz,"\nError: memory not reallocated. get_obsdata.4 \n");
+            log_error("Error: memory not reallocated for buffered IO f");
+            exit(1);
+        }
+        // localize the reading here
+        /* Opening files */
+        if( args->file_in[0] == '\0' ) {
+            file_input = stdin;
+        }
+        else {
+            if( (file_input = bzopen(  args->file_in, "r", &file_input_gz)) == 0) {
+                // fzprintf(file_logerr,&file_logerr_gz,"\n It is not possible to open the input file %s\n", file_in);
+                log_error("It is not possible to open the input file %s\n",  args->file_in);
+                exit(1);
+            }
+        }
+        setbuf(file_input,f_buffer);
+
+
+
         /* ok for diploid or haploid */
-        c = fzgetc(file_input, file_input_gz);
-        while (c != 0 && c != -1/* && n_sam < nsamuser_eff*/) {
-            while(c == 32 || c == 9 || c == 13 || c == 10 || c == '*' || c=='#') c = fzgetc(file_input, file_input_gz);
+        c = bzgetc(file_input, file_input_gz);
+        
+        while (c != 0 && c != -1 /* && n_sam < nsamuser_eff*/)
+        {
+            while (c == 32 || c == 9 || c == 13 || c == 10 || c == '*' || c == '#')
+                c = bzgetc(file_input, file_input_gz);
             n_sit = 0;
-            if(!(var_char(file_input,file_input_gz,
-                        // file_logerr,file_logerr_gz,
-                        &count,&c,&n_sam,&n_sit,&nseq,&maxsam,&names,&DNA_matr,&n_site,
-                        excludelines,name_excluded,&n_excl,includelines,name_ingroups,name_outgroup,outgroup,args->ploidy/*,fnut*//*,CpG*/)))
+            if (!(var_char(
+                file_input, 
+                file_input_gz,
+                // file_logerr,file_logerr_gz,
+                &count, &c, &n_sam, &n_sit, & nseq, &maxsam, & names, &DNA_matr, &n_site,
+                excludelines, name_excluded, &n_excl, includelines, name_ingroups, name_outgroup, outgroup, args->ploidy /*,fnut*/ /*,CpG*/)))
                 return 0;
-            if(n_sam == 32167) {
-                fzprintf(file_output,file_output_gz,"Only 32167 samples per loci are allowed.\n");
+            if (n_sam == 32167)
+            {
+                // fzprintf(file_output, file_output_gz, "Only 32167 samples per loci are allowed.\n");
+                log_error("Only 32167 samples per loci are allowed.");
                 break;
             }
         }
         n_samp = n_sam;
+
+        free(f_buffer);
+        // once we are done close the file
+        if( args->file_in[0] != '\0' ) {
+            // fzclose(file_input, &file_input_gz);
+            // close BGZF file_input_gz
+            bgzf_close(file_input_gz);
+        }
+
     }
     if(args->input_format[0] == 't') {
+        
         /*READ TFASTA FILE*/
-        if(function_read_tfasta(file_input,file_input_gz,
-                // file_logerr,file_logerr_gz,
-                init_site,end_site,&n_sam,&n_site,&names,&DNA_matr,chr_name,first)==0) {
+        if(
+            // function_read_tfasta(file_input,file_input_gz,
+            //     // file_logerr,file_logerr_gz,
+            //     init_site,end_site,&n_sam,&n_site,&names,&DNA_matr,chr_name,first)==0
+            read_tfasta_DNA_lite(tfasta, chr_name, init_site, end_site, &n_sam, &n_site, &DNA_matr) == 0
+            
+        ) 
+        {
             // fzprintf(file_logerr,file_logerr_gz,"Unable reading tfasta file\n");
             log_error("Unable reading tfasta file");
             exit(1);
         }
         n_samp = n_sam;
+        names = tfasta->names;
+        log_info("Done reading tfasta file, number of samples: %d", n_samp);
     }
     
 	/*n_site: number of total sites in the sequence*/
@@ -271,7 +330,7 @@ int read_fasta(
 	// if(*int_total_nsam_order == 0) {
     if( args->int_total_nsam_order == 0) {    
 		args->int_total_nsam_order = nsamtot = n_samp;
-		if((args->sort_nsam[0] = (int *) calloc( (unsigned long)n_samp, sizeof(int) )) == 0) {
+		if((args->sort_nsam = (int *) calloc( (unsigned long)n_samp, sizeof(int) )) == 0) {
 			//fzprintf(file_logerr,file_logerr_gz,"Error allocating memory");
             log_error("Error allocating memory for sort_nsam");
 			exit(1);
@@ -593,10 +652,10 @@ int read_fasta(
                 n_site,
                 DNA_matr2,
                 matrix_segrpos,
-				file_output/*,mainargc*/,
-                file_output_gz,
-                NULL, // file_logerr,
-                NULL, //file_logerr_gz,
+				// file_output/*,mainargc*/,
+                // file_output_gz,
+                // NULL, // file_logerr,
+                // NULL, //file_logerr_gz,
                 args->include_unknown,
                 args->criteria_transcript,
                 output,
@@ -654,43 +713,50 @@ int read_fasta(
                         strcat(file_fas_char,chr_name);
                         snprintf(file_fas_char2,MSP_MAX_FILENAME, "_win_%ld.fas", yy);
                         strcat(file_fas_char,file_fas_char2);
-                        if( (file_fas = fzopen( file_fas_char, "w", &file_fas_gz)) == 0) {
-                            fzprintf(file_output,file_output_gz,"\n It is not possible to write the fasta file %s.", file_fas_char);
+
+                        if( (file_fas = bzopen( file_fas_char, "wu", &file_fas_gz)) == 0) {
+                            // fzprintf(file_output,file_output_gz,"\n It is not possible to write the fasta file %s.", file_fas_char);
+                            log_error("It is not possible to write the fasta file %s.", file_fas_char);
                         }
                         else {
+                            log_info("Writing fasta file %s", file_fas_char);
                             for(x=0;x<n_samp;x++) {
-                                fzprintf(file_fas,&file_fas_gz,">%s\n",names2[x]); /*one fasta per window*/
+                                bzprintf(file_fas,file_fas_gz,">%s\n",names2[x]); /*one fasta per window*/
                                 for(xx=wgenes[2*yy+0]-1;xx<=wgenes[2*yy+1]-1;xx++) {
                                     if(DNA_matr2[(long int)n_site*(unsigned long)x+xx] == '1') {
-                                        fzprintf(file_fas,&file_fas_gz,"T");
+                                        bzprintf(file_fas,file_fas_gz,"T");
                                     }
                                     if(DNA_matr2[(long int)n_site*(unsigned long)x+xx] == '2') {
-                                        fzprintf(file_fas,&file_fas_gz,"C");
+                                        bzprintf(file_fas,file_fas_gz,"C");
                                     }
                                     if(DNA_matr2[(long int)n_site*(unsigned long)x+xx] == '3') {
-                                        fzprintf(file_fas,&file_fas_gz,"G");
+                                        bzprintf(file_fas,file_fas_gz,"G");
                                     }
                                     if(DNA_matr2[(long int)n_site*(unsigned long)x+xx] == '4') {
-                                        fzprintf(file_fas,&file_fas_gz,"A");
+                                        bzprintf(file_fas,file_fas_gz,"A");
                                     }
                                     if(DNA_matr2[(long int)n_site*(unsigned long)x+xx] == '5') {
-                                        fzprintf(file_fas,&file_fas_gz,"N");
+                                        bzprintf(file_fas,file_fas_gz,"N");
                                     }
                                     if(DNA_matr2[(long int)n_site*(unsigned long)x+xx] == '6') {
-                                        fzprintf(file_fas,&file_fas_gz,"-");
+                                        bzprintf(file_fas,file_fas_gz,"-");
                                     }
                                 }
                             }
-                            fzprintf(file_fas,&file_fas_gz,"\n");
+                            bzprintf(file_fas,file_fas_gz,"\n");
+
+                            bgzf_close(file_fas_gz);
                         }
                         //fzprintf(file_fas,&file_fas_gz,"\n");
                     }
                     /*fzclose(file_fas,&file_fas_gz);*/
+                    // close file_fas_gz
+                   
                 }
                 else {
                     // one way to do it
                     file_fas = file_output;
-                    file_fas_gz = *file_output_gz;
+                    file_fas_gz = file_output_gz;
                     memset(file_fas_char, 0, MSP_MAX_FILENAME);
                     strcpy(file_fas_char, args->file_out);
                     //strcat(file_fas_char,"_");
@@ -703,28 +769,28 @@ int read_fasta(
                     // else 
                     {
                         for(x=0;x<n_samp;x++) {
-                            fzprintf(file_fas,&file_fas_gz,">%s\n",names2[x]); /*one fasta per chr_name*/
+                            bzprintf(file_fas,file_fas_gz,">%s\n",names2[x]); /*one fasta per chr_name*/
                             for(xx=0;xx<n_site;xx++) {
                                 if(DNA_matr2[(long int)n_site*(unsigned long)x+xx] == '1') {
-                                    fzprintf(file_fas,&file_fas_gz,"T");
+                                    bzprintf(file_fas,file_fas_gz,"T");
                                 }
                                 if(DNA_matr2[(long int)n_site*(unsigned long)x+xx] == '2') {
-                                    fzprintf(file_fas,&file_fas_gz,"C");
+                                    bzprintf(file_fas,file_fas_gz,"C");
                                 }
                                 if(DNA_matr2[(long int)n_site*(unsigned long)x+xx] == '3') {
-                                    fzprintf(file_fas,&file_fas_gz,"G");
+                                    bzprintf(file_fas,file_fas_gz,"G");
                                 }
                                 if(DNA_matr2[(long int)n_site*(unsigned long)x+xx] == '4') {
-                                    fzprintf(file_fas,&file_fas_gz,"A");
+                                    bzprintf(file_fas,file_fas_gz,"A");
                                 }
                                 if(DNA_matr2[(long int)n_site*(unsigned long)x+xx] == '5') {
-                                    fzprintf(file_fas,&file_fas_gz,"N");
+                                    bzprintf(file_fas,file_fas_gz,"N");
                                 }
                                 if(DNA_matr2[(long int)n_site*(unsigned long)x+xx] == '6') {
-                                    fzprintf(file_fas,&file_fas_gz,"-");
+                                    bzprintf(file_fas,file_fas_gz,"-");
                                 }
                             }
-                            fzprintf(file_fas,&file_fas_gz,"\n");
+                            bzprintf(file_fas,file_fas_gz,"\n");
                         }
                        
                     }
@@ -757,192 +823,280 @@ int read_fasta(
                         if(args->ploidy==1) strcat(file_weights_char,"_ploidy1");
                         if(args->ploidy==2) strcat(file_weights_char,"_ploidy2");
                         strcat(file_weights_char,"_WEIGHTS.gz");
-                        if( (file_weights = fzopen( file_weights_char, "w", &file_weights_gz)) == 0) {
-                            fzprintf(file_output,file_output_gz,"\n It is not possible to write the weigths file %s.", file_weights_char);
+                        log_info("Writing weights file %s", file_weights_char);
+                        if( (file_weights = bzopen( file_weights_char, "wb", &file_weights_gz)) == 0) {
+                            // fzprintf(file_output,file_output_gz,"\n It is not possible to write the weigths file %s.", file_weights_char);
+                            log_error("It is not possible to write the weigths file %s.", file_weights_char);
                             exit(1);
                         }
-                        file_weights_gz.index = &file_weights_gz_index;
-
-                        if(args->gfffiles == 0 && (file_es != 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTVARX");
-                        if(args->gfffiles == 1 && (file_es == 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTPOS\tWEIGHTVAR");
-                        if(args->gfffiles == 1 && (file_es != 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTPOS\tWEIGHTVAR\tWEIGHTVARX");
-                        fzprintf(file_weights,&file_weights_gz,"\n");
+                        
+                        // TODO :: handle create index
+                        // file_weights_gz.index = &file_weights_gz_index;
+                        // write the header 
+                        bzprintf(file_weights,file_weights_gz,wv2_header);
+                        if(args->gfffiles == 0 && (file_es != 0)) bzprintf(file_weights,file_weights_gz,"#CHR\tPOSITION\tWEIGHTVARX");
+                        if(args->gfffiles == 1 && (file_es == 0)) bzprintf(file_weights,file_weights_gz,"#CHR\tPOSITION\tWEIGHTPOS\tWEIGHTVAR");
+                        if(args->gfffiles == 1 && (file_es != 0)) bzprintf(file_weights,file_weights_gz,"#CHR\tPOSITION\tWEIGHTPOS\tWEIGHTVAR\tWEIGHTVARX");
+                        bzprintf(file_weights,file_weights_gz,"\n");
                         
                         for(xx=0;xx<n_site;xx++) {
-                            if(args->gfffiles == 1 || file_es != 0) fzprintf(file_weights,&file_weights_gz,"%s:%ld\t",chr_name,xx+1);
+                            if(args->gfffiles == 1 || file_es != 0) bzprintf(file_weights,file_weights_gz,"%s\t%ld\t",chr_name,xx+1);
                             if(args->gfffiles == 1) {
                                 /*fzprintf(file_weights,&file_weights_gz,"\t");*/
-                                fzprintf(file_weights,&file_weights_gz, "%.3f\t",matrix_sizepos[0][xx]);
+                                bzprintf(file_weights,file_weights_gz, "%.3f\t",matrix_sizepos[0][xx]);
                                 /*if(matrix_sizepos[0][xx] == 0.0) fzprintf(file_weights,&file_weights_gz,"%.3f\t",(double)0);
-                                else */fzprintf(file_weights,&file_weights_gz,"%.3f\t",matrix_segrpos[xx]);
+                                else */bzprintf(file_weights,file_weights_gz,"%.3f\t",matrix_segrpos[xx]);
                             }
                             dd=0;
                             if(file_es != 0) {
-                                fzprintf(file_weights,&file_weights_gz,"\t");
+                                bzprintf(file_weights,file_weights_gz,"\t");
                                 if(Pp[dd] == xx+1) {
-                                    fzprintf(file_weights,&file_weights_gz,"%.3e\t",wV[dd]);
+                                    bzprintf(file_weights,file_weights_gz,"%.3e\t",wV[dd]);
                                     dd++;
                                 }
                                 else
-                                    fzprintf(file_weights,&file_weights_gz,"NA\t");
+                                    bzprintf(file_weights,file_weights_gz,"NA\t");
                             }
-                            if(args->gfffiles == 1 || file_es != 0) fzprintf(file_weights,&file_weights_gz,"\n");
+                            if(args->gfffiles == 1 || file_es != 0) bzprintf(file_weights,file_weights_gz,"\n");
                         }
-                        if(args->gfffiles == 1 || file_es != 0) fzclose(file_weights,&file_weights_gz);
+                        if(args->gfffiles == 1 || file_es != 0) {
+                            // fzclose(file_weights,file_weights_gz);
+                            bgzf_close(file_weights_gz); // TODO :: handle create index
+                            
+                            // create an index for the tfasta weights file
+                            log_info("Creating index for the weights file %s", file_weights_char);
+                            create_index(file_weights_char,4,0,tfasta_conf);
+                        }
                     }
                }
             /*}*/
 		}
 
 		/*PRINT TFASTA: IT SHOULD NOT BE HERE THIS "FUNCTION"!!*/
-		/*PRINT TFASTA: IT SHOULD NOT BE HERE THIS "FUNCTION"!!*/
-		/*PRINT TFASTA: IT SHOULD NOT BE HERE THIS "FUNCTION"!!*/
-		/*PRINT TFASTA: IT SHOULD NOT BE HERE THIS "FUNCTION"!!*/
-		/*PRINT TFASTA: IT SHOULD NOT BE HERE THIS "FUNCTION"!!*/
-		/*PRINT TFASTA: IT SHOULD NOT BE HERE THIS "FUNCTION"!!*/
-		/*PRINT TFASTA: IT SHOULD NOT BE HERE THIS "FUNCTION"!!*/
-		/*PRINT TFASTA: IT SHOULD NOT BE HERE THIS "FUNCTION"!!*/
 
-		if(args->tfasta == 1) {
+
+        if (args->tfasta == 1)
+        {
             /*printf("\nWriting tfasta file...");*/
             fflush(stdout);
             // fzprintf(file_logerr,file_logerr_gz,"\nWriting tfasta file...");
             log_info("Writing tfasta file...");
             /*
-			memset(file_fas_char, 0, MSP_MAX_FILENAME);
-			strcpy(file_fas_char, file_in);
-			strcat(file_fas_char,"_");
-			strcat(file_fas_char,subset_positions);
-			strcat(file_fas_char,"_");
-			strcat(file_fas_char,criteria_transcript);
-			if(outgroup_presence==0) strcat(file_fas_char,"_outg0");
-			if(outgroup_presence==1) strcat(file_fas_char,"_outg1");
-			if(ploidy==1) strcat(file_fas_char,"_ploidy1");
-			if(ploidy==2) strcat(file_fas_char,"_ploidy2");
-			strcat(file_fas_char,".tfa");
-			if( (file_fas = fzopen( file_fas_char, "w", file_fas_gz)) == 0) {
-				fzprintf(file_output,file_output_gz,"\n It is not possible to write the tfasta file %s.", file_fas_char);
-			}
-			else {
-			*/
-                file_tfas = file_output;
-                file_tfas_gz = file_output_gz;
-
-                if(first == 0) {
-                    /*fzprintf(file_tfas,file_tfas_gz,"#PLOIDY: ");
-                    for(x=0;x<n_samp;x++) {
-                        fzprintf(file_tfas,file_tfas_gz,"%d ",ploidy);
-                    }
-                    fzprintf(file_tfas,file_tfas_gz,"\n");*/
-                    fzprintf(file_tfas,file_tfas_gz,"#NAMES: ");
-                    for(x=0;x<n_samp;x++) {
-                        fzprintf(file_tfas,file_tfas_gz,">%s ",names2[x]);
-                    }
-                    fzprintf(file_tfas,file_tfas_gz,"\n");
-                    /*if(gfffiles == 0 && file_es == 0) */fzprintf(file_tfas,file_tfas_gz,"#CHR:POSITION\tGENOTYPES");
-                    fzprintf(file_tfas,file_tfas_gz,"\n");
-                }
-                if(args->gfffiles == 1 || file_es != 0) {
-                    memset(file_weights_char, 0, MSP_MAX_FILENAME);
-                    if(args->file_out[0]=='\0') strcpy(file_weights_char, args->file_in);
-                    else strcpy(file_weights_char, args->file_out);
-                    //sprintf(file_weights_char,"%s_npops%d_nsam%d",file_weights_char,(npops>0?npops:1),nsamtot);
-                    char chtemp[MSP_MAX_FILENAME];
-                    sprintf(chtemp,"npops%d_nsam%d",(args->npops>0?args->npops:1),nsamtot);
-                    strcat(file_weights_char,"_");
-                    strcat(file_weights_char,chtemp);
-                    if(args->gfffiles == 1) {
-                        strcat(file_weights_char,"_");
-                        strcat(file_weights_char,args->subset_positions);
-                        strcat(file_weights_char,"_");
-                        strcat(file_weights_char,args->criteria_transcript);
-                    }
-                    if(file_ws != 0) {
-                        strcat(file_weights_char,"_IncludedWeightFile");
-                    }
-                    if(args->include_unknown) strcat(file_weights_char,"_IncludeMissingVariantsmhits");
-                    else strcat(file_weights_char,"_ExcludeMissingVariantsmhits");
-                    if(args->outgroup==0) strcat(file_weights_char,"_NOoutg");
-                    if(args->outgroup==1) strcat(file_weights_char,"_outg");
-                    if(args->ploidy==1) strcat(file_weights_char,"_ploidy1");
-                    if(args->ploidy==2) strcat(file_weights_char,"_ploidy2");
-                    strcat(file_weights_char,"_WEIGHTS.gz");
-                    if(first == 0) {
-                        if( (file_weights = fzopen( file_weights_char, "w", &file_weights_gz)) == 0) {
-                            fzprintf(file_output,file_output_gz,"\n It is not possible to write the weigths file %s.", file_weights_char);
-                            exit(1);
-                        }
-                        file_weights_gz.index = &file_weights_gz_index;
-                        if(args->gfffiles == 0 && (file_es != 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTVARX");
-                        if(args->gfffiles == 1 && (file_es == 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTPOS\tWEIGHTVAR");
-                        if(args->gfffiles == 1 && (file_es != 0)) fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTPOS\tWEIGHTVAR\tWEIGHTVARX");
-                        fzprintf(file_weights,&file_weights_gz,"\n");
-                    }
-                    /*
-                    else {
-                        if( (file_weights = fzopen( file_weights_char, "a", &file_weights_gz)) == 0) {
-                            fzprintf(file_output,file_output_gz,"\n It is not possible to write the weigths file %s.", file_weights_char);
-                            exit(1);
-                        }
-                    }
-                    */
-                }
-				dd = 0;
-
-				for(xx=0;xx<n_site;xx++) {
-                    fzprintf(file_tfas,file_tfas_gz,"%s:%ld\t",chr_name,xx+1);
-                    if(args->gfffiles == 1 || file_es != 0) fzprintf(file_weights,&file_weights_gz,"%s:%ld\t",chr_name,xx+1);
-					for(x=0;x<n_samp;x++) {
-						/*if(x != 0 && ploidy == 1) fzprintf(file_tfas,file_tfas_gz,",");*/
-						/*if(x != 0 && ploidy == 2 && x/2 == (float)x/2.0) fzprintf(file_tfas,file_tfas_gz,",");*/
-						switch (DNA_matr2[(long int)n_site*(unsigned long)x+xx]) {
-							case '1':
-								fzprintf(file_tfas,file_tfas_gz,"T");
-								break;
-							case '2':
-								fzprintf(file_tfas,file_tfas_gz,"C");
-								break;
-							case '3':
-								fzprintf(file_tfas,file_tfas_gz,"G");
-								break;
-							case '4':
-								fzprintf(file_tfas,file_tfas_gz,"A");
-								break;
-							case '5':
-								fzprintf(file_tfas,file_tfas_gz,"N");
-								break;
-							case '6':
-								fzprintf(file_tfas,file_tfas_gz,"-");
-								break;
-							default:
-								fzprintf(file_tfas,file_tfas_gz,"%c",DNA_matr2[(long int)n_site*(unsigned long)x+xx]);
-								break;
-						}
-					}
-					if(args->gfffiles == 1) {
-						/*fzprintf(file_weights,&file_weights_gz,"\t");*/
-						fzprintf(file_weights,&file_weights_gz,"%.3f\t",matrix_sizepos[0][xx]);
-						/*if(matrix_sizepos[0][xx] == 0.0) fzprintf(file_weights,&file_weights_gz,"%.3f\t",(double)0);
-						else */fzprintf(file_weights,&file_weights_gz,"%.3f\t",matrix_segrpos[xx]);
-					}
-					if(file_es != 0) {
-						fzprintf(file_weights,&file_weights_gz,"\t");
-						if(Pp[dd] == xx+1) {
-							fzprintf(file_weights,&file_weights_gz,"%.3e\t",wV[dd]);
-							dd++;
-						}
-						else 
-							fzprintf(file_weights,&file_weights_gz,"NA\t");
-					}
-                    fzprintf(file_tfas,file_tfas_gz,"\n");
-                    if(args->gfffiles == 1 || file_es != 0) fzprintf(file_weights,&file_weights_gz,"\n");
-				}
-			/*}
-			fzclose(file_tfas,file_tfas_gz);
+            memset(file_fas_char, 0, MSP_MAX_FILENAME);
+            strcpy(file_fas_char, file_in);
+            strcat(file_fas_char,"_");
+            strcat(file_fas_char,subset_positions);
+            strcat(file_fas_char,"_");
+            strcat(file_fas_char,criteria_transcript);
+            if(outgroup_presence==0) strcat(file_fas_char,"_outg0");
+            if(outgroup_presence==1) strcat(file_fas_char,"_outg1");
+            if(ploidy==1) strcat(file_fas_char,"_ploidy1");
+            if(ploidy==2) strcat(file_fas_char,"_ploidy2");
+            strcat(file_fas_char,".tfa");
+            if( (file_fas = fzopen( file_fas_char, "w", file_fas_gz)) == 0) {
+                fzprintf(file_output,file_output_gz,"\n It is not possible to write the tfasta file %s.", file_fas_char);
+            }
+            else {
             */
-            if((first == nscaffolds-1) && (args->gfffiles == 1 || file_es != 0))
-                fzclose(file_weights,&file_weights_gz);
-		}
+
+            // output tfasta file must be compressed in gz format to be able to index it
+            // args->file_out filename must be validated before
+            file_tfas = file_output;
+            file_tfas_gz = file_output_gz;
+
+            if (first == 0)
+            {
+                // bgzf_write
+                // Write the TFAv2.0 header to the output file
+                // char *v2_header = "##fileformat=TFAv2.0\n";   
+                // bzprintf(file_tfas,file_tfas_gz, v2_header);
+                /*fzprintf(file_tfas,file_tfas_gz,"#PLOIDY: ");
+                for(x=0;x<n_samp;x++) {
+                    fzprintf(file_tfas,file_tfas_gz,"%d ",ploidy);
+                }
+                fzprintf(file_tfas,file_tfas_gz,"\n");*/
+                //fzprintf(file_tfas, file_tfas_gz, "#NAMES: ");
+                bzprintf(file_tfas,file_tfas_gz, "#NAMES: ");
+                for (x = 0; x < n_samp; x++)
+                {
+                    bzprintf(file_tfas, file_tfas_gz, ">%s ", names2[x]);
+                }
+                bzprintf(file_tfas, file_tfas_gz, "\n");
+                /*if(gfffiles == 0 && file_es == 0) */ bzprintf(file_tfas, file_tfas_gz, "#CHR\tPOSITION\tGENOTYPES");
+                bzprintf(file_tfas, file_tfas_gz, "\n");
+            }
+            if (args->gfffiles == 1 || file_es != 0)
+            {
+                memset(file_weights_char, 0, MSP_MAX_FILENAME);
+                if (args->file_out[0] == '\0')
+                    strcpy(file_weights_char, args->file_in);
+                else
+                    strcpy(file_weights_char, args->file_out);
+                // sprintf(file_weights_char,"%s_npops%d_nsam%d",file_weights_char,(npops>0?npops:1),nsamtot);
+                char chtemp[MSP_MAX_FILENAME];
+                sprintf(chtemp, "npops%d_nsam%d", (args->npops > 0 ? args->npops : 1), nsamtot);
+                strcat(file_weights_char, "_");
+                strcat(file_weights_char, chtemp);
+                if (args->gfffiles == 1)
+                {
+                    strcat(file_weights_char, "_");
+                    strcat(file_weights_char, args->subset_positions);
+                    strcat(file_weights_char, "_");
+                    strcat(file_weights_char, args->criteria_transcript);
+                }
+                if (file_ws != 0)
+                {
+                    strcat(file_weights_char, "_IncludedWeightFile");
+                }
+                if (args->include_unknown)
+                    strcat(file_weights_char, "_IncludeMissingVariantsmhits");
+                else
+                    strcat(file_weights_char, "_ExcludeMissingVariantsmhits");
+                if (args->outgroup == 0)
+                    strcat(file_weights_char, "_NOoutg");
+                if (args->outgroup == 1)
+                    strcat(file_weights_char, "_outg");
+                if (args->ploidy == 1)
+                    strcat(file_weights_char, "_ploidy1");
+                if (args->ploidy == 2)
+                    strcat(file_weights_char, "_ploidy2");
+                strcat(file_weights_char, "_WEIGHTS.gz");
+                if (first == 0)
+                {
+                    log_info("Writing weights file %s", file_weights_char);
+                    if ((file_weights = bzopen(file_weights_char, "wb", &file_weights_gz)) == 0)
+                    {
+                        // fzprintf(file_output,file_output_gz,"\n It is not possible to write the weigths file %s.", file_weights_char);
+                        log_error("It is not possible to write the weigths file %s.", file_weights_char);
+                        exit(1);
+                    }
+                    // file_weights_gz.index = &file_weights_gz_index;
+                    // write the header
+                    bzprintf(file_weights,file_weights_gz,wv2_header);
+                    if (args->gfffiles == 0 && (file_es != 0))
+                        bzprintf(file_weights, file_weights_gz, "#CHR\tPOSITION\tWEIGHTVARX");
+                    if (args->gfffiles == 1 && (file_es == 0))
+                        bzprintf(file_weights, file_weights_gz, "#CHR\tPOSITION\tWEIGHTPOS\tWEIGHTVAR");
+                    if (args->gfffiles == 1 && (file_es != 0))
+                        bzprintf(file_weights, file_weights_gz, "#CHR\tPOSITION\tWEIGHTPOS\tWEIGHTVAR\tWEIGHTVARX");
+                    bzprintf(file_weights, file_weights_gz, "\n");
+                }
+                /*
+                else {
+                    if( (file_weights = fzopen( file_weights_char, "a", &file_weights_gz)) == 0) {
+                        fzprintf(file_output,file_output_gz,"\n It is not possible to write the weigths file %s.", file_weights_char);
+                        exit(1);
+                    }
+                }
+                */
+            }
+            dd = 0;
+
+            kstring_t str_line = {0, 0, NULL};
+            kstring_t str_wline = {0, 0, NULL};
+            for (xx = 0; xx < n_site; xx++)
+            {
+                // bzprintf(file_tfas, file_tfas_gz, "%s\t%ld\t", chr_name, xx + 1);
+                kputsn(chr_name, strlen(chr_name), &str_line);
+                ksprintf(&str_line, "\t%ld\t", xx + 1);
+                if (args->gfffiles == 1 || file_es != 0) {
+                    // bzprintf(file_weights, file_weights_gz, "%s\t%ld\t", chr_name, xx + 1);
+                    ksprintf(&str_wline, "%s\t%ld\t", chr_name, xx + 1);
+                }
+                    
+                for (x = 0; x < n_samp; x++)
+                {
+                    /*if(x != 0 && ploidy == 1) fzprintf(file_tfas,file_tfas_gz,",");*/
+                    /*if(x != 0 && ploidy == 2 && x/2 == (float)x/2.0) fzprintf(file_tfas,file_tfas_gz,",");*/
+                    switch (DNA_matr2[(long int)n_site * (unsigned long)x + xx])
+                    {
+                    case '1':
+                        // bzprintf(file_tfas, file_tfas_gz, "T");
+                        kputc('T', &str_line);
+                        break;
+                    case '2':
+                        // bzprintf(file_tfas, file_tfas_gz, "C");
+                        kputc('C', &str_line);
+                        break;
+                    case '3':
+                        // bzprintf(file_tfas, file_tfas_gz, "G");
+                        kputc('G', &str_line);
+                        break;
+                    case '4':
+                        // bzprintf(file_tfas, file_tfas_gz, "A");
+                        kputc('A', &str_line);
+                        break;
+                    case '5':
+                        // bzprintf(file_tfas, file_tfas_gz, "N");
+                        kputc('N', &str_line);
+                        break;
+                    case '6':
+                        // bzprintf(file_tfas, file_tfas_gz, "-");
+                        kputc('-', &str_line);
+                        break;
+                    default:
+                        // bzprintf(file_tfas, file_tfas_gz, "%c", DNA_matr2[(long int)n_site * (unsigned long)x + xx]);
+                        kputc(DNA_matr2[(long int)n_site * (unsigned long)x + xx], &str_line);
+                        break;
+                    }
+                }
+                if (args->gfffiles == 1)
+                {
+                    /*fzprintf(file_weights,&file_weights_gz,"\t");*/
+                    // bzprintf(file_weights, file_weights_gz, "%.3f\t", matrix_sizepos[0][xx]);
+                    ksprintf(&str_wline, "%.3f\t", matrix_sizepos[0][xx]);
+                    /*if(matrix_sizepos[0][xx] == 0.0) fzprintf(file_weights,&file_weights_gz,"%.3f\t",(double)0);
+                    else */
+                    // bzprintf(file_weights, file_weights_gz, "%.3f\t", matrix_segrpos[xx]);
+                    ksprintf(&str_wline, "%.3f\t", matrix_segrpos[xx]);
+
+                   
+
+                }
+                if (file_es != 0)
+                {
+                    // bzprintf(file_weights, file_weights_gz, "\t");
+                    ksprintf(&str_wline, "\t");
+                    if (Pp[dd] == xx + 1)
+                    {
+                        // bzprintf(file_weights, file_weights_gz, "%.3e\t", wV[dd]);
+                        ksprintf(&str_wline, "%.3e\t", wV[dd]);
+                        dd++;
+                    }
+                    else
+                        // bzprintf(file_weights, file_weights_gz, "NA\t");
+                        ksprintf(&str_wline, "NA\t");
+                }
+                // bzprintf(file_tfas, file_tfas_gz, "\n");
+                ksprintf(&str_line, "\n");
+                // write the line to the file
+                bgzf_write(file_tfas_gz, str_line.s, str_line.l);
+                // reset the line
+                str_line.l = 0;
+                if (args->gfffiles == 1 || file_es != 0)
+                {
+                    // bzprintf(file_weights, file_weights_gz, "\n");
+                    ksprintf(&str_wline, "\n");
+                    // write the line to the file
+                    bgzf_write(file_weights_gz, str_wline.s, str_wline.l);
+                    // reset the line
+                    str_wline.l = 0;
+                }
+            }
+            /*}
+            fzclose(file_tfas,file_tfas_gz);
+            */
+            if ((first == nscaffolds - 1) && (args->gfffiles == 1 || file_es != 0))
+                // fzclose(file_weights, &file_weights_gz);
+                if (file_weights_gz != 0) {
+                    bgzf_close(file_weights_gz);
+                    // create an index for the tfasta weights file
+                    log_info("Creating index for the weights file %s", file_weights_char);
+                    create_index(file_weights_char,4,0,tfasta_conf);
+                }
+                
+
+        }
 
         for(x=0;x<n_samp;x++) free(names2[x]);
         free(names2);
@@ -992,34 +1146,37 @@ int read_fasta(
         if(args->outgroup==1) strcat(mask_name,"_outg");
         if(args->ploidy==1) strcat(mask_name,"_ploidy1");
         if(args->ploidy==2) strcat(mask_name,"_ploidy2");
-        strcat(mask_name,"_MASK.txt");
-        if((file_mask = fzopen(mask_name,"w",&file_mask_gz)) == 0) {
+        strcat(mask_name,"_MASK.txt"); 
+        log_info("Writing mask file %s", mask_name); // TODO :: writing is too slow need to be optimized
+        if((file_mask = bzopen(mask_name,"wu",&file_mask_gz)) == 0) {
             //fzprintf(file_logerr,file_logerr_gz,"Error in mask file %s.",mask_name);
             log_error("Error in mask file %s.",mask_name);
             exit(1);
         }
         for(xx=0;xx<n_site;xx++) {
-            fzprintf(file_mask,&file_mask_gz,"%.3f ",matrix_sizepos[0][xx]); /*print the value of each position*/
+            bzprintf(file_mask,file_mask_gz,"%.3f ",matrix_sizepos[0][xx]); /*print the value of each position*/
         }
-        fzprintf(file_mask,&file_mask_gz,"\n");
+        bzprintf(file_mask,file_mask_gz,"\n");
         for(x=0;x<nsamtot/args->ploidy;x++) {
             for(xx=0;xx<n_site;xx++) {
                 w = *(DNA_matr+(((long int)n_site*(unsigned long)x)+(unsigned long)xx));
-                if(w >= 48+5) fzprintf(file_mask,&file_mask_gz,"0");/*missing*/
-                else fzprintf(file_mask,&file_mask_gz,"1");/*normal*/
+                if(w >= 48+5) bzprintf(file_mask,file_mask_gz,"0");/*missing*/
+                else bzprintf(file_mask,file_mask_gz,"1");/*normal*/
             }
-            fzprintf(file_mask,&file_mask_gz,"\n");
+            bzprintf(file_mask,file_mask_gz,"\n");
             if(args->ploidy==2) {
                 for(xx=0;xx<n_site;xx++) {
                     w = *(DNA_matr+(((long int)n_site*(unsigned long)x)+(unsigned long)xx));
-                    if(w >= 48+5) fzprintf(file_mask,&file_mask_gz,"0");/*missing*/
-                    else fzprintf(file_mask,&file_mask_gz,"1");/*normal*/
+                    if(w >= 48+5) bzprintf(file_mask,file_mask_gz,"0");/*missing*/
+                    else bzprintf(file_mask,file_mask_gz,"1");/*normal*/
                 }
-                fzprintf(file_mask,&file_mask_gz,"\n");
+                bzprintf(file_mask,file_mask_gz,"\n");
             }
         }
 
-        fzclose(file_mask,&file_mask_gz); /*!added*/
+        // fzclose(file_mask,&file_mask_gz); 
+        bgzf_close(file_mask_gz);
+        /*!added*/
         /****** end print MASK file ******/
 
         /*count positions with missing values after weighting regions*/
@@ -1140,7 +1297,7 @@ int read_fasta(
         if(args->npops==0) {
             args->npops = 1;
             // nsamuser[0] = n_samp;
-            args->vint_perpop_nsam = n_samp;
+            args->vint_perpop_nsam[0] = n_samp;
         }
 		for(x=0;x<n_site;x++) {
 			if((sum_sam[0][x] = (double *)calloc((unsigned long)n_samp,sizeof(double))) == NULL) {
@@ -1188,7 +1345,7 @@ int read_fasta(
 		}
 
         /*function to analyze all data*/
-		if(get_obsstats_mod(file_output,file_output_gz,
+		if(get_obsstats_mod( // file_output,file_output_gz,
                             // file_logerr,
                             // file_logerr_gz,
                             n_samp,n_site,
@@ -1241,23 +1398,30 @@ int read_fasta(
             if(args->ploidy==1) strcat(file_weights_char,"_ploidy1");
             if(args->ploidy==2) strcat(file_weights_char,"_ploidy2");
             strcat(file_weights_char,"_WEIGHTS.gz");
-            if( (file_weights = fzopen( file_weights_char, "w", &file_weights_gz)) == 0) {
+            log_info("Writing weights file %s", file_weights_char);
+            if( (file_weights = bzopen( file_weights_char, "wb", &file_weights_gz)) == 0) {
                 //fzprintf(file_output,file_output_gz,"\n It is not possible to write the weigths file %s.", file_weights_char);
                 log_error("It is not possible to write the weigths file %s.", file_weights_char);
                 exit(1);
             }
-            file_weights_gz.index = &file_weights_gz_index;
-            fzprintf(file_weights,&file_weights_gz,"#CHR:POSITION\tWEIGHTPOS\tWEIGHTVAR");
-            fzprintf(file_weights,&file_weights_gz,"\n");
+            // file_weights_gz.index = &file_weights_gz_index;
+            // write the header
+            bzprintf(file_weights,file_weights_gz,wv2_header);
+            bzprintf(file_weights,file_weights_gz,"#CHR\tPOSITION\tWEIGHTPOS\tWEIGHTVAR");
+            bzprintf(file_weights,file_weights_gz,"\n");
 
             for(xx=0;xx<n_site;xx++) {
-                fzprintf(file_weights,&file_weights_gz,"%s:%ld\t",chr_name,xx+1);
-                fzprintf(file_weights,&file_weights_gz,"%.3f\t",matrix_sizepos[0][xx]);
+                bzprintf(file_weights,file_weights_gz,"%s\t%ld\t",chr_name,xx+1);
+                bzprintf(file_weights,file_weights_gz,"%.3f\t",matrix_sizepos[0][xx]);
                 /*if(matrix_sizepos[0][xx] == 0.0) fzprintf(file_weights,&file_weights_gz,"%.3f\t",(double)0);
-                 else */fzprintf(file_weights,&file_weights_gz,"%.3f\t",matrix_segrpos[xx]);
-                fzprintf(file_weights,&file_weights_gz,"\n");
+                 else */bzprintf(file_weights,file_weights_gz,"%.3f\t",matrix_segrpos[xx]);
+                bzprintf(file_weights,file_weights_gz,"\n");
             }
-            fzclose(file_weights,&file_weights_gz);
+            // fzclose(file_weights,&file_weights_gz);
+            bgzf_close(file_weights_gz);
+            // create an index for the tfasta weights file
+            log_info("Creating index for the weights file %s", file_weights_char);
+            create_index(file_weights_char,4,0,tfasta_conf);
         }
         *lenR = n_site;
         free(DNA_matr2);
@@ -1266,10 +1430,12 @@ int read_fasta(
 	return(1);
 }
 
-
+/*
+ * Read the fasta file and store the data in a matrix 
+ */
 int var_char(
     FILE *file_input, 
-    SGZip *file_input_gz,
+    BGZF *file_input_gz,
     //FILE *file_logerr, 
     //SGZip *file_logerr_gz,
     long int *count,
@@ -1280,7 +1446,7 @@ int var_char(
     int *maxsam,
     char ***names,
     char **DNA_matr,
-	long int *n_site,
+	long long int *n_site,
     int excludelines,
     char *name_excluded,
     int *n_excl,
@@ -1306,9 +1472,9 @@ int var_char(
 					if(((strin = strstr(names[0][*nseq-1],name_excluded)) != 0)) {
 						*nseq -= 1;
 						*n_excl += 1;
-						*c = fzgetc(file_input, file_input_gz);
+						*c = bzgetc(file_input, file_input_gz);
 						while(*c != '*' && *c != -1 && *c != 0 && *c != '>')
-							*c = fzgetc(file_input, file_input_gz);
+							*c = bzgetc(file_input, file_input_gz);
 						aa = 0;
 					}
 				}
@@ -1316,9 +1482,9 @@ int var_char(
 					if(((strin = strstr(names[0][*nseq-1],name_ingroups)) == 0)) {
 						*nseq -= 1;
 						*n_excl += 1;
-						*c = fzgetc(file_input, file_input_gz);
+						*c = bzgetc(file_input, file_input_gz);
 						while(*c != '*' && *c != -1 && *c != 0 && *c != '>')
-							*c = fzgetc(file_input, file_input_gz);
+							*c = bzgetc(file_input, file_input_gz);
 						aa = 0;
 					}
 				}
@@ -1329,9 +1495,9 @@ int var_char(
 				if(((strin = strstr(names[0][*nseq-1],name_excluded)) != 0)) {
 					*nseq -= 1;
 					*n_excl += 1;
-					*c = fzgetc(file_input, file_input_gz);
+					*c = bzgetc(file_input, file_input_gz);
 					while(*c != '*' && *c != -1 && *c != 0 && *c != '>')
-						*c = fzgetc(file_input, file_input_gz);
+						*c = bzgetc(file_input, file_input_gz);
 					aa = 0;
 				}
 			}
@@ -1339,9 +1505,9 @@ int var_char(
 				if(((strin = strstr(names[0][*nseq-1],name_ingroups)) == 0)) {
 					*nseq -= 1;
 					*n_excl += 1;
-					*c = fzgetc(file_input, file_input_gz);
+					*c = bzgetc(file_input, file_input_gz);
 					while(*c != '*' && *c != -1 && *c != 0 && *c != '>')
-						*c = fzgetc(file_input, file_input_gz);
+						*c = bzgetc(file_input, file_input_gz);
 					aa = 0;
 				}
 			}
@@ -1631,7 +1797,7 @@ int var_char(
                     return(0);
                     break;
             }
-            if(*c !='>'/*|| *c != 0 || *c != -1*/) *c = fzgetc(file_input, file_input_gz);
+            if(*c !='>'/*|| *c != 0 || *c != -1*/) *c = bzgetc(file_input, file_input_gz);
         }
         *n_sam += 1;
         if(*n_site == 0) *n_site = *n_sit;
@@ -1644,7 +1810,7 @@ int var_char(
     return 1;
 }
 
-int assigna(FILE *file_input, SGZip *file_input_gz,int *c,int *nseq,int *maxsam,char ***names)
+int assigna(FILE *file_input, BGZF *file_input_gz,int *c,int *nseq,int *maxsam,char ***names)
 {
     int N_VAR = 2;
     char var_file[2][50]  =
@@ -1662,7 +1828,7 @@ int assigna(FILE *file_input, SGZip *file_input_gz,int *c,int *nseq,int *maxsam,
     j = 0;
     for(i_=0;i_<N_VAR;i_++) {
         while((var_file[i_][j]) == *c && (var_file[i_][j]) != '\0' && *c != '\0') {
-            *c = fzgetc(file_input, file_input_gz);
+            *c = bzgetc(file_input, file_input_gz);
             j++;
         }
     }
@@ -1670,7 +1836,7 @@ int assigna(FILE *file_input, SGZip *file_input_gz,int *c,int *nseq,int *maxsam,
     else if(j==4) i_= 2;/*NBRF*/
 	else {
 		i_=0;/*NO ACCEPTED*/
-		if(*c != 0 && *c != -1) *c = fzgetc(file_input, file_input_gz);
+		if(*c != 0 && *c != -1) *c = bzgetc(file_input, file_input_gz);
 	}
 	
     if((i_ == 2  && *c != 0 && *c != -1)) { /* NBRF files */
@@ -1680,7 +1846,7 @@ int assigna(FILE *file_input, SGZip *file_input_gz,int *c,int *nseq,int *maxsam,
 				names[0][*nseq][nn] = (char)*c;
 				nn++;
 			}
-			*c = fzgetc(file_input, file_input_gz);
+			*c = bzgetc(file_input, file_input_gz);
         }
         names[0][*nseq][nn] = '\0';
         *nseq += 1;
@@ -1706,21 +1872,21 @@ int assigna(FILE *file_input, SGZip *file_input_gz,int *c,int *nseq,int *maxsam,
         }
         /*use unix or macos or dos format. begin*/
         while(*c != '\0' && *c != 13 && *c != 10 && *c != -1 && *c != 0  && *c>0)
-            *c = fzgetc(file_input, file_input_gz);
+            *c = bzgetc(file_input, file_input_gz);
 		
         c0 = *c;
-        *c = fzgetc(file_input, file_input_gz);
-        if(c0 == 13 && *c == 10) *c = fzgetc(file_input, file_input_gz);
+        *c = bzgetc(file_input, file_input_gz);
+        if(c0 == 13 && *c == 10) *c = bzgetc(file_input, file_input_gz);
         while(*c != 10 && *c != 13 && *c != -1 && c != 0) 
-            *c = fzgetc(file_input, file_input_gz);
+            *c = bzgetc(file_input, file_input_gz);
         if(*c == -1 || *c == 0) {
             // puts("\n Unexpected end of file");
             log_error("Unexpected end of file");
             return(0);
         }
         c0 = *c;
-        *c = fzgetc(file_input, file_input_gz);
-        if(c0 == 13 && *c == 10) *c = fzgetc(file_input, file_input_gz);
+        *c = bzgetc(file_input, file_input_gz);
+        if(c0 == 13 && *c == 10) *c = bzgetc(file_input, file_input_gz);
         if(*c == -1 || *c == 0) {
             // puts("\n Unexpected end of file");
             log_error("Unexpected end of file");
@@ -1738,7 +1904,7 @@ int assigna(FILE *file_input, SGZip *file_input_gz,int *c,int *nseq,int *maxsam,
 					names[0][*nseq][nn] = (char)*c;
 					nn++;
 				}
-				*c = fzgetc(file_input, file_input_gz);
+				*c = bzgetc(file_input, file_input_gz);
             }
             names[0][*nseq][nn] = '\0';
             *nseq += 1;
@@ -1764,11 +1930,11 @@ int assigna(FILE *file_input, SGZip *file_input_gz,int *c,int *nseq,int *maxsam,
             }
             /*use Unix / MacOS / DOS format. begin*/
             while(*c != '\0' && *c != 13 && *c != 10 && *c != -1 && *c != 0  && *c>0)
-                *c = fzgetc(file_input, file_input_gz);
+                *c = bzgetc(file_input, file_input_gz);
 			
             c0 = *c;
-            *c = fzgetc(file_input, file_input_gz);
-            if(c0 == 13 && *c == 10) *c = fzgetc(file_input, file_input_gz);
+            *c = bzgetc(file_input, file_input_gz);
+            if(c0 == 13 && *c == 10) *c = bzgetc(file_input, file_input_gz);
             if(*c == -1 || *c == 0) {
                 //puts("\n Unexpected end of file");
                 log_error("Unexpected end of file");
@@ -1785,9 +1951,9 @@ int assigna(FILE *file_input, SGZip *file_input_gz,int *c,int *nseq,int *maxsam,
 
 int read_coordinates(
     FILE *file_wcoor, 
-    SGZip *file_wcoor_gz, 
+    BGZF *file_wcoor_gz, 
     FILE *file_output, 
-    SGZip *file_output_gz, 
+    BGZF *file_output_gz, 
     // FILE *file_logerr, SGZip *file_logerr_gz, 
     long int **wgenes, 
     long int *nwindows,
@@ -1819,7 +1985,7 @@ int read_coordinates(
     }
     
     *nwindows = 0;
-    c = fzgetc(file_wcoor, file_wcoor_gz);
+    c = bzgetc(file_wcoor, file_wcoor_gz);
     
     if(check_comment(&c,file_wcoor,file_wcoor_gz) == 0) {
         //fzprintf(file_logerr,file_logerr_gz,"\nWarning: no coordinates assigned. \n");
@@ -1841,16 +2007,16 @@ int read_coordinates(
             /*now keep all values: two columns, only numbers*/
             /*first column is the name of the scaffold*/
             while(c == 32 || c == 9 || c == 13 || c == 10)
-                c = fzgetc(file_wcoor, file_wcoor_gz);
+                c = bzgetc(file_wcoor, file_wcoor_gz);
             if(check_comment(&c,file_wcoor, file_wcoor_gz) == 0) {
                 c=0;break;
             }
             while(c == 32 || c == 9 || c == 13 || c == 10)
-                c = fzgetc(file_wcoor, file_wcoor_gz);
+                c = bzgetc(file_wcoor, file_wcoor_gz);
             x=0;
             while(c != 32 && c != 9 && c != 13 && c != 10 && c!=0 && c!=-1 && x < 100  && c!='\xff' && c!='\xfe' && c>0) {
                 valn[x] = c;
-                c = fgetc(file_wcoor);
+                c = bzgetc(file_wcoor, file_wcoor_gz);
                 x++;
             }
             valn[x] = '\0';/*scaffold name*/
@@ -1863,16 +2029,16 @@ int read_coordinates(
                     break;
                 }
                 while(c != 13 && c != 10 && c!=0 && c!=-1  && c!='\xff' && c!='\xfe')
-                    c = fzgetc(file_wcoor, file_wcoor_gz);
+                    c = bzgetc(file_wcoor, file_wcoor_gz);
                 if(check_comment(&c,file_wcoor, file_wcoor_gz) == 0){
                     free(valn);*nwindows = (xx)/2;return(1);
                 }
                 while(c == 32 || c == 9 || c == 13 || c == 10)
-                    c = fzgetc(file_wcoor, file_wcoor_gz);
+                    c = bzgetc(file_wcoor, file_wcoor_gz);
                 x=0;
                 while(c != 32 && c != 9 && c != 13 && c != 10 && c!=0 && c!=-1 && x < 100  && c!='\xff' && c!='\xfe' && c>0) {
                     valn[x] = c;
-                    c = fgetc(file_wcoor);
+                    c = bzgetc(file_wcoor, file_wcoor_gz);
                     x++;
                 }
                 valn[x] = '\0';/*scaffold name*/
@@ -1887,16 +2053,16 @@ int read_coordinates(
             inside_chr = 1;
             /*KEEP POSITIONS (first initial position, then end, next region and so on)*/
             while(c == 32 || c == 9 || c == 13 || c == 10)
-                c = fzgetc(file_wcoor, file_wcoor_gz);
+                c = bzgetc(file_wcoor, file_wcoor_gz);
             if(check_comment(&c,file_wcoor, file_wcoor_gz) == 0) {
                 c=0;free(valn);return(0);
             }
             while(c == 32 || c == 9 || c == 13 || c == 10)
-                c = fzgetc(file_wcoor, file_wcoor_gz);
+                c = bzgetc(file_wcoor, file_wcoor_gz);
             x=0;
             while(c != 32 && c != 9 && c != 13 && c != 10 && c!=0 && c!=-1 && x < 100 && c!='\xff' && c!='\xfe' && c>0) {
                 valn[x] = c;
-                c = fzgetc(file_wcoor, file_wcoor_gz);
+                c = bzgetc(file_wcoor, file_wcoor_gz);
                 x++;
             }
             valn[x] = '\0';
@@ -1904,16 +2070,16 @@ int read_coordinates(
             
             xx++;
             while(c == 32 || c == 9 || c == 13 || c == 10)
-                c = fgetc(file_wcoor);
+                c = bzgetc(file_wcoor, file_wcoor_gz);
             if(check_comment(&c,file_wcoor, file_wcoor_gz) == 0) {
                 c=0;free(valn);return(0);
             }
             while(c == 32 || c == 9 || c == 13 || c == 10)
-                c = fzgetc(file_wcoor, file_wcoor_gz);
+                c = bzgetc(file_wcoor, file_wcoor_gz);
             x=0;
             while(c != 32 && c != 9 && c != 13 && c != 10 && c!=0 && c!=-1 && x < 100 && c!='\xff' && c!='\xfe' && c>0) {
                 valn[x] = c;
-                c = fgetc(file_wcoor);
+                c = bzgetc(file_wcoor, file_wcoor_gz);
                 x++;
             }
             valn[x] = '\0';
@@ -1943,14 +2109,191 @@ int read_coordinates(
     return 1;
 }
 
-int read_weights_positions_file(
+/**
+ * Reads weights and positions from a file and populates the provided variables.
+ *
+ * @param wtfasta The wtfasta_file structure to store the weights and positions.
+ * @param wP Pointer to the array to store the weights - weight for each position.
+ * @param wPV Pointer to the array to store  weights for the variant at each position.
+ * @param wV Pointer to the array to store weight at variant (effect sizes) not yet functional although we can recover.
+ * @param chr_name Pointer to the character array to store the chromosome name.
+ * @param first The first value.
+ * @param length The output length value the wP wPV and wV.
+ * @return Returns 1 on success, 0 on failure.
+ */
+int read_weights_positions_file( 
+    wtfasta_file *wtfasta,
+    float **wP, 
+    float **wPV, 
+    float **wV,
+    char *chr_name,
+    unsigned long first ,
+    long int *length) {
+    // THIS should be done in the main function, not here
+	if (wtfasta == NULL)
+	{
+		return (0);
+	}
+    static long int position = 0;
+
+    char *region = (char *)malloc(strlen(chr_name) + 25);
+    // sprintf(region, "%s:%ld-%ld", chr_name, init_site, end_site);
+    sprintf(region, "%s", chr_name);
+    hts_itr_t *iter = tbx_itr_querys(wtfasta->tbx, region);
+    if (iter == NULL)
+    {
+        // it is possible that the region is not found in the index
+            log_error("Failed to parse region: %s", chr_name);
+        return 0;
+    }
+    // for wP, wPV and wV free the memory if it is already allocated
+	if (*wP != NULL)
+	{
+		free(*wP);
+		*wP = NULL;
+	}
+	if (*wPV != NULL)
+	{
+		free(*wPV);
+		*wPV = NULL;
+	}
+	if (*wV != NULL)
+	{
+		free(*wV);
+		*wV = NULL;
+	}
+    int expected_sites = 1000;
+    // allocate memory for wP, wPV and wV
+    if ((*wP = (float *)calloc(expected_sites, sizeof(float))) == 0)
+    {
+        // fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.14 \n");
+        log_error("Error: memory not reallocated. read_weights_positions_file.wP");
+        return (0);
+    }
+    if ((*wPV = (float *)calloc(expected_sites, sizeof(float))) == 0)
+    {
+        // fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.25 \n");
+        log_error("Error: memory not reallocated. read_weights_positions_file.wPV");
+        return (0);
+    }
+    if ((*wV = (float *)calloc(expected_sites, sizeof(float))) == 0)
+    {
+        // fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.23 \n");
+        log_error("Error: memory not reallocated. read_weights_positions_file.wV");
+        return (0);
+    }
+    kstring_t str = {0, 0, NULL};
+    const char *delim = ":\t\n";
+	int n_sites = 0;
+    while (tbx_itr_next(wtfasta->fp, wtfasta->tbx, iter, &str) >= 0)
+    {
+
+        if (n_sites >= expected_sites)
+        {
+            // need to reallocate memory for the matrix, if our calculations are correct, this should not happen
+            expected_sites += 1000;
+            log_debug("Reallocating memory for wP, wPV and wV");
+            if ((*wP = realloc(*wP, expected_sites* sizeof(float ))) == 0)
+            {
+                
+               
+                free(*wP);
+                free(*wPV);
+                free(*wV);
+                *wP = 0;
+                *wPV = 0;
+                *wV = 0;
+                log_error("Error: realloc error read_weights_positions_file.wP");
+                return (0);
+            }
+            if ((*wPV = realloc(*wPV, expected_sites * sizeof(float) )  ) == 0)
+            {
+                free(*wP);
+                free(*wPV);
+                free(*wV);
+                *wP = 0;
+                *wPV = 0;
+                *wV = 0;
+                // puts("Error: realloc error get_obsdata.11\n");
+                log_error("Error: realloc error read_weights_positions_file.wPV");
+                return (0);
+            }
+            if ((*wV = realloc(*wV,  expected_sites * sizeof(float) )    ) == 0)
+            {
+               
+                free(*wP);
+                free(*wPV);
+                free(*wV);
+                *wP = 0;
+                *wPV = 0;
+                *wV = 0;
+                // puts("Error: realloc error get_obsdata.11\n");
+                log_error("Error: realloc error read_weights_positions_file.wV");
+                return (0);
+            }
+        }
+        // if line start with # then it is a comment
+        if (str.s[0] == '#')
+        {
+            // skip comments :: not going to happen Here
+            // log_debug("Comment : %s", str.s);
+            continue;
+        }
+        char *cc = strtok(str.s, delim);
+        int col = 0;
+
+        // by default wV[0][n_sites] = 1.0
+        wV[0][n_sites] = 1.0;
+
+        while (cc != NULL)
+        {
+            // col 0 is the name of the sequence
+            if (col == 0)
+            {
+            }
+            // col 1 is the position
+            if (col == 1)
+            {
+                position = atol(cc); // need to check on position make sure we are going in a sequential order
+            }
+            if (col == 2)
+            { // wP
+                wP[0][n_sites] = (double)atof(cc);
+            }
+            if (col == 3)
+            { // wPV
+                wPV[0][n_sites] = (double)atof(cc);
+            }
+            //
+            if (col == 4)
+            { // optional wV
+                wV[0][n_sites] = (double)atof(cc);
+            }
+            // increment the column
+            col++;
+            // get the next token
+            cc = strtok(NULL, delim);
+        }
+        // increment the site
+        n_sites += 1;
+    }
+    *length = n_sites;
+    return (1);
+}
+
+
+int read_weights_positions_file_(
     FILE *file_ws, 
-    SGZip *file_ws_gz,
+    BGZF *file_ws_gz,
     FILE *file_output, 
-    SGZip *file_output_gz, 
+    BGZF *file_output_gz, 
     // FILE *file_logerr, 
     // SGZip *file_logerr_gz, 
-    float **wP, float **wPV, float **wV,char *chr_name,unsigned long first) {
+    float **wP, 
+    float **wPV, 
+    float **wV,
+    char *chr_name,
+    unsigned long first) {
     
 	/*!--- Not used long int position; */
     static char *valn=0;
@@ -1990,7 +2333,7 @@ int read_weights_positions_file(
             return(0);
         }
         if(first == 0) {
-            c = fzgetc(file_ws, file_ws_gz);
+            c = bzgetc(file_ws, file_ws_gz);
             valn[0] = c;
             /*exclude header*/
             if(check_comment(&c,file_ws, file_ws_gz) == 0) {
@@ -2005,7 +2348,7 @@ int read_weights_positions_file(
                 return(0);
             }
             while(c == 32 || c == 9 || c == 13 || c == 10)
-                c = fzgetc(file_ws, file_ws_gz);
+                c = bzgetc(file_ws, file_ws_gz);
             if(check_comment(&c,file_ws, file_ws_gz) == 0) {
                 free(valn);return(0);
             }
@@ -2019,7 +2362,7 @@ int read_weights_positions_file(
             x=0;
             while(c != 32 && c != 9 && c != 13 && c != 10 && c!= 58 && c!=0 && c!=-1 && x < 100 && c!='\xff' && c!='\xfe' && c > 0) {
                 valn[x] = c;
-                c = fzgetc(file_ws, file_ws_gz);
+                c = bzgetc(file_ws, file_ws_gz);
                 x++;
             }
             valn[x] = '\0';
@@ -2042,9 +2385,9 @@ int read_weights_positions_file(
                         break;
                     }
                     while(c != 13 && c == 10 && c!=0 && c!=-1 && c!='\xff' && c!='\xfe' && c>0)
-                        c = fzgetc(file_ws, file_ws_gz);
+                        c = bzgetc(file_ws, file_ws_gz);
                     if(c == 10 || c==13)
-                        c = fzgetc(file_ws, file_ws_gz);
+                        c = bzgetc(file_ws, file_ws_gz);
                     if(check_comment(&c,file_ws, file_ws_gz) == 0) {
                         c=0;break;
                     }
@@ -2054,7 +2397,7 @@ int read_weights_positions_file(
                     x=0;
                     while(c != 32 && c != 9 && c != 13 && c != 10 && c!=0 && c!=-1 && x < 100 && c!='\xff' && c!='\xfe' && c>0) {
                         valn[x] = c;
-                        c = fzgetc(file_ws, file_ws_gz);
+                        c = bzgetc(file_ws, file_ws_gz);
                         x++;
                     }
                     valn[x] = '\0';/*scaffold name*/
@@ -2071,13 +2414,13 @@ int read_weights_positions_file(
                 inside_chr = 1;
                 /*POSITION*/
                 while(c == 32 || c == 9 || c == 13 || c == 10 || c == 58)
-                    c = fzgetc(file_ws, file_ws_gz);
+                    c = bzgetc(file_ws, file_ws_gz);
                 if(c==0 || c==-1 || c < 1)
                     break;
                 x=0;
                 while(c != 32 && c != 9 && c != 13 && c != 10 && c!=0 && c!=-1 && x < 100 && c!='\xff' && c!='\xfe' && c>0) {
                     valn[x] = c;
-                    c = fzgetc(file_ws, file_ws_gz);
+                    c = bzgetc(file_ws, file_ws_gz);
                     x++;
                 }
                 /*!--- Not used position = atol(valn); e reallocs*/
@@ -2086,13 +2429,13 @@ int read_weights_positions_file(
                 
                 /*Weight Position*/
                 while(c == 32 || c == 9)/* || c == 13 || c == 10)*/
-                    c = fzgetc(file_ws, file_ws_gz);
+                    c = bzgetc(file_ws, file_ws_gz);
                 if(c==0 || c==-1 || c < 1)
                     break;
                 x=0;
                 while(c != 32 && c != 9 && c != 13 && c != 10 && c!=0 && c!=-1 && x < 100 && c!='\xff' && c!='\xfe' && c>0) {
                     valn[x] = c;
-                    c = fzgetc(file_ws, file_ws_gz);
+                    c = bzgetc(file_ws, file_ws_gz);
                     x++;
                 }
                 valn[x] = '\0';
@@ -2100,29 +2443,29 @@ int read_weights_positions_file(
 
                 /*Weight Variant*/
                 while(c == 32 || c == 9)/* || c == 13 || c == 10)*/
-                    c = fzgetc(file_ws, file_ws_gz);
+                    c = bzgetc(file_ws, file_ws_gz);
                 if(c==0 || c==-1 || c < 1)
                     break;
                 x=0;
                 while(c != 32 && c != 9 && c != 13 && c != 10 && c!=0 && c!=-1 && c!='\xff' && c!='\xfe' && x < 100 && c>0) {
                     valn[x] = c;
-                    c = fzgetc(file_ws, file_ws_gz);
+                    c = bzgetc(file_ws, file_ws_gz);
                     x++;
                 }
                 valn[x] = '\0';
                 wPV[0][xx] = (double)atof(valn);
                 
-                while(c == 32 || c == 9) c = fzgetc(file_ws, file_ws_gz);
+                while(c == 32 || c == 9) c = bzgetc(file_ws, file_ws_gz);
                 if(!(c == 13 || c == 10 || c == 0 || c == -1)) {
                     /*Effect size: deprecated*/
                     while(c == 32 || c == 9)/* || c == 13 || c == 10)*/
-                        c = fzgetc(file_ws, file_ws_gz);
+                        c = bzgetc(file_ws, file_ws_gz);
                     if(c==0 || c==-1 || c < 1)
                         break;
                     x=0;
                     while(c != 32 && c != 9 && c != 13 && c != 10 && c!=0 && c!=-1 && x < 100 && c!='\xff' && c!='\xfe' && c>0) {
                         valn[x] = c;
-                        c = fzgetc(file_ws, file_ws_gz);
+                        c = bzgetc(file_ws, file_ws_gz);
                         x++;
                     }
                     valn[x] = '\0';
@@ -2138,32 +2481,35 @@ int read_weights_positions_file(
                     if((*wP = realloc(*wP,((long int)(dd+1)*(long int)1000*sizeof(float)))) == 0) {
                         file_ws=0;*wP=0;*wPV=0;*wV=0;
                         free(*wP);free(*wPV);free(*wV);free(valn);
-                        puts("Error: realloc error get_obsdata.11\n");
+                        //puts("Error: realloc error get_obsdata.11\n");
+                        log_error("Error: realloc error get_obsdata.11");
                         return(0);
                     }
                     if((*wPV = realloc(*wPV,((long int)(dd+1)*(long int)1000*sizeof(float)))) == 0) {
                         file_ws=0;*wP=0;*wPV=0;*wV=0;
                         free(*wP);free(*wPV);free(*wV);free(valn);
-                        puts("Error: realloc error get_obsdata.11\n");
+                        //puts("Error: realloc error get_obsdata.11\n");
+                        log_error("Error: realloc error get_obsdata.11");
                         return(0);
                     }
                     if((*wV = realloc(*wV,((long int)(dd+1)*(long int)1000*sizeof(float)))) == 0) {
                         file_ws=0;*wP=0;*wPV=0;*wV=0;
                         free(*wP);free(*wPV);free(*wV);free(valn);
-                        puts("Error: realloc error get_obsdata.11\n");
+                        //puts("Error: realloc error get_obsdata.11\n");
+                        log_error("Error: realloc error get_obsdata.11");
                         return(0);
                     }
                 }
                 /*take the name of the scaffold again*/
                 while(c == 32 || c == 9 || c == 13 || c == 10)
-                    c = fzgetc(file_ws, file_ws_gz);
+                    c = bzgetc(file_ws, file_ws_gz);
                 if(check_comment(&c,file_ws, file_ws_gz) == 0) {
                     free(valn);return(1);
                 }
                 x=0;
                 while(c != 32 && c != 9 && c != 13 && c != 10 && c!= 58 && c!=0 && c!=-1 && x < 100 && c!='\xff' && c!='\xfe' && c > 0) {
                     valn[x] = c;
-                    c = fzgetc(file_ws, file_ws_gz);
+                    c = bzgetc(file_ws, file_ws_gz);
                     x++;
                 }
                 valn[x] = '\0';
@@ -2182,675 +2528,682 @@ int read_weights_positions_file(
 }
 
 /*deprecated*/
-int read_weights_file(
-    FILE *file_es, 
-    SGZip *file_es_gz, 
-    FILE *file_output, 
-    SGZip *file_output_gz, 
-    //FILE *file_logerr, 
-    //SGZip *file_logerr_gz, 
-    float **wV, 
-    long int **Pp, 
-    long int *nV, 
-    char *chr_name) {
+// int read_weights_file(
+//     FILE *file_es, 
+//     SGZip *file_es_gz, 
+//     FILE *file_output, 
+//     SGZip *file_output_gz, 
+//     //FILE *file_logerr, 
+//     //SGZip *file_logerr_gz, 
+//     float **wV, 
+//     long int **Pp, 
+//     long int *nV, 
+//     char *chr_name) {
 
-	long int *effsz_site=0; /*positions*/
-	float    *effsz_wght=0; /*effect sizes*/
-	long int tot_effszP = 0; /*total values*/
-	char *valn=0;
-	long int dd;
-	double ee;
-	int c;
-	int x;
-	long int xx;
-    int inside_chr;
+// 	long int *effsz_site=0; /*positions*/
+// 	float    *effsz_wght=0; /*effect sizes*/
+// 	long int tot_effszP = 0; /*total values*/
+// 	char *valn=0;
+// 	long int dd;
+// 	double ee;
+// 	int c;
+// 	int x;
+// 	long int xx;
+//     int inside_chr;
 
-    /*printf("\nReading Effect sizes file...");*/
-    fflush(stdout);
-    //fzprintf(file_logerr,file_logerr_gz,"\nReading Effect sizes file...");
-    log_info("Reading Effect sizes file...");
+//     /*printf("\nReading Effect sizes file...");*/
+//     fflush(stdout);
+//     //fzprintf(file_logerr,file_logerr_gz,"\nReading Effect sizes file...");
+//     log_info("Reading Effect sizes file...");
     
-    if(file_es != 0) {
-		if((effsz_site = (long int *)calloc(1000,sizeof(long int))) == 0) {
-			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.1 \n");
-            log_error("Error: memory not reallocated. get_obsdata.1");
-			return(0);
-		}
-		if((effsz_wght = (float *)calloc(1000,sizeof(float))) == 0) {
-			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.2 \n");
-            log_error("Error: memory not reallocated. get_obsdata.2");
-			return(0);
-		}
-		if((valn = (char *)calloc(100,sizeof(char))) == 0) {
-			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.3 \n");
-            log_error("Error: memory not reallocated. get_obsdata.3");
-			return(0);
-		}
+//     if(file_es != 0) {
+// 		if((effsz_site = (long int *)calloc(1000,sizeof(long int))) == 0) {
+// 			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.1 \n");
+//             log_error("Error: memory not reallocated. get_obsdata.1");
+// 			return(0);
+// 		}
+// 		if((effsz_wght = (float *)calloc(1000,sizeof(float))) == 0) {
+// 			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.2 \n");
+//             log_error("Error: memory not reallocated. get_obsdata.2");
+// 			return(0);
+// 		}
+// 		if((valn = (char *)calloc(100,sizeof(char))) == 0) {
+// 			//fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.3 \n");
+//             log_error("Error: memory not reallocated. get_obsdata.3");
+// 			return(0);
+// 		}
 
-        c=0;
-        c = fzgetc(file_es, file_es_gz);
+//         c=0;
+//         c = fzgetc(file_es, file_es_gz);
 
-		while(c != 13 && c != 10 && c != 0 && c != -1)
-			c = fzgetc(file_es, file_es_gz); /*exclude header*/
+// 		while(c != 13 && c != 10 && c != 0 && c != -1)
+// 			c = fzgetc(file_es, file_es_gz); /*exclude header*/
 
-		while(c == 13 || c == 10) 
-			c = fzgetc(file_es, file_es_gz);
+// 		while(c == 13 || c == 10) 
+// 			c = fzgetc(file_es, file_es_gz);
 
-        inside_chr = 0;
-		if(c==0 || c==-1 || c < 1) {
-			file_es=0;
-			*wV=0;
-			free(effsz_site);
-			free(effsz_wght);
-            //fzprintf(file_logerr,file_logerr_gz,"\nError: no effect sizes assigned \n");
-            log_error("Error: no effect sizes assigned");
-            return(0);
-		}
-		else {
-			/*now keep all values: two columns, only numbers or decimals*/
-			xx=0;
-			while (c != 0 && c != -1) {
-                valn[0]='\0';
-                if(check_comment(&c,file_es, file_es_gz) == 0){
-                    c=0;break;
-                }
-                while(strcmp(chr_name,valn) != 0) { /*work only with those rows having the same scaffold than chr_name*/
-                    while(c == 32 || c == 9 || c == 13 || c == 10)
-                        c = fzgetc(file_es, file_es_gz);
-                    if(c==-1 || c == 0)
-                        break;
-                    x=0;
-                    if(check_comment(&c,file_es, file_es_gz) == 0)
-                        exit(1);
-                    while(c != 32 && c != 9 && c != 13 && c != 10 && c!=0 && c!=-1 && x < 100 && c!='\xff' && c!='\xfe' && c>0) {
-                        valn[x] = c;
-                        c = fzgetc(file_es, file_es_gz);
-                        x++;
-                    }
-                    valn[x] = '\0';/*scaffold name*/
-                    if(strcmp(chr_name,valn) != 0) {
-                        valn[0]='\0';
-                        while(!(c == 32 || c == 9 || c == 13 || c == 10))
-                            c = fzgetc(file_es, file_es_gz);
-                        if(c==-1 || c == 0)
-                            break;
-                    }
-                    if(inside_chr == 1)
-                        inside_chr = -1; /*we passed our region*/
-                }
-                if(c==-1 || c == 0)
-                    break;
-                if(inside_chr == -1)
-                    break; /*we go out*/
-                inside_chr = 1;
-				/*POSITION*/
-				while(c == 32 || c == 9 || c == 13 || c == 10) 
-					c = fzgetc(file_es, file_es_gz);
-				if(c==-1)
-					break;
-				x=0;
-				while(c != 32 && c != 9 && c != 13 && c != 10 && c!=0 && c!=-1 && x < 100 && c!='\xff' && c!='\xfe' && c>0) {
-					valn[x] = c;
-					c = fzgetc(file_es, file_es_gz);
-					x++;
-				}
-				valn[x] = '\0';
-				effsz_site[xx] = (double)atof(valn);
+//         inside_chr = 0;
+// 		if(c==0 || c==-1 || c < 1) {
+// 			file_es=0;
+// 			*wV=0;
+// 			free(effsz_site);
+// 			free(effsz_wght);
+//             //fzprintf(file_logerr,file_logerr_gz,"\nError: no effect sizes assigned \n");
+//             log_error("Error: no effect sizes assigned");
+//             return(0);
+// 		}
+// 		else {
+// 			/*now keep all values: two columns, only numbers or decimals*/
+// 			xx=0;
+// 			while (c != 0 && c != -1) {
+//                 valn[0]='\0';
+//                 if(check_comment(&c,file_es, file_es_gz) == 0){
+//                     c=0;break;
+//                 }
+//                 while(strcmp(chr_name,valn) != 0) { /*work only with those rows having the same scaffold than chr_name*/
+//                     while(c == 32 || c == 9 || c == 13 || c == 10)
+//                         c = fzgetc(file_es, file_es_gz);
+//                     if(c==-1 || c == 0)
+//                         break;
+//                     x=0;
+//                     if(check_comment(&c,file_es, file_es_gz) == 0)
+//                         exit(1);
+//                     while(c != 32 && c != 9 && c != 13 && c != 10 && c!=0 && c!=-1 && x < 100 && c!='\xff' && c!='\xfe' && c>0) {
+//                         valn[x] = c;
+//                         c = fzgetc(file_es, file_es_gz);
+//                         x++;
+//                     }
+//                     valn[x] = '\0';/*scaffold name*/
+//                     if(strcmp(chr_name,valn) != 0) {
+//                         valn[0]='\0';
+//                         while(!(c == 32 || c == 9 || c == 13 || c == 10))
+//                             c = fzgetc(file_es, file_es_gz);
+//                         if(c==-1 || c == 0)
+//                             break;
+//                     }
+//                     if(inside_chr == 1)
+//                         inside_chr = -1; /*we passed our region*/
+//                 }
+//                 if(c==-1 || c == 0)
+//                     break;
+//                 if(inside_chr == -1)
+//                     break; /*we go out*/
+//                 inside_chr = 1;
+// 				/*POSITION*/
+// 				while(c == 32 || c == 9 || c == 13 || c == 10) 
+// 					c = fzgetc(file_es, file_es_gz);
+// 				if(c==-1)
+// 					break;
+// 				x=0;
+// 				while(c != 32 && c != 9 && c != 13 && c != 10 && c!=0 && c!=-1 && x < 100 && c!='\xff' && c!='\xfe' && c>0) {
+// 					valn[x] = c;
+// 					c = fzgetc(file_es, file_es_gz);
+// 					x++;
+// 				}
+// 				valn[x] = '\0';
+// 				effsz_site[xx] = (double)atof(valn);
 				
-				/*Effect size*/
-				while(c == 32 || c == 9 || c == 13 || c == 10) 
-					c = fzgetc(file_es, file_es_gz);
-				if(c==-1)
-					break;
-				x=0;
-				while(c != 32 && c != 9 && c != 13 && c != 10 && c!=0 && c!=-1 && x < 100 && c!='\xff' && c!='\xfe' && c>0) {
-					valn[x] = c;
-					c = fzgetc(file_es, file_es_gz);
-					x++;
-				}
-				valn[x] = '\0';
-				effsz_wght[xx] = (double)atof(valn);
+// 				/*Effect size*/
+// 				while(c == 32 || c == 9 || c == 13 || c == 10) 
+// 					c = fzgetc(file_es, file_es_gz);
+// 				if(c==-1)
+// 					break;
+// 				x=0;
+// 				while(c != 32 && c != 9 && c != 13 && c != 10 && c!=0 && c!=-1 && x < 100 && c!='\xff' && c!='\xfe' && c>0) {
+// 					valn[x] = c;
+// 					c = fzgetc(file_es, file_es_gz);
+// 					x++;
+// 				}
+// 				valn[x] = '\0';
+// 				effsz_wght[xx] = (double)atof(valn);
 				
-				xx++;
-				dd = (long int)floor((double)xx/(double)1000);
-				ee = (double)xx/(double)1000;
-				if(dd==ee) {
-					if((effsz_site = realloc(effsz_site,((long int)(dd+1)*(long int)1000*sizeof(long int)))) == 0) {
-                        file_es=0;*wV=0;
-                        free(effsz_site);free(effsz_wght);
-						puts("Error: realloc error get_obsdata.11\n");
-						return(0);
-					}    
-					if((effsz_wght = realloc(effsz_wght,((long int)(dd+1)*(long int)1000*sizeof(float)))) == 0) {
-                        file_es=0;*wV=0;
-                        free(effsz_site);free(effsz_wght);
-                        puts("Error: realloc errorget_obsdatavarchar.12\n");
-						return(0);
-					}    
-				}
-			}
-			if(effsz_site[xx]== 0) xx--;
-			tot_effszP = xx;/*total number of values added*/
+// 				xx++;
+// 				dd = (long int)floor((double)xx/(double)1000);
+// 				ee = (double)xx/(double)1000;
+// 				if(dd==ee) {
+// 					if((effsz_site = realloc(effsz_site,((long int)(dd+1)*(long int)1000*sizeof(long int)))) == 0) {
+//                         file_es=0;*wV=0;
+//                         free(effsz_site);free(effsz_wght);
+// 						puts("Error: realloc error get_obsdata.11\n");
+// 						return(0);
+// 					}    
+// 					if((effsz_wght = realloc(effsz_wght,((long int)(dd+1)*(long int)1000*sizeof(float)))) == 0) {
+//                         file_es=0;*wV=0;
+//                         free(effsz_site);free(effsz_wght);
+//                         puts("Error: realloc errorget_obsdatavarchar.12\n");
+// 						return(0);
+// 					}    
+// 				}
+// 			}
+// 			if(effsz_site[xx]== 0) xx--;
+// 			tot_effszP = xx;/*total number of values added*/
 			
-			/*now we need to assign this values to the variant positions here observed and include them in wV vector*/
-			if(xx>0) {
-				if((*Pp = (long int *)calloc(xx,sizeof(long int))) == 0) {
-                    file_es=0;*wV=0;
-                    free(effsz_site);free(effsz_wght);
-                    //fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.3 \n");
-                    log_error("Error: memory not reallocated. get_obsdata.3");
-					return(0);
-				}
-				if((*wV = (float *)calloc(xx,sizeof(float))) == 0) {
-                    file_es=0;*wV=0;
-                    free(effsz_site);free(effsz_wght);
-                    //fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.2 \n");
-                    log_error("Error: memory not reallocated. get_obsdata.2");
-					return(0);
-				}
-				for( x = 0; x < (int)xx; x++ ) {
-					Pp[0][x] = effsz_site[x];
-					wV[0][x] = effsz_wght[x];
-				}
-				*nV = tot_effszP;
-			}
-			free(effsz_site);
-			free(effsz_wght);
-		}
-        free(valn);
-	}
-	/*end collecting data for effect sizes*/
-	return 1;
-}
+// 			/*now we need to assign this values to the variant positions here observed and include them in wV vector*/
+// 			if(xx>0) {
+// 				if((*Pp = (long int *)calloc(xx,sizeof(long int))) == 0) {
+//                     file_es=0;*wV=0;
+//                     free(effsz_site);free(effsz_wght);
+//                     //fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.3 \n");
+//                     log_error("Error: memory not reallocated. get_obsdata.3");
+// 					return(0);
+// 				}
+// 				if((*wV = (float *)calloc(xx,sizeof(float))) == 0) {
+//                     file_es=0;*wV=0;
+//                     free(effsz_site);free(effsz_wght);
+//                     //fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. get_obsdata.2 \n");
+//                     log_error("Error: memory not reallocated. get_obsdata.2");
+// 					return(0);
+// 				}
+// 				for( x = 0; x < (int)xx; x++ ) {
+// 					Pp[0][x] = effsz_site[x];
+// 					wV[0][x] = effsz_wght[x];
+// 				}
+// 				*nV = tot_effszP;
+// 			}
+// 			free(effsz_site);
+// 			free(effsz_wght);
+// 		}
+//         free(valn);
+// 	}
+// 	/*end collecting data for effect sizes*/
+// 	return 1;
+// }
 
 
-int function_read_tfasta(
-    FILE *file_input, 
-    SGZip *file_input_gz, 
-    // FILE *file_logerr, SGZip *file_logerr_gz, 
-    long int init_site,long int end_site,int *n_sam, long int *n_site, char ***names, char **DNA_matr,char *chr_name, unsigned long first)
-{
-    static int c[1];
-    static char line[32767*2];
-    static char line2[32767*2];
-    static int col=0;
-    static int col2=0;
-    static int maxsam=128;
-    static long int position;
+// int function_read_tfasta(
+//     FILE *file_input, 
+//     SGZip *file_input_gz, 
+//     // FILE *file_logerr, SGZip *file_logerr_gz, 
+//     long int init_site,
+//     long int end_site,
+//     int *n_sam, 
+//     long int *n_site, 
+//     char ***names, 
+//     char **DNA_matr,
+//     char *chr_name, 
+//     unsigned long first)
+// {
+//     static int c[1];
+//     static char line[32767*2];
+//     static char line2[32767*2];
+//     static int col=0;
+//     static int col2=0;
+//     static int maxsam=128;
+//     static long int position;
     
-    static int chr_defined=0;
-    static int position_defined=0;
+//     static int chr_defined=0;
+//     static int position_defined=0;
     
-    char *cc;
-    static int nseq=0;
-    int x;
-    long int end_position=0;
-    long int dd=0;
-    long int count;
-    double ee;
+//     char *cc;
+//     static int nseq=0;
+//     int x;
+//     long int end_position=0;
+//     long int dd=0;
+//     long int count;
+//     double ee;
     
-    /*if names and number of samples are defined then skip the definition of names*/
-    if(first == 0) {
-        *c = fzgetc(file_input, file_input_gz);
-        if(*c == 0 || *c==-1  || *c=='\xff' || *c=='\xfe') return(0);
-        line[col] = *c;
-        col++;
-    }
+//     /*if names and number of samples are defined then skip the definition of names*/
+//     if(first == 0) {
+//         *c = fzgetc(file_input, file_input_gz);
+//         if(*c == 0 || *c==-1  || *c=='\xff' || *c=='\xfe') return(0);
+//         line[col] = *c;
+//         col++;
+//     }
     
-    while(*c=='#') {
-        /*parse comments*/
-        while(*c != 0 && *c!=-1 && *c!=10 && *c!=13 && *c!='\xff' && *c!='\xfe') {
-            *c = fzgetc(file_input, file_input_gz);
-            line[col] = *c;
-            col++;
-        }
-        if(*c==0 || *c==-1 || *c < 1  || *c=='\xff' || *c=='\xfe') {
-            // fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
-            log_error("Error: no sequence assigned for %s scaffold", chr_name);
-            *c=0;break;
-        }
-        line[col] = '\0';
-        if((cc=strstr(line, "#NAMES:")) != 0) {
-            /*collect names*/
-            nseq = 0;
-            cc = strtok (line,">\n\r ");
-            while (cc != NULL)
-            {
-                if(strstr(cc,"#NAMES:") == 0) {
-                    strcpy(names[0][nseq],cc);
-                    nseq++;
-                    if(nseq == maxsam) {
-                        maxsam += 32;
-                        if(maxsam > 32767) {
-                            //puts("\n Sorry, no more than 32767 samples are allowed.");
-                            log_error("Sorry, no more than 32767 samples are allowed.");
-                            return 0;
-                        }
-                        if ((*names = (char **)realloc(*names,maxsam*sizeof(char *))) == 0) {
-                            //puts("\nError: memory not reallocated. assigna.1 \n");
-                            log_error("Error: memory not reallocated. assigna.1");
-                            return(0);
-                        }
-                        for(x=nseq;x<maxsam;x++) {
-                            if ((names[0][x] = (char *)calloc(50,sizeof(char))) == 0) {
-                                //puts("\nError: memory not reallocated. assigna.2 \n");
-                                log_error("Error: memory not reallocated. assigna.2");
-                                return(0);
-                            }
-                        }
-                    }
-                }
-                cc = strtok(NULL, ">\n\r ");
-            }
-            *n_sam = nseq;
-        }
-        while(*c==10 || *c==13 || *c <= -1 || *c == 0 || *c=='\xff' || *c=='\xfe')
-            *c = fzgetc(file_input, file_input_gz);
-        if(*c==0 || *c==-1 || *c < 1  || *c=='\xff' || *c=='\xfe') {
-            //fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
-            log_error("Error: no sequence assigned for %s scaffold", chr_name);
-            return(0);
-        }
-        col=0;
-        /* *c = fzgetc(file_input, file_input_gz);*/
-        line[col] = *c;
-        col++;
-    }
-    /*
-    if(check_comment(c,file_input,file_input_gz) == 0)
-        return(0);
-    */
-    /*include in DNAmatrix the positions from the init_site to the end_site (if defined)*/
-    if(end_site == -1) end_position = init_site + 1;
-    /**/
-    if(*c==0 || *c==-1 || *c < 1  || *c=='\xff' || *c=='\xfe') {
-        //fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
-        log_error("Error: no sequence assigned for %s scaffold", chr_name);
-        return(0);
-    }
-    if(chr_defined == 0) {
-        col = 0;
-        while(*c != 0 && *c!=-1 && *c!=10 && *c!=13 && *c != 9 && *c != 32 && *c != 58 && *c!='\xff' && *c!='\xfe') {
-            line[col] = *c;
-            col++;
-            *c = fzgetc(file_input, file_input_gz);
-        }
-        if(*c == 0 || *c==-1  || *c=='\xff' || *c=='\xfe') {
-            //fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
-            log_error("Error: no sequence assigned for %s scaffold", chr_name);
-            return(0);
-        }
-        line[col] = '\0';
-    }
-    if(position_defined == 0) {
-        if(*c==58) {
-            *c = fzgetc(file_input, file_input_gz);
-            col2 = 0;
-            while(*c != 0 && *c!=-1 && *c!=10 && *c!=13 && *c != 9 && *c != 32 && *c!='\xff' && *c!='\xfe') {
-                line2[col2] = *c;
-                col2++;
-                *c = fzgetc(file_input, file_input_gz);
-            }
-            if(*c == 0 || *c==-1  || *c=='\xff' || *c=='\xfe') {
-                //fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
-                log_error("Error: no sequence assigned for %s scaffold", chr_name);
-                return(0);
-            }
-            line2[col2] = '\0';
-            position = atol(line2);
-        }
-    }
-    if(check_comment(c,file_input,file_input_gz) == 0)
-        return(0);
-    /**/
-    /******** chr name *************/
-    while(strcmp(line, chr_name) != 0 && !(*c <= 0 || *c==10 || *c==13 || *c=='\xff' || *c=='\xfe')) {
-        position = 0;
-        while(!(*c==10 || *c==13 || *c <= -1 || *c == 0 || *c=='\xff' || *c=='\xfe'))
-            *c = fzgetc(file_input, file_input_gz);
-        if(check_comment(c,file_input,file_input_gz) == 0)
-            return(0);
-        if(*c==10 || *c==13) {
-            while(*c==10 || *c==13)
-                *c = fzgetc(file_input, file_input_gz);
-            if(check_comment(c,file_input,file_input_gz) == 0)
-                return(0);
-            col = 0;
-            while(*c != 0 && *c!=-1 && *c!=10 && *c!=13 && *c != 9 && *c != 32 && *c!='\xff' && *c!='\xfe' && *c != 58 && *c>0) {
-                line[col] = *c;
-                col++;
-                *c = fzgetc(file_input, file_input_gz);
-            }
-            if(check_comment(c,file_input,file_input_gz) == 0)
-                return(0);
-            line[col] = '\0';
-            if(*c==58) {
-                if(strcmp(line, chr_name) == 0 && position < init_site) {
-                    while(*c==10 || *c==13 || *c==58) *c = fzgetc(file_input, file_input_gz);
-                    if(check_comment(c,file_input,file_input_gz) == 0)
-                        return(0);
-                    col2 = 0;
-                    while(*c != 0 && *c!=-1 && *c!=10 && *c!=13 && *c != 9 && *c != 32 && *c!='\xff' && *c!='\xfe' && *c>0) {
-                        line2[col2] = *c;
-                        col2++;
-                        *c = fzgetc(file_input, file_input_gz);
-                    }
-                    line2[col2] = '\0';
-                    position = atol(line2);
-                    if(end_site == -1) end_position = position + 1;
-                    if(check_comment(c,file_input,file_input_gz) == 0)
-                        return(0);
-                }
-            }
-        }
-    }
-    if(check_comment(c,file_input,file_input_gz) == 0)
-        return(0);
-    *n_site = 0;
-    *c = fzgetc(file_input, file_input_gz);
-    col = 0;
-    count=0;
-    while (strcmp(line, chr_name) == 0 && *n_site < end_position) {
-        if(position > *n_site) {
-            while(position > *n_site+1) {
-                /*include as many missing rows as positions until arriving to 'positions'*/
-                col = 0;
-                while(col < *n_sam) {
-                    DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
-                    col += 1;
-                    count += 1;
-                    /*realloc DNAmatr if nnecessary*/
-                    dd = (long int)floor((double)count/(double)(1e6));
-                    ee = (double)count/(double)1e6;
-                    if((double)dd == ee/* && dd>0*/) {
-                        if((*DNA_matr = realloc(*DNA_matr,((long int)/*count+1*//**/dd+(long int)1/**/)/**/*(long int)1e6* /**/sizeof(char))) == 0) {
-                            //puts("Error: realloc error varchar.1\n");
-                            log_error("Error: realloc error varchar.1");
-                            return(0);
-                        }
-                    }
-                }
-                *n_site += 1;
-                col = 0;
-            }
-            if(end_site == -1) end_position = position + 1;
-            position_defined = 1;
-        }
-        else {
-            chr_defined = 0;
-            position_defined = 0;
-        }
-        switch(*c) {
-            case 'T':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '1';
-                col += 1;
-                count += 1;
-                break;
-            case 't':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '1';
-                col += 1;
-                count += 1;
-                break;
-            case 'U':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '1';
-                col += 1;
-                count += 1;
-                break;
-            case 'u':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '1';
-                col += 1;
-                count += 1;
-                break;
-            case 'C':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '2';
-                col += 1;
-                count += 1;
-                break;
-            case 'c':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '2';
-                col += 1;
-                count += 1;
-                break;
-            case 'G':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '3';
-                col += 1;
-                count += 1;
-                break;
-            case 'g':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '3';
-                col += 1;
-                count += 1;
-                break;
-            case 'A':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '4';
-                col += 1;
-                count += 1;
-                break;
-            case 'a':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '4';
-                col += 1;
-                count += 1;
-                break;
-            case 0:
-                break;
-            case -1:
-                break;
-            case 10:
-                break;
-            case 13:
-                break;
-            case 32:
-                break;
-            case 9:
-                break;
-            case 'N':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
-                col += 1;
-                count += 1;
-                break;
-            case 'n':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
-                col += 1;
-                count += 1;
-                break;
-            case '?':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
-                col += 1;
-                count += 1;
-                break;
-            case '-':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '6';
-                col += 1;
-                count += 1;
-                break;
-                /*gaps are converted to N*/
-            case 'W':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'w';
-                col += 1;
-                count += 1;
-                break;
-            case 'w':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'w';
-                col += 1;
-                count += 1;
-                break;
-            case 'M':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'm';
-                col += 1;
-                count += 1;
-                break;
-            case 'm':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'm';
-                col += 1;
-                count += 1;
-                break;
-            case 'R':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'r';
-                col += 1;
-                count += 1;
-                break;
-            case 'r':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'r';
-                col += 1;
-                count += 1;
-                break;
-            case 'Y':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'y';
-                col += 1;
-                count += 1;
-                break;
-            case 'y':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'y';
-                col += 1;
-                count += 1;
-                break;
-            case 'K':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'k';
-                col += 1;
-                count += 1;
-                break;
-            case 'k':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'k';
-                col += 1;
-                count += 1;
-                break;
-            case 'S':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 's';
-                col += 1;
-                count += 1;
-                break;
-            case 's':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 's';
-                col += 1;
-                count += 1;
-                break;
-            case 'b':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
-                col += 1;
-                count += 1;
-                break;
-            case 'B':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
-                col += 1;
-                count += 1;
-                break;
-            case 'd':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
-                col += 1;
-                count += 1;
-                break;
-            case 'D':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
-                col += 1;
-                count += 1;
-                break;
-            case 'h':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
-                col += 1;
-                count += 1;
-                break;
-            case 'H':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
-                col += 1;
-                count += 1;
-                break;
-            case 'v':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
-                col += 1;
-                count += 1;
-                break;
-            case 'V':
-                DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
-                col += 1;
-                count += 1;
-                break;
-            default:
-                //fzprintf(file_logerr,file_logerr_gz,"Unexpected value in tfa file: position %ld, sample %d: ",position,col);
-                //fzprintf(file_logerr,file_logerr_gz,"%c\n",*c);
-                log_error("Unexpected value in tfa file: position %ld, sample %d: %c",position,col,*c);
-                return(0);
-                break;
-        }
-        if(check_comment(c,file_input,file_input_gz) == 0) {
-            if(col == *n_sam || col == 0) {
-                *n_site += 1;
-                return(1);
-            }
-            return(0);
-        }
-        *c = fzgetc(file_input, file_input_gz);
-        if(*c < 0 || *c==10 || *c==13 || *c == -1 || *c == 0) {
-            while(check_comment(c,file_input,file_input_gz) == 0) {
-                if(col == *n_sam || col == 0) {
-                    *n_site += 1;
-                    return(1);
-                }
-                return(0);
-            }
-            while(*c==10 || *c==13)
-                *c = fzgetc(file_input, file_input_gz);
-            while(check_comment(c,file_input,file_input_gz) == 0) {
-                if(col == *n_sam || col == 0) {
-                    *n_site += 1;
-                    return(1);
-                }
-                return(0);
-            }
-            *n_site += 1;
-            col = 0;
-            while(*c != 0 && *c!=-1 && *c!=10 && *c!=13 && *c != 9 && *c != 32 && *c!='\xff' && *c!='\xfe' && *c != 58 && *c>0) {
-                line[col] = *c;
-                col++;
-                *c = fzgetc(file_input, file_input_gz);
-            }
-            line[col] = '\0';
-            chr_defined = 1;
-            while(check_comment(c,file_input,file_input_gz) == 0) {
-                if(col == *n_sam || col == 0) {
-                    *n_site += 1;
-                    return(1);
-                }
-                return(0);
-            }
-            col = 0;
-            if(*c == 58) {
-                while(*c==10 || *c==13 || *c==58) *c = fzgetc(file_input, file_input_gz);
-                col2 = 0;
-                while(*c != 0 && *c!=-1 && *c!=10 && *c!=13 && *c != 9 && *c != 32 && *c>0) {
-                    line2[col2] = *c;
-                    col2++;
-                    *c = fzgetc(file_input, file_input_gz);
-                }
-                line2[col2] = '\0';
-                col2 = 0;
-                position = atol(line2);
-                if(end_site == -1) end_position = position + 1;
-                position_defined = 1;
-                if(check_comment(c,file_input,file_input_gz) == 0)
-                    return(0);
-            }
-        }
-        /*realloc DNAmatr if nnecessary*/
-        dd = (long int)floor((double)count/(double)1e6);
-        ee = (double)count/(double)1e6;
-        if(dd == ee/* && dd>0*/) {
-            if((*DNA_matr = realloc(*DNA_matr,((long int)dd+(long int)1)*(long int)1e6*sizeof(char))) == 0) {
-        //    if((*DNA_matr = realloc(*DNA_matr,((long int)count+1)*sizeof(char))) == 0) {
-                puts("Error: realloc error varchar.1\n");
-                return(0);
-            }
-        }
-    }
-    /*return n_site,n_sam,DNA matrix and names in pointers*/
+//     while(*c=='#') {
+//         /*parse comments*/
+//         while(*c != 0 && *c!=-1 && *c!=10 && *c!=13 && *c!='\xff' && *c!='\xfe') {
+//             *c = fzgetc(file_input, file_input_gz);
+//             line[col] = *c;
+//             col++;
+//         }
+//         if(*c==0 || *c==-1 || *c < 1  || *c=='\xff' || *c=='\xfe') {
+//             // fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
+//             log_error("Error: no sequence assigned for %s scaffold", chr_name);
+//             *c=0;break;
+//         }
+//         line[col] = '\0';
+//         if((cc=strstr(line, "#NAMES:")) != 0) {
+//             /*collect names*/
+//             nseq = 0;
+//             cc = strtok (line,">\n\r ");
+//             while (cc != NULL)
+//             {
+//                 if(strstr(cc,"#NAMES:") == 0) {
+//                     strcpy(names[0][nseq],cc);
+//                     nseq++;
+//                     if(nseq == maxsam) {
+//                         maxsam += 32;
+//                         if(maxsam > 32767) {
+//                             //puts("\n Sorry, no more than 32767 samples are allowed.");
+//                             log_error("Sorry, no more than 32767 samples are allowed.");
+//                             return 0;
+//                         }
+//                         if ((*names = (char **)realloc(*names,maxsam*sizeof(char *))) == 0) {
+//                             //puts("\nError: memory not reallocated. assigna.1 \n");
+//                             log_error("Error: memory not reallocated. assigna.1");
+//                             return(0);
+//                         }
+//                         for(x=nseq;x<maxsam;x++) {
+//                             if ((names[0][x] = (char *)calloc(50,sizeof(char))) == 0) {
+//                                 //puts("\nError: memory not reallocated. assigna.2 \n");
+//                                 log_error("Error: memory not reallocated. assigna.2");
+//                                 return(0);
+//                             }
+//                         }
+//                     }
+//                 }
+//                 cc = strtok(NULL, ">\n\r ");
+//             }
+//             *n_sam = nseq;
+//         }
+//         while(*c==10 || *c==13 || *c <= -1 || *c == 0 || *c=='\xff' || *c=='\xfe')
+//             *c = fzgetc(file_input, file_input_gz);
+//         if(*c==0 || *c==-1 || *c < 1  || *c=='\xff' || *c=='\xfe') {
+//             //fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
+//             log_error("Error: no sequence assigned for %s scaffold", chr_name);
+//             return(0);
+//         }
+//         col=0;
+//         /* *c = fzgetc(file_input, file_input_gz);*/
+//         line[col] = *c;
+//         col++;
+//     }
+//     /*
+//     if(check_comment(c,file_input,file_input_gz) == 0)
+//         return(0);
+//     */
+//     /*include in DNAmatrix the positions from the init_site to the end_site (if defined)*/
+//     if(end_site == -1) end_position = init_site + 1;
+//     /**/
+//     if(*c==0 || *c==-1 || *c < 1  || *c=='\xff' || *c=='\xfe') {
+//         //fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
+//         log_error("Error: no sequence assigned for %s scaffold", chr_name);
+//         return(0);
+//     }
+//     if(chr_defined == 0) {
+//         col = 0;
+//         while(*c != 0 && *c!=-1 && *c!=10 && *c!=13 && *c != 9 && *c != 32 && *c != 58 && *c!='\xff' && *c!='\xfe') {
+//             line[col] = *c;
+//             col++;
+//             *c = fzgetc(file_input, file_input_gz);
+//         }
+//         if(*c == 0 || *c==-1  || *c=='\xff' || *c=='\xfe') {
+//             //fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
+//             log_error("Error: no sequence assigned for %s scaffold", chr_name);
+//             return(0);
+//         }
+//         line[col] = '\0';
+//     }
+//     if(position_defined == 0) {
+//         if(*c==58) {
+//             *c = fzgetc(file_input, file_input_gz);
+//             col2 = 0;
+//             while(*c != 0 && *c!=-1 && *c!=10 && *c!=13 && *c != 9 && *c != 32 && *c!='\xff' && *c!='\xfe') {
+//                 line2[col2] = *c;
+//                 col2++;
+//                 *c = fzgetc(file_input, file_input_gz);
+//             }
+//             if(*c == 0 || *c==-1  || *c=='\xff' || *c=='\xfe') {
+//                 //fzprintf(file_logerr,file_logerr_gz,"\nError: no sequence assigned for %s scaffold \n",chr_name);
+//                 log_error("Error: no sequence assigned for %s scaffold", chr_name);
+//                 return(0);
+//             }
+//             line2[col2] = '\0';
+//             position = atol(line2);
+//         }
+//     }
+//     if(check_comment(c,file_input,file_input_gz) == 0)
+//         return(0);
+//     /**/
+//     /******** chr name *************/
+//     while(strcmp(line, chr_name) != 0 && !(*c <= 0 || *c==10 || *c==13 || *c=='\xff' || *c=='\xfe')) {
+//         position = 0;
+//         while(!(*c==10 || *c==13 || *c <= -1 || *c == 0 || *c=='\xff' || *c=='\xfe'))
+//             *c = fzgetc(file_input, file_input_gz);
+//         if(check_comment(c,file_input,file_input_gz) == 0)
+//             return(0);
+//         if(*c==10 || *c==13) {
+//             while(*c==10 || *c==13)
+//                 *c = fzgetc(file_input, file_input_gz);
+//             if(check_comment(c,file_input,file_input_gz) == 0)
+//                 return(0);
+//             col = 0;
+//             while(*c != 0 && *c!=-1 && *c!=10 && *c!=13 && *c != 9 && *c != 32 && *c!='\xff' && *c!='\xfe' && *c != 58 && *c>0) {
+//                 line[col] = *c;
+//                 col++;
+//                 *c = fzgetc(file_input, file_input_gz);
+//             }
+//             if(check_comment(c,file_input,file_input_gz) == 0)
+//                 return(0);
+//             line[col] = '\0';
+//             if(*c==58) {
+//                 if(strcmp(line, chr_name) == 0 && position < init_site) {
+//                     while(*c==10 || *c==13 || *c==58) *c = fzgetc(file_input, file_input_gz);
+//                     if(check_comment(c,file_input,file_input_gz) == 0)
+//                         return(0);
+//                     col2 = 0;
+//                     while(*c != 0 && *c!=-1 && *c!=10 && *c!=13 && *c != 9 && *c != 32 && *c!='\xff' && *c!='\xfe' && *c>0) {
+//                         line2[col2] = *c;
+//                         col2++;
+//                         *c = fzgetc(file_input, file_input_gz);
+//                     }
+//                     line2[col2] = '\0';
+//                     position = atol(line2);
+//                     if(end_site == -1) end_position = position + 1;
+//                     if(check_comment(c,file_input,file_input_gz) == 0)
+//                         return(0);
+//                 }
+//             }
+//         }
+//     }
+//     if(check_comment(c,file_input,file_input_gz) == 0)
+//         return(0);
+//     *n_site = 0;
+//     *c = fzgetc(file_input, file_input_gz);
+//     col = 0;
+//     count=0;
+//     while (strcmp(line, chr_name) == 0 && *n_site < end_position) {
+//         if(position > *n_site) {
+//             while(position > *n_site+1) {
+//                 /*include as many missing rows as positions until arriving to 'positions'*/
+//                 col = 0;
+//                 while(col < *n_sam) {
+//                     DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
+//                     col += 1;
+//                     count += 1;
+//                     /*realloc DNAmatr if nnecessary*/
+//                     dd = (long int)floor((double)count/(double)(1e6));
+//                     ee = (double)count/(double)1e6;
+//                     if((double)dd == ee/* && dd>0*/) {
+//                         if((*DNA_matr = realloc(*DNA_matr,((long int)/*count+1*//**/dd+(long int)1/**/)/**/*(long int)1e6* /**/sizeof(char))) == 0) {
+//                             //puts("Error: realloc error varchar.1\n");
+//                             log_error("Error: realloc error varchar.1");
+//                             return(0);
+//                         }
+//                     }
+//                 }
+//                 *n_site += 1;
+//                 col = 0;
+//             }
+//             if(end_site == -1) end_position = position + 1;
+//             position_defined = 1;
+//         }
+//         else {
+//             chr_defined = 0;
+//             position_defined = 0;
+//         }
+//         switch(*c) {
+//             case 'T':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '1';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 't':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '1';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'U':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '1';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'u':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '1';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'C':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '2';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'c':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '2';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'G':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '3';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'g':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '3';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'A':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '4';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'a':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '4';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 0:
+//                 break;
+//             case -1:
+//                 break;
+//             case 10:
+//                 break;
+//             case 13:
+//                 break;
+//             case 32:
+//                 break;
+//             case 9:
+//                 break;
+//             case 'N':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'n':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case '?':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case '-':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '6';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//                 /*gaps are converted to N*/
+//             case 'W':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'w';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'w':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'w';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'M':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'm';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'm':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'm';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'R':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'r';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'r':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'r';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'Y':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'y';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'y':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'y';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'K':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'k';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'k':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 'k';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'S':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 's';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 's':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = 's';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'b':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'B':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'd':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'D':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'h':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'H':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'v':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             case 'V':
+//                 DNA_matr[0][(((long int)nseq*(unsigned long)*n_site)+(unsigned long)col)] = '5';
+//                 col += 1;
+//                 count += 1;
+//                 break;
+//             default:
+//                 //fzprintf(file_logerr,file_logerr_gz,"Unexpected value in tfa file: position %ld, sample %d: ",position,col);
+//                 //fzprintf(file_logerr,file_logerr_gz,"%c\n",*c);
+//                 log_error("Unexpected value in tfa file: position %ld, sample %d: %c",position,col,*c);
+//                 return(0);
+//                 break;
+//         }
+//         if(check_comment(c,file_input,file_input_gz) == 0) {
+//             if(col == *n_sam || col == 0) {
+//                 *n_site += 1;
+//                 return(1);
+//             }
+//             return(0);
+//         }
+//         *c = fzgetc(file_input, file_input_gz);
+//         if(*c < 0 || *c==10 || *c==13 || *c == -1 || *c == 0) {
+//             while(check_comment(c,file_input,file_input_gz) == 0) {
+//                 if(col == *n_sam || col == 0) {
+//                     *n_site += 1;
+//                     return(1);
+//                 }
+//                 return(0);
+//             }
+//             while(*c==10 || *c==13)
+//                 *c = fzgetc(file_input, file_input_gz);
+//             while(check_comment(c,file_input,file_input_gz) == 0) {
+//                 if(col == *n_sam || col == 0) {
+//                     *n_site += 1;
+//                     return(1);
+//                 }
+//                 return(0);
+//             }
+//             *n_site += 1;
+//             col = 0;
+//             while(*c != 0 && *c!=-1 && *c!=10 && *c!=13 && *c != 9 && *c != 32 && *c!='\xff' && *c!='\xfe' && *c != 58 && *c>0) {
+//                 line[col] = *c;
+//                 col++;
+//                 *c = fzgetc(file_input, file_input_gz);
+//             }
+//             line[col] = '\0';
+//             chr_defined = 1;
+//             while(check_comment(c,file_input,file_input_gz) == 0) {
+//                 if(col == *n_sam || col == 0) {
+//                     *n_site += 1;
+//                     return(1);
+//                 }
+//                 return(0);
+//             }
+//             col = 0;
+//             if(*c == 58) {
+//                 while(*c==10 || *c==13 || *c==58) *c = fzgetc(file_input, file_input_gz);
+//                 col2 = 0;
+//                 while(*c != 0 && *c!=-1 && *c!=10 && *c!=13 && *c != 9 && *c != 32 && *c>0) {
+//                     line2[col2] = *c;
+//                     col2++;
+//                     *c = fzgetc(file_input, file_input_gz);
+//                 }
+//                 line2[col2] = '\0';
+//                 col2 = 0;
+//                 position = atol(line2);
+//                 if(end_site == -1) end_position = position + 1;
+//                 position_defined = 1;
+//                 if(check_comment(c,file_input,file_input_gz) == 0)
+//                     return(0);
+//             }
+//         }
+//         /*realloc DNAmatr if nnecessary*/
+//         dd = (long int)floor((double)count/(double)1e6);
+//         ee = (double)count/(double)1e6;
+//         if(dd == ee/* && dd>0*/) {
+//             if((*DNA_matr = realloc(*DNA_matr,((long int)dd+(long int)1)*(long int)1e6*sizeof(char))) == 0) {
+//         //    if((*DNA_matr = realloc(*DNA_matr,((long int)count+1)*sizeof(char))) == 0) {
+//                 puts("Error: realloc error varchar.1\n");
+//                 return(0);
+//             }
+//         }
+//     }
+//     /*return n_site,n_sam,DNA matrix and names in pointers*/
     
-    return(1);
-}
+//     return(1);
+// }
 
-int  check_comment(int *c, FILE *file_input, SGZip *file_input_gz) {
+int  check_comment(int *c, FILE *file_input, BGZF *file_input_gz) {
     if(*c=='#') {
         /*parse comments*/
         while(*c!=10 && *c!=13 && *c != 0 && *c!=-1 && *c!='\xff' && *c!='\xfe') {
-            *c = fzgetc(file_input, file_input_gz);
+            *c = bzgetc(file_input, file_input_gz);
         }
         if(*c==0 || *c==-1 || *c =='\xff' || *c=='\xfe')
             return(0);

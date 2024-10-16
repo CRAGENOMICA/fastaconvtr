@@ -8,10 +8,10 @@
 
 #include "get_obsdatastats.h"
 #include "log.h"
-
+#include <htslib/bgzf.h>
 int get_obsstats_mod(
-	FILE *file_output, 
-	SGZip *file_output_gz, 
+	// FILE *file_output, 
+	// BGZF *file_output_gz, 
 	//FILE *file_logerr, 
 	//SGZip *file_logerr_gz, 
 	int n_samp, 
@@ -124,10 +124,11 @@ int get_obsstats_mod(
 		// fzprintf(file_logerr,file_logerr_gz," n_samples: %d .",n_samp);
 		log_error("n_samples: %d . NOT ENOUGH SAMPLES.",n_samp);
 		//fzprintf(file_logerr,file_logerr_gz," NOT ENOUGH SAMPLES.");
-		if(file_output) {
-			fzprintf(file_output,file_output_gz," n_samples: %d .",n_samp);
-			fzprintf(file_output,file_output_gz," NOT ENOUGH SAMPLES.");
-		}
+		// if(file_output) {
+			// fzprintf(file_output,file_output_gz," n_samples: %d .",n_samp);
+			// fzprintf(file_output,file_output_gz," NOT ENOUGH SAMPLES.");
+
+		// }
         free(initsq1);
 		return(0);
 	}
@@ -722,7 +723,8 @@ int get_obsstats_mod(
 		}
 	}
  	if(_sites == (double)0) {
-		fzprintf(file_output,file_output_gz,"Not valid sites available in this file: ");
+		// fzprintf(file_output,file_output_gz,"Not valid sites available in this file: ");
+		log_error("Not valid sites available in this file: ");
         free(initsq1);
         return 0;
     }

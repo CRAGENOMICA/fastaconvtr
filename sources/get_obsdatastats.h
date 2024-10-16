@@ -9,14 +9,14 @@
 #define GET_OBSDATASTATS_H_
 
 #include "common.h"
-#include "zutil.h"
-
+#include <htslib/bgzf.h>
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
-	int get_obsstats_mod(FILE *file_output, 
-	SGZip *file_output_gz, 
+	int get_obsstats_mod(
+		// FILE *file_output, 
+	// BGZF *file_output_gz, 
 	//FILE *file_logerr, 
 	//SGZip *file_logerr_gz, 
 	int n_samp, 

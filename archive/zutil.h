@@ -86,7 +86,6 @@
 #include <zlib.h>
 #include <stdarg.h>
 
-
 #ifndef WIN32
     #define F_OK 0
     int access(const char *path, int mode); /* Always use F_OK as mode. Returns 0 if the file exists otherwise it returns -1 */

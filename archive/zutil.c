@@ -360,6 +360,8 @@ gz_return private_fzprintf(FILE * file_handle, SGZip *z, char *message) {
 	return ret;
 }
 
+
+
 /*http://stackoverflow.com/questions/1056411/how-to-pass-variable-number-of-arguments-to-printf-sprintf*/
 /*
  * message -> buffer

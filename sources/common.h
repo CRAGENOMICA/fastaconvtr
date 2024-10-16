@@ -19,11 +19,12 @@ extern "C" {
 	#include <string.h>
 	#include <stdlib.h>
 	#include <math.h>
+	#include "htslib/bgzf.h"
 	
 	#define FULL_VERSION "v." VERSION_NUMBER " (" BUILD_NUMBER ")"
 
 
-	#define FASTA2MS2 "#fastaconvtr" FULL_VERSION " Sebastian E. Ramos-Onsins.\n"
+	#define FASTA2MS2 "#fastaconvtr " FULL_VERSION " Sebastian E. Ramos-Onsins.\n"
 
 	#define MSP_MAX_FILENAME			(unsigned long) 4096 /**< @brief Maximum Filename Length allowed */
 	#define MSP_MAX_GFF_WORDLEN         (unsigned long) 20
@@ -80,6 +81,10 @@ extern "C" {
 		int argc;
 	} fastaconvtr_args_t;
 
+
+	int bzprintf(FILE *file_handle, BGZF *z, const char *message, ...);
+	FILE * bzopen(const char *filename, const char *opentype, BGZF **z) ;
+	int bzgetc(FILE * file_handle, BGZF *z) ;
 	
 	#ifdef	__cplusplus
 	}

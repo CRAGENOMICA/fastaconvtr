@@ -183,7 +183,7 @@ void log_log(int level, const char *file, int line, const char *fmt, ...) {
 }
 
 
-void log_start(const char *program_name,int argc, char *argv[]) {
+void log_start(const char *program_name,int argc, const char *argv[]) {
    // echo program started
   log_info("%s started", program_name);
   // echo command line arguments as received

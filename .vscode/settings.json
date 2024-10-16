@@ -1,0 +1,25 @@
+{
+    "files.associations": {
+        "read_fasta.h": "c",
+        "array": "c",
+        "deque": "c",
+        "string": "c",
+        "unordered_map": "c",
+        "unordered_set": "c",
+        "vector": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "zindex.h": "c",
+        "main_fasta2ms2.h": "c",
+        "files_util.h": "c",
+        "stdbool.h": "c",
+        "get_obsdatastats.h": "c",
+        "zutil.h": "c",
+        "common.h": "c",
+        "write_ms.h": "c",
+        "usegff2.h": "c",
+        "random": "c",
+        "tfasta.h": "c",
+        "log.h": "c"
+    }
+}

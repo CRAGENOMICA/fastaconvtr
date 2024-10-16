@@ -1,0 +1,229 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            
+            "name": "(gdb) Launch fastaconvtr",
+            "type": "cppdbg",
+            "request": "launch",
+            //"program": "${command:cmake.launchTargetPath}",
+            "program": "${command:cmake.buildDirectory}/fastaconvtr",
+
+            // ## activate which case for debuging
+            // "args": [],
+            // "args": [],
+            // "args": [],
+            // "args": ["-F", "fasta", "-f", "fasta","-i", "./Examples/100Kchr10.fa",  "-o", "./test_output.fa.qz",    "-n", "./Examples/chr10.txt"],
+
+            // ../bin/fastaconvtr -F fasta -f tfasta  -i ./100Kchr10.fa -o ./100Kchr10.tfa.gz -n ./chr10.txt
+            // "args": ["-F", "fasta", "-f", "tfasta","-i", "./100Kchr10.fa",  "-o", "../debug_test/100Kchr10.tfa.gz",    "-n", "./chr10.txt"],
+
+
+          
+            
+            //  ../bin/fastaconvtr -F fasta -f tfasta  -i ./100Kchr10.fa -o ./100Kchr10_fa2tfa_01B.tfa.gz -m ./coord_100Kb.txt -n ./chr10.txt
+            // "args" : ["-F", "fasta", "-f", "tfasta", "-i", "./100Kchr10.fa", "-o", "../debug_test/100Kchr10_fa2tfa_01B.tfa.gz", "-m", "./coord_100Kb.txt", "-n", "./chr10.txt"],
+           
+            //  ../bin/fastaconvtr -F fasta -f tfasta  -i ./100Kchr10.fa -o ./100Kchr10_fa2tfa_02.tfa.gz  -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 1 -n ./chr10.txt
+            // "args": ["-F", "fasta", "-f", "tfasta", "-i", "./100Kchr10.fa", "-o", "../debug_test/100Kchr10_fa2tfa_02.tfa.gz", "-g", "./100Kchr10.gtf", "nonsynonymous", "Nuclear_Universal", "-c", "max", "-u", "1", "-n", "./chr10.txt"],
+           
+            //  ../bin/fastaconvtr -F fasta -f tfasta  -i ./100Kchr10.fa -o ./100Kchr10_fa2tfa_03.tfa.gz  -E ./100Kchr10_fa2tfa_02.tfa.gz_npops1_nsam42_nonsynonymous_max_IncludeMissingVariantsmhits_NOoutg_ploidy1_WEIGHTS.gz -n ./chr10.txt
+            // "args": ["-F", "fasta", "-f", "tfasta", "-i", "./100Kchr10.fa", "-o", "../debug_test/100Kchr10_fa2tfa_03.tfa.gz", "-E", "../debug_test/100Kchr10_fa2tfa_02.tfa.gz_npops1_nsam42_nonsynonymous_max_IncludeMissingVariantsmhits_NOoutg_ploidy1_WEIGHTS.gz", "-n", "./chr10.txt"],
+           
+            //  ../bin/fastaconvtr -F fasta -f tfasta  -i ./100Kchr10.fa -o ./100Kchr10_fa2tfa_02B.tfa.gz -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 0 -n ./chr10.txt  -n ./chr10.txt
+            // "args": ["-F", "fasta", "-f", "tfasta", "-i", "./100Kchr10.fa", "-o", "../debug_test/100Kchr10_fa2tfa_02B.tfa.gz", "-g", "./100Kchr10.gtf", "nonsynonymous", "Nuclear_Universal", "-c", "max", "-u", "0", "-n", "./chr10.txt"],
+            
+            //  ../bin/fastaconvtr -F fasta -f tfasta  -i ./100Kchr10.fa -o ./100Kchr10_fa2tfa_03B.tfa.gz -E ./100Kchr10_fa2tfa_02B.tfa.gz_npops1_nsam42_nonsynonymous_max_ExcludeMissingVariantsmhits_NOoutg_ploidy1_WEIGHTS.gz -n ./chr10.txt
+            // "args": ["-F", "fasta", "-f", "tfasta", "-i", "./100Kchr10.fa", "-o", "../debug_test/100Kchr10_fa2tfa_03B.tfa.gz", "-E", "../debug_test/100Kchr10_fa2tfa_02B.tfa.gz_npops1_nsam42_nonsynonymous_max_ExcludeMissingVariantsmhits_NOoutg_ploidy1_WEIGHTS.gz", "-n", "./chr10.txt"],
+            
+            //  ../bin/fastaconvtr -F fasta -f tfasta  -i ./100Kchr10.fa -o ./100Kchr10_fa2tfa_04.tfa.gz -p 2 -n ./chr10.txt
+            // "args": ["-F", "fasta", "-f", "tfasta", "-i", "./100Kchr10.fa", "-o", "../debug_test/100Kchr10_fa2tfa_04.tfa.gz", "-p", "2", "-n", "./chr10.txt"],
+            
+            //  ../bin/fastaconvtr -F fasta -f tfasta  -i ./100Kchr10.fa -o ./100Kchr10_fa2tfa_05.tfa.gz -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 1 -p 2 -n ./chr10.txt
+            // "args": ["-F", "fasta", "-f", "tfasta", "-i", "./100Kchr10.fa", "-o", "../debug_test/100Kchr10_fa2tfa_05.tfa.gz", "-g", "./100Kchr10.gtf", "nonsynonymous", "Nuclear_Universal", "-c", "max", "-u", "1", "-p", "2", "-n", "./chr10.txt"],
+            
+            //  ../bin/fastaconvtr -F fasta -f tfasta  -i ./100Kchr10.fa -o ./100Kchr10_fa2tfa_06.tfa.gz -E ./100Kchr10_fa2tfa_05.tfa.gz_npops1_nsam84_nonsynonymous_max_IncludeMissingVariantsmhits_NOoutg_ploidy2_WEIGHTS.gz -p 2 -n ./chr10.txt
+            // "args": ["-F", "fasta", "-f", "tfasta", "-i", "./100Kchr10.fa", "-o", "../debug_test/100Kchr10_fa2tfa_06.tfa.gz", "-E", "../debug_test/100Kchr10_fa2tfa_05.tfa.gz_npops1_nsam84_nonsynonymous_max_IncludeMissingVariantsmhits_NOoutg_ploidy2_WEIGHTS.gz", "-p", "2", "-n", "./chr10.txt"],
+            
+            //  ../bin/fastaconvtr -F fasta -f tfasta  -i ./100Kchr10.fa -o ./100Kchr10_fa2tfa_07.tfa.gz -N 2 40 2 -G 1 -u 1 -n ./chr10.txt
+            // "args": ["-F", "fasta", "-f", "tfasta", "-i", "./100Kchr10.fa", "-o", "../debug_test/100Kchr10_fa2tfa_07.tfa.gz", "-N", "2", "40", "2", "-G", "1", "-u", "1", "-n", "./chr10.txt"],
+            
+            //  ../bin/fastaconvtr -F fasta -f tfasta  -i ./100Kchr10.fa -o ./100Kchr10_fa2tfa_08.tfa.gz -N 2 40 2 -G 1 -u 1 -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -n ./chr10.txt
+            // "args": ["-F", "fasta", "-f", "tfasta", "-i", "./100Kchr10.fa", "-o", "../debug_test/100Kchr10_fa2tfa_08.tfa.gz", "-N", "2", "40", "2", "-G", "1", "-u", "1", "-g", "./100Kchr10.gtf", "nonsynonymous", "Nuclear_Universal", "-c", "max", "-n", "./chr10.txt"],
+
+            
+            // echo tfasta to ms: Useful to generate mask files in case doing simulations. msfile contains only variants in full-non-missing positions
+            // echo --------------------------------------------------------------------------------------------------
+           
+            // ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_01.ms.txt -n ./chr10.txt
+            // "args": ["-F", "tfasta", "-f", "ms", "-i", "./100Kchr10.tfa.gz", "-o", "../debug_test/100Kchr10_tfa2ms_01.ms.txt", "-n", "./chr10.txt"],
+            
+            // ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_02.ms.txt -N 1 42 -n ./chr10.txt
+            //"args": ["-F", "tfasta", "-f", "ms", "-i", "./100Kchr10.tfa.gz", "-o", "../debug_test/100Kchr10_tfa2ms_02.ms.txt", "-N", "1", "42", "-n", "./chr10.txt"],
+            
+            // ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_03.ms.txt -N 2 40 2 -G 1 -n ./chr10.txt
+            // "args" : ["-F", "tfasta", "-f", "ms", "-i", "./100Kchr10.tfa.gz", "-o", "../debug_test/100Kchr10_tfa2ms_03.ms.txt", "-N", "2", "40", "2", "-G", "1", "-n", "./chr10.txt"],
+            // echo
+            // echo tfa2ms.ex04
+            // echo ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_04.ms.txt -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 0 -n ./chr10.txt > ./100Kchr10_tfa2ms_04.ms.txt.log.txt
+            // ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_04.ms.txt -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 0 -n ./chr10.txt > ./100Kchr10_tfa2ms_04.ms.txt.log.txt
+            // "args": ["-F", "tfasta", "-f", "ms", "-i", "./100Kchr10.tfa.gz", "-o", "./100Kchr10_tfa2ms_04.ms.txt", "-g", "./100Kchr10.gtf", "nonsynonymous", "Nuclear_Universal", "-c", "max", "-u", "0", "-n", "./chr10.txt"],
+            // echo
+            // echo tfa2ms.ex05 should give same results than previous
+            // echo ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_05.ms.txt -E ./100Kchr10_tfa2ms_04.ms.txt_npops1_nsam42_nonsynonymous_max_ExcludeMissingmhits_NOoutg_ploidy1_WEIGHTS.txt -n ./chr10.txt
+            // ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_05.ms.txt -E ./100Kchr10_tfa2ms_04.ms.txt_npops1_nsam42_nonsynonymous_max_ExcludeMissingmhits_NOoutg_ploidy1_WEIGHTS.txt -n ./chr10.txt
+            // "args": ["-F", "tfasta", "-f", "ms", "-i", "./100Kchr10.tfa.gz", "-o", "./100Kchr10_tfa2ms_05.ms.txt", "-E", "./100Kchr10_tfa2ms_04.ms.txt_npops1_nsam42_nonsynonymous_max_ExcludeMissingmhits_NOoutg_ploidy1_WEIGHTS.gz", "-n", "./chr10.txt"],
+            // echo
+            // echo tfa2ms.ex06
+            // echo ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_06.ms.txt -W ./coord_100Kb.txt -n ./chr10.txt
+            // ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_06.ms.txt -W ./coord_100Kb.txt -n ./chr10.txt
+            // "args": ["-F", "tfasta", "-f", "ms", "-i", "./100Kchr10.tfa.gz", "-o", "./100Kchr10_tfa2ms_06.ms.txt", "-W", "./coord_100Kb.txt", "-n", "./chr10.txt"],
+            // echo
+            // echo tfa2ms.ex07 should give same results than previous
+            // echo ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_07.ms.txt -w 10000 -s 20000 -n ./chr10.txt
+            // ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_07.ms.txt -w 10000 -s 20000 -n ./chr10.txt
+            // "args": ["-F", "tfasta", "-f", "ms", "-i", "./100Kchr10.tfa.gz", "-o", "./100Kchr10_tfa2ms_07.ms.txt", "-w", "10000", "-s", "20000", "-n", "./chr10.txt"],
+            // echo
+            // echo tfa2ms.ex08
+            // echo ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_08.ms.txt -P 0 -n ./chr10.txt
+            // ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_08.ms.txt -P 0 -n ./chr10.txt
+            // "args": ["-F", "tfasta", "-f", "ms", "-i", "./100Kchr10.tfa.gz", "-o", "./100Kchr10_tfa2ms_08.ms.txt", "-P", "0", "-n", "./chr10.txt"],
+            // echo
+            // echo tfa2ms.ex09
+            // echo ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_09.ms.txt -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 0 -W ./coord_100Kb.txt -P 0 -n ./chr10.txt > ./100Kchr10_tfa2ms_09.ms.txt.log.txt
+            // ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_09.ms.txt -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 0 -W ./coord_100Kb.txt -P 0 -n ./chr10.txt > ./100Kchr10_tfa2ms_09.ms.txt.log.txt
+            // "args": ["-F", "tfasta", "-f", "ms", "-i", "./100Kchr10.tfa.gz", "-o", "./100Kchr10_tfa2ms_09.ms.txt", "-g", "./100Kchr10.gtf", "nonsynonymous", "Nuclear_Universal", "-c", "max", "-u", "0", "-W", "./coord_100Kb.txt", "-P", "0", "-n", "./chr10.txt"],
+            // echo
+            // echo tfa2ms.ex10: checking multiple scaffolds
+            // echo ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kallchr.tfa -o ./100Kchr10_tfa2ms_10.ms.txt -P 0 -n ./chr10.txt
+            // ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kallchr.tfa -o ./100Kchr10_tfa2ms_10.ms.txt -P 0 -n ./chr10.txt
+            // "args": ["-F", "tfasta", "-f", "ms", "-i", "./100Kallchr.tfa.gz", "-o", "./100Kchr10_tfa2ms_10.ms.txt", "-P", "0", "-n", "./chr10.txt"],
+            // echo
+            // echo tfa2ms.ex11: checking multiple scaffolds coordinates file
+            // echo ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kallchr.tfa -o ./100Kchr10_tfa2ms_11.ms.txt -W ./coord_100Kb_allchr.txt -n ./chr10.txt
+            // ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kallchr.tfa -o ./100Kchr10_tfa2ms_11.ms.txt -W ./coord_100Kb_allchr.txt -n ./chr10.txt
+            // "args": ["-F", "tfasta", "-f", "ms", "-i", "./100Kallchr.tfa.gz", "-o", "./100Kchr10_tfa2ms_11.ms.txt", "-W", "./coord_100Kb_allchr.txt", "-n", "./chr10.txt"],
+
+            // #FASTA TO MS
+            // echo --------------------------------------------------------------------------------------------------
+            // echo fasta to ms: Useful to generate mask files in case doing simulations. msfile contains only variants in full-non-missing positions
+            // echo --------------------------------------------------------------------------------------------------
+            // echo
+            // echo fa2ms.ex01
+            // echo ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_01.ms.txt -n ./chr10.txt
+            // ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_01.ms.txt -n ./chr10.txt
+            // "args": ["-F", "fasta", "-f", "ms", "-i", "./100Kchr10.fa", "-o", "./100Kchr10_fa2ms_01.ms.txt", "-n", "./chr10.txt"],
+            // echo
+            // echo fa2ms.ex02
+            // echo ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_02.ms.txt -N 1 42 -n ./chr10.txt
+            // ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_02.ms.txt -N 1 42 -n ./chr10.txt
+            // echo
+            // echo fa2ms.ex03
+            // echo ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_03.ms.txt -N 2 40 2 -G 1 -n ./chr10.txt
+            // ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_03.ms.txt -N 2 40 2 -G 1 -n ./chr10.txt
+            // echo
+            // echo fa2ms.ex03B
+            // echo ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_03B.ms.txt -N 2 80 4 -G 1 -p 2 -n ./chr10.txt
+            // ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_03B.ms.txt -N 2 80 4 -G 1 -p 2 -n ./chr10.txt
+            // echo
+            // echo fa2ms.ex04
+            // echo ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_04.ms.txt -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 0 -n ./chr10.txt > ./100Kchr10_fa2ms_04.ms.txt.log.txt
+            // ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_04.ms.txt -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 0 -n ./chr10.txt > ./100Kchr10_fa2ms_04.ms.txt.log.txt
+            // echo
+            // echo fa2ms.ex04b
+            // echo ../bin/fastaconvtr -F fasta -f ms  -N 2 40 2 -G 1 -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_04b.ms.txt -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 0 -n ./chr10.txt > ./100Kchr10_fa2ms_04b.ms.txt.log.txt
+            // ../bin/fastaconvtr -F fasta -f ms  -N 2 40 2 -G 1 -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_04b.ms.txt -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 0 -n ./chr10.txt > ./100Kchr10_fa2ms_04b.ms.txt.log.txt
+            // echo
+            // echo
+            // echo fa2ms.ex05 should give same results than previous
+            // echo ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_05.ms.txt -E ./100Kchr10_fa2ms_04.ms.txt_npops1_nsam42_nonsynonymous_max_ExcludeMissingmhits_NOoutg_ploidy1_WEIGHTS.gz -n ./chr10.txt
+            // ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_05.ms.txt -E ./100Kchr10_fa2ms_04.ms.txt_npops1_nsam42_nonsynonymous_max_ExcludeMissingmhits_NOoutg_ploidy1_WEIGHTS.gz -n ./chr10.txt
+            // echo
+            // echo fa2ms.ex06
+            // echo ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_06.ms.txt -W ./coord_100Kb.txt -n ./chr10.txt
+            // ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_06.ms.txt -W ./coord_100Kb.txt -n ./chr10.txt
+            // echo
+            // echo fa2ms.ex06b should give same results than previous
+            // echo ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_06b.ms.txt -w 10000 -s 20000 -n ./chr10.txt
+            // ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_06b.ms.txt -w 10000 -s 20000 -n ./chr10.txt
+            // echo
+            // echo fa2ms.ex07
+            // echo ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_07.ms.txt -N 2 40 2 -w 10000 -s 20000 -n ./chr10.txt
+            // ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_07.ms.txt -N 2 40 2 -w 10000 -s 20000 -n ./chr10.txt
+            // echo
+            // echo fa2ms.ex08
+            // echo ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_08.ms.txt -P 0 -n ./chr10.txt
+            // ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_08.ms.txt -P 0 -n ./chr10.txt
+            // echo
+            // echo fa2ms.ex09
+            // echo ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_09.ms.txt -p 2 -n ./chr10.txt
+            // ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_09.ms.txt -p 2 -n ./chr10.txt
+            // echo
+            // echo fa2ms.ex10
+            // echo ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_10.ms.txt -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 0 -p 2 -n ./chr10.txt > ./100Kchr10_fa2ms_10.ms.txt.log.txt
+            // ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_10.ms.txt -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 0 -p 2 -n ./chr10.txt > ./100Kchr10_fa2ms_10.ms.txt.log.txt
+            // echo
+            // echo fa2ms.ex11 should give same results than previous
+            // echo ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_11.ms.txt -E ./100Kchr10_fa2ms_10.ms.txt_npops1_nsam84_nonsynonymous_max_ExcludeMissingmhits_NOoutg_ploidy2_WEIGHTS.gz -p 2 -n ./chr10.txt
+            // ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_11.ms.txt -E ./100Kchr10_fa2ms_10.ms.txt_npops1_nsam84_nonsynonymous_max_ExcludeMissingmhits_NOoutg_ploidy2_WEIGHTS.gz -p 2 -n ./chr10.txt
+            // echo
+            // echo fa2ms.ex12
+            // echo ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_12.ms.txt -W ./coord_100Kb.txt -p 2 -n ./chr10.txt
+            // ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_12.ms.txt -W ./coord_100Kb.txt -p 2 -n ./chr10.txt
+            // echo
+            // echo fa2ms.ex13
+            // echo ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_13.ms.txt -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 0 -W ./coord_100Kb.txt -P 0 -n ./chr10.txt > ./100Kchr10_fa2ms_13.ms.txt.log.txt
+            // ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_13.ms.txt -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 0 -W ./coord_100Kb.txt -P 0 -n ./chr10.txt > ./100Kchr10_fa2ms_13.ms.txt.log.txt
+            // echo
+            // echo fa2ms.ex14 should give same results than previous
+            // echo ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_14.ms.txt -E ./100Kchr10_fa2ms_13.ms.txt_npops1_nsam42_nonsynonymous_max_ExcludeMissingmhits_NOoutg_ploidy1_WEIGHTS.gz -P 0 -p 2 -W ./coord_100Kb.txt -n ./chr10.txt
+            // ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_14.ms.txt -E ./100Kchr10_fa2ms_13.ms.txt_npops1_nsam42_nonsynonymous_max_ExcludeMissingmhits_NOoutg_ploidy1_WEIGHTS.gz -P 0 -p 2 -W ./coord_100Kb.txt -n ./chr10.txt
+            // echo
+            // echo fa2ms.ex15
+            // echo ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_15.ms.txt -N 3 40 40 4 -G 1 -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 0 -p 2 -n ./chr10.txt > ./100Kchr10_fa2ms_15.ms.txt.log.txt
+            // ../bin/fastaconvtr -F fasta -f ms      -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_15.ms.txt -N 3 40 40 4 -G 1 -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 0 -p 2 -n ./chr10.txt > ./100Kchr10_fa2ms_15.ms.txt.log.txt
+            // echo
+
+
+            // ../bin/fastaconvtr -F fasta -f fasta -i ./100Kchr10.fa -o ./100Kchr10_fa2fa_04.fa -W ./coord_100Kb.txt -n ./chr10.txt
+            // "args" : ["-F", "fasta", "-f", "fasta", "-i", "./100Kchr10.fa", "-o", "./100Kchr10_fa2fa_04.fa", "-W", "./coord_100Kb.txt", "-n", "./chr10.txt"],
+
+            // ../bin/fastaconvtr -F tfasta -f fasta  -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2fa_01.fa -n ./chr10.txt
+            "args" : ["-F", "tfasta", "-f", "fasta", "-i", "./100Kchr10.tfa.gz", "-o", "./100Kchr10_tfa2fa_01.fa", "-n", "./chr10.txt"],
+
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/Examples",
+            "environment": [
+                {
+                    // add the directory where our target was built to the PATHs
+                    // it gets resolved by CMake Tools:
+                    "name": "PATH",
+                    "value": "${env:PATH}:${command:cmake.getLaunchTargetDirectory}"
+                },
+                {
+                    // other env var example
+                    "name": "OTHER_VALUE",
+                    "value": "Something something"
+                }
+            ],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Set Disassembly Flavor to Intel",
+                    "text": "-gdb-set disassembly-flavor intel",
+                    "ignoreFailures": true
+                }
+            ]
+        }
+
+    ]
+}

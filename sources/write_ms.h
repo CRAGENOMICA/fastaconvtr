@@ -16,6 +16,8 @@ extern "C" {
 	
 #include "common.h"
 #include "zutil.h"
+#include "htslib/bgzf.h"
+
 	
 	void usage(void);
 	double probQ_chisquare(int dgf,  double chisq);

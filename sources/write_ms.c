@@ -7,13 +7,55 @@
  */
 
 #include "write_ms.h"
+#include "log.h"
 
-int write_msfile(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr, SGZip *file_logerr_gz,int nsam,long int lenR, long int lenT, double lenP, long int lenS, long int *vector_pos, double *vector_sizepos,
-				 char *matrix_pol, long int slide, long int window,float svratio,float summatrix_sizepos, long int nmissing, int *mis_pos, char *format, float *fnut, 
-				 int Physical_length,float CpG, float GCs,float *wV,long int nV,int *svp,float **pwmatrix_miss,int tfasta,
-				 long int *Pp,int *CpGp,int *Ap,int *Cp,int *Gp,int *Tp,int *GCp,long int *wgenes, long int nwindows,int *nsamuser,int npops, double **sum_sam,
-				 double **nsites1_pop,double **nsites2_pop,double **nsites3_pop,double **nsites1_pop_outg,double **nsites2_pop_outg,double **nsites3_pop_outg,
-				 int outgroup)
+int write_msfile(
+	FILE *file_output,
+	BGZF *file_output_gz,
+	int nsam, 
+	long int lenR, 
+	long int lenT, 
+	double lenP, 
+	long int lenS, 
+	long int *vector_pos, 
+	double *vector_sizepos,
+	char *matrix_pol, 
+	// long int slide, //  args.slide, 
+	// long int window, //  args.window,
+	float svratio, 
+	float summatrix_sizepos, 
+	long int nmissing, 
+	int *mis_pos, 
+	// char *format, // args.format,
+	float *fnut,
+	// int Physical_length, // args.Physical_length,  
+	float CpG, 
+	float GCs, 
+	float *wV, 
+	long int nV, 
+	int *svp, 
+	float **pwmatrix_miss, 
+	// int tfasta, // args.tfasta
+	long int *Pp, 
+	int *CpGp, 
+	int *Ap, 
+	int *Cp, 
+	int *Gp, 
+	int *Tp, 
+	int *GCp, 
+	long int *wgenes, 
+	long int nwindows, 
+	// int *nsamuser,   args.vint_perpop_nsam
+	// int npops,  // args.npops
+	double **sum_sam,
+	double **nsites1_pop, 
+	double **nsites2_pop, 
+	double **nsites3_pop, 
+	double **nsites1_pop_outg, 
+	double **nsites2_pop_outg, 
+	double **nsites3_pop_outg,
+	// int outgroup, // args.outgroup
+	fastaconvtr_args_t *args)
 {
 	 /*
 	 FILE *file_output: the ouput file (stdout)
@@ -81,30 +123,33 @@ int write_msfile(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr, SG
 	
     /*printf("\nWriting ms file...");*/
     fflush(stdout);
-    fzprintf(file_logerr,file_logerr_gz,"\nWriting ms file...");
+    // fzprintf(file_logerr,file_logerr_gz,"\nWriting ms file...");
+	log_info("Writing ms file %s  ", args->file_out);
 
-    x=(long int)tfasta;/*variable still not used here...*/
+	
+
+    x=(long int)args->tfasta;/*variable still not used here...*/
 	x=(long int)nmissing;/*variable still not used here...*/
 	
 	/*initial header*/
-	fzprintf(file_output,file_output_gz, FASTA2MS2);
+	bzprintf(file_output,file_output_gz, FASTA2MS2);
 	/*line indicating a number of statistics*/
-    fzprintf(file_output,file_output_gz, "#Data for TOTAL Alignment. ");
-	if(format[0] == 'x') fzprintf(file_output,file_output_gz, "format: msx ");
-	else fzprintf(file_output,file_output_gz, "format: ms ");
-    fzprintf(file_output,file_output_gz, "length: %ld ",lenR);
-	fzprintf(file_output,file_output_gz, "Efflength: %.2f ",lenP); /*weighted length*/
-	fzprintf(file_output,file_output_gz, "Booleanlength: %ld ",lenT);/*counting all valid positions as 1 or 0*/
-	fzprintf(file_output,file_output_gz, "NumVariants: %ld ",lenS);
+    bzprintf(file_output,file_output_gz, "#Data for TOTAL Alignment. ");
+	if(args->format[0] == 'x') bzprintf(file_output,file_output_gz, "format: msx ");
+	else bzprintf(file_output,file_output_gz, "format: ms ");
+    bzprintf(file_output,file_output_gz, "length: %ld ",lenR);
+	bzprintf(file_output,file_output_gz, "Efflength: %.2f ",lenP); /*weighted length*/
+	bzprintf(file_output,file_output_gz, "Booleanlength: %ld ",lenT);/*counting all valid positions as 1 or 0*/
+	bzprintf(file_output,file_output_gz, "NumVariants: %ld ",lenS);
 	if(nwindows == 0) {
-		if(Physical_length == 1) {
-			n = (long int)ceil((float)lenR/(float)slide);
+		if(args->Physical_length == 1) {
+			n = (long int)ceil((float)lenR/(float)args->slide);
 		}
 		else {
 			n=0;
 			for(x=0;x<lenR;) {
 				size = 0.;
-				while(size < (double)slide && x < lenR) {
+				while(size < (double)args->slide && x < lenR) {
 					size += vector_sizepos[x];
 					x++;
 				}
@@ -114,68 +159,76 @@ int write_msfile(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr, SG
 	} else {
 		n = nwindows;
 	}
-	fzprintf(file_output,file_output_gz, "nwindows: %.0f ",(double)n);
-	if(svratio == -10000.0) fzprintf(file_output,file_output_gz, "s/v: NA ");
-	else fzprintf(file_output,file_output_gz, "s/v: %.3f ",svratio);
+	bzprintf(file_output,file_output_gz, "nwindows: %.0f ",(double)n);
+	if(svratio == -10000.0) bzprintf(file_output,file_output_gz, "s/v: NA ");
+	else bzprintf(file_output,file_output_gz, "s/v: %.3f ",svratio);
 	sum_mis_pos = 0.;
 	for(x=0;x<lenR;x++) sum_mis_pos += mis_pos[x];
 	/*freq_missing = (float)nmissing/((float)nsam*(float)lenP);*/
 	freq_missing = sum_mis_pos/summatrix_sizepos;
-	if(format[0] == 'x') fzprintf(file_output,file_output_gz, "FreqMissing: %.4f ",freq_missing); /* (over effective length) */
+	if(args->format[0] == 'x') bzprintf(file_output,file_output_gz, "FreqMissing: %.4f ",freq_missing); /* (over effective length) */
 	sumfnut = fnut[0]+fnut[1]+fnut[2]+fnut[3];
-	fzprintf(file_output,file_output_gz, "GfreqT: %.2f GfreqC: %.2f GfreqG: %.2f GfreqA: %.2f ",fnut[0]/sumfnut,fnut[1]/sumfnut,fnut[2]/sumfnut,fnut[3]/sumfnut); 
-	fzprintf(file_output,file_output_gz, "GCs: %.3f ",(GCs/(float)nsam)/((float)lenP));
-    fzprintf(file_output,file_output_gz, "CpGs: %.3f ",(CpG/(float)nsam)/((float)lenP));
-    fzprintf(file_output,file_output_gz, "Cs+Gs: %.3f ",(fnut[1]+fnut[2])/sumfnut);
-	if(format[0] == 'x') {
-		fzprintf(file_output,file_output_gz, "npops: %d ",npops);
-		for(np=0;np<npops;np++) fzprintf(file_output,file_output_gz, "nsam[%d]: %d ",np,nsamuser[np]);
+	bzprintf(file_output,file_output_gz, "GfreqT: %.2f GfreqC: %.2f GfreqG: %.2f GfreqA: %.2f ",fnut[0]/sumfnut,fnut[1]/sumfnut,fnut[2]/sumfnut,fnut[3]/sumfnut); 
+	bzprintf(file_output,file_output_gz, "GCs: %.3f ",(GCs/(float)nsam)/((float)lenP));
+    bzprintf(file_output,file_output_gz, "CpGs: %.3f ",(CpG/(float)nsam)/((float)lenP));
+    bzprintf(file_output,file_output_gz, "Cs+Gs: %.3f ",(fnut[1]+fnut[2])/sumfnut);
+	if(args->format[0] == 'x') {
+		bzprintf(file_output,file_output_gz, "npops: %d ",args->npops);
+		for(np=0;np<args->npops;np++) bzprintf(file_output,file_output_gz, "nsam[%d]: %d ",np,args->vint_perpop_nsam[np]);
 	}
 	/*Comment: header in the prior field*/
-	if(format[0] == 'x') {
-		fzprintf(file_output,file_output_gz, "\n#initial_physical_position, final_physical_position, Efflength, ");
-		fzprintf(file_output,file_output_gz, "Boolean length, s/v_ratio, FreqMissing, freqT, freqC, freqG, freqA, freqGCs, freqCpGs");
-		for(np=0;np<npops-outgroup;np++) fzprintf(file_output,file_output_gz, "nsites1_pop[%d], nsites2_pop[%d], nsites3_pop[%d], nsites1_pop[%d]_outg, nsites2_pop[%d]_outg, nsites3_pop[%d]_outg, ",np,np,np,np,np,np);
-		fzprintf(file_output,file_output_gz, "vector_Efflength_sample, ");
-		fzprintf(file_output,file_output_gz, "matrix_length_amng_pops ");
-		fzprintf(file_output,file_output_gz, "\n#NOTE: 1,2,3,4 means T,C,G,A, respectively. 8 and 9 means N and missing data. In case allowing missing data, multiple hits are reduced to the two more frequent, otherwise excluded. ");
-		fzprintf(file_output,file_output_gz, "\n");
+	if(args->format[0] == 'x') {
+		bzprintf(file_output,file_output_gz, "\n#initial_physical_position, final_physical_position, Efflength, ");
+		bzprintf(file_output,file_output_gz, "Boolean length, s/v_ratio, FreqMissing, freqT, freqC, freqG, freqA, freqGCs, freqCpGs");
+		for(np=0;np<args->npops-args->outgroup;np++) bzprintf(file_output,file_output_gz, "nsites1_pop[%d], nsites2_pop[%d], nsites3_pop[%d], nsites1_pop[%d]_outg, nsites2_pop[%d]_outg, nsites3_pop[%d]_outg, ",np,np,np,np,np,np);
+		bzprintf(file_output,file_output_gz, "vector_Efflength_sample, ");
+		bzprintf(file_output,file_output_gz, "matrix_length_amng_pops ");
+		bzprintf(file_output,file_output_gz, "\n#NOTE: 1,2,3,4 means T,C,G,A, respectively. 8 and 9 means N and missing data. In case allowing missing data, multiple hits are reduced to the two more frequent, otherwise excluded. ");
+		bzprintf(file_output,file_output_gz, "\n");
 	}
 	/*else fzprintf(file_output,file_output_gz, "\n#In priors include the initial physical position, the final and the effective size of the window. Multiple hits excluded.");*/
 
 	/*print in the prior field all the necessary values*/
 	/*look for windows: coordinates or sliding window*/
-	ncomb = (npops-outgroup)*(npops-outgroup-1)/2;
+	ncomb = (args->npops-args->outgroup)*(args->npops-args->outgroup-1)/2;
 	if((sizepw = (float *)calloc(ncomb,sizeof(float)))==0) {
-		fzprintf(file_output,file_output_gz,"Error allocating memory write.out0");
+		// fzprintf(file_output,file_output_gz,"Error allocating memory write.out0");
+		log_error("Error allocating memory write_ms.sizepw");
 		exit(1);
 	}
 	if((sizensam = (float *)calloc(nsam,sizeof(float)))==0) {
-		fzprintf(file_output,file_output_gz,"Error allocating memory write.out1");
+		// fzprintf(file_output,file_output_gz,"Error allocating memory write.out1");
+		log_error("Error allocating memory write_ms.sizensam");
 		exit(1);
 	}
-	if((sizen1p = (float *)calloc(npops,sizeof(float)))==0) {
-		fzprintf(file_output,file_output_gz,"Error allocating memory write.out1");
+	if((sizen1p = (float *)calloc(args->npops,sizeof(float)))==0) {
+		//fzprintf(file_output,file_output_gz,"Error allocating memory write.out1");
+		log_error("Error allocating memory write_ms.sizen1p");
 		exit(1);
 	}
-	if((sizen2p = (float *)calloc(npops,sizeof(float)))==0) {
-		fzprintf(file_output,file_output_gz,"Error allocating memory write.out1");
+	if((sizen2p = (float *)calloc(args->npops,sizeof(float)))==0) {
+		//fzprintf(file_output,file_output_gz,"Error allocating memory write.out1");
+		log_error("Error allocating memory write_ms.sizen2p");
 		exit(1);
 	}
-	if((sizen3p = (float *)calloc(npops,sizeof(float)))==0) {
-		fzprintf(file_output,file_output_gz,"Error allocating memory write.out1");
+	if((sizen3p = (float *)calloc(args->npops,sizeof(float)))==0) {
+		//fzprintf(file_output,file_output_gz,"Error allocating memory write.out1");
+		log_error("Error allocating memory write_ms.sizen3p");
 		exit(1);
 	}
-	if((sizen1o = (float *)calloc(npops,sizeof(float)))==0) {
-		fzprintf(file_output,file_output_gz,"Error allocating memory write.out1");
+	if((sizen1o = (float *)calloc(args->npops,sizeof(float)))==0) {
+		//fzprintf(file_output,file_output_gz,"Error allocating memory write.out1");
+		log_error("Error allocating memory write_ms.sizen1o");
 		exit(1);
 	}
-	if((sizen2o = (float *)calloc(npops,sizeof(float)))==0) {
-		fzprintf(file_output,file_output_gz,"Error allocating memory write.out1");
+	if((sizen2o = (float *)calloc(args->npops,sizeof(float)))==0) {
+		//fzprintf(file_output,file_output_gz,"Error allocating memory write.out1");
+		log_error("Error allocating memory write_ms.sizen2o");
 		exit(1);
 	}
-	if((sizen3o = (float *)calloc(npops,sizeof(float)))==0) {
-		fzprintf(file_output,file_output_gz,"Error allocating memory write.out1");
+	if((sizen3o = (float *)calloc(args->npops,sizeof(float)))==0) {
+		//fzprintf(file_output,file_output_gz,"Error allocating memory write.out1");
+		log_error("Error allocating memory write_ms.sizen3o");
 		exit(1);
 	}
 	begS = 0;
@@ -185,7 +238,7 @@ int write_msfile(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr, SG
 		if(nwindows==0) {
 			beg = y = x;
 			endy = lenR;
-			sizewin = (double)window;
+			sizewin = (double)args->window;
 		}
 		else {
 			beg = y = wgenes[wc++]-1;
@@ -207,7 +260,7 @@ int write_msfile(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr, SG
 		sizeA = 0.;
 		sizeGC= 0.;
 		sizeCpG=0.;
-		for(np1=0;np1<npops-outgroup-1;np1++) {
+		for(np1=0;np1<args->npops-args->outgroup-1;np1++) {
 			sizen1p[np1]=0.;
 			sizen2p[np1]=0.;
 			sizen3p[np1]=0.;
@@ -215,7 +268,7 @@ int write_msfile(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr, SG
 			sizen2o[np1]=0.;
 			sizen3o[np1]=0.;
 		}
-		for(pp=0;pp<(npops-outgroup)*(npops-outgroup-1)/2;pp++) 
+		for(pp=0;pp<(args->npops-args->outgroup)*(args->npops-args->outgroup-1)/2;pp++) 
 			sizepw[pp] = 0.;
 		for(ns=0;ns<nsam;ns++) 
 			sizensam[ns] = 0.;
@@ -223,7 +276,7 @@ int write_msfile(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr, SG
 		while(y < endy && sizeR <  sizewin) {
 			/*calculate size of the window*/
 			size += vector_sizepos[y];
-			if(Physical_length == 1)
+			if(args->Physical_length == 1)
 				sizeR += 1.0;
 			else
 				sizeR += vector_sizepos[y];
@@ -243,7 +296,7 @@ int write_msfile(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr, SG
 			sizeCpG +=CpGp[y];
 			/*calculate nsites[123]_pop[_outg]*/
 			pp=0;
-			for(np1=0;np1<npops-outgroup;np1++) {
+			for(np1=0;np1<args->npops-args->outgroup;np1++) {
 				sizen1p[np1] +=nsites1_pop[y][np1];
 				sizen2p[np1] +=nsites2_pop[y][np1];
 				sizen3p[np1] +=nsites3_pop[y][np1];
@@ -251,7 +304,7 @@ int write_msfile(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr, SG
 				sizen2o[np1] +=nsites2_pop_outg[y][np1];
 				sizen3o[np1] +=nsites3_pop_outg[y][np1];
 				/*calculate matrix_length_amng_pops*/
-				for(np2=np1+1;np2<npops-outgroup;np2++) {
+				for(np2=np1+1;np2<args->npops-args->outgroup;np2++) {
 					sizepw[pp] += pwmatrix_miss[y][pp];
 					pp++;
 				}
@@ -262,21 +315,21 @@ int write_msfile(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr, SG
 			y++;
 		}
 		end = y;
-		fzprintf(file_output,file_output_gz,"\n// %ld\t%ld\t%.2f",beg+1,end,size);
-		if(format[0] == 'x') {
+		bzprintf(file_output,file_output_gz,"\n// %ld\t%ld\t%.2f",beg+1,end,size);
+		if(args->format[0] == 'x') {
 			sizent = sizeT + sizeC + sizeG + sizeA;
-			fzprintf(file_output,file_output_gz,"\t%.0f",sizeRT);
-			if(trv>0) fzprintf(file_output,file_output_gz,"\t%.2f",trs/trv);
-			else fzprintf(file_output,file_output_gz,"\tNA");
-			fzprintf(file_output,file_output_gz,"\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f",sizems/size,sizeT/sizent,sizeC/sizent,sizeG/sizent,sizeA/sizent,sizeGC/sizent,sizeCpG/sizent);
-			for(np1=0;np1<npops-outgroup;np1++) 
-				fzprintf(file_output,file_output_gz,"\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f",sizen1p[np1],sizen2p[np1],sizen3p[np1],sizen1o[np1],sizen2o[np1],sizen3o[np1]);
+			bzprintf(file_output,file_output_gz,"\t%.0f",sizeRT);
+			if(trv>0) bzprintf(file_output,file_output_gz,"\t%.2f",trs/trv);
+			else bzprintf(file_output,file_output_gz,"\tNA");
+			bzprintf(file_output,file_output_gz,"\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f",sizems/size,sizeT/sizent,sizeC/sizent,sizeG/sizent,sizeA/sizent,sizeGC/sizent,sizeCpG/sizent);
+			for(np1=0;np1<args->npops-args->outgroup;np1++) 
+				bzprintf(file_output,file_output_gz,"\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f",sizen1p[np1],sizen2p[np1],sizen3p[np1],sizen1o[np1],sizen2o[np1],sizen3o[np1]);
 			for(ns=0;ns<nsam;ns++) 
-				fzprintf(file_output,file_output_gz,"\t%.2f",sizensam[ns]);
-			for(pp=0;pp<((npops-outgroup)*(npops-1-outgroup)/2);pp++) 
-				fzprintf(file_output,file_output_gz,"\t%.2f",sizepw[pp]);
+				bzprintf(file_output,file_output_gz,"\t%.2f",sizensam[ns]);
+			for(pp=0;pp<((args->npops-args->outgroup)*(args->npops-1-args->outgroup)/2);pp++) 
+				bzprintf(file_output,file_output_gz,"\t%.2f",sizepw[pp]);
 		}
-		fzprintf(file_output,file_output_gz,"\n");
+		bzprintf(file_output,file_output_gz,"\n");
 		
 		/*locate the number of variants in the window*/
 		z = begS;
@@ -284,69 +337,69 @@ int write_msfile(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr, SG
 		begS = z;
 		while(z < lenS && vector_pos[z] < end) {z++;}
 		endS = z;
-		fzprintf(file_output,file_output_gz,"segsites: %ld",(endS-begS));
-		fzprintf(file_output,file_output_gz,"\n");
+		bzprintf(file_output,file_output_gz,"segsites: %ld",(endS-begS));
+		bzprintf(file_output,file_output_gz,"\n");
 		
 		/*locate the relative positions in the filtered window*/
-        if(format[0] == 'x') {
-            fzprintf(file_output,file_output_gz,"positions: ");
+        if(args->format[0] == 'x') {
+            bzprintf(file_output,file_output_gz,"positions: ");
             psize = 0.;
             y = beg;
             z = begS;
             while(vector_pos[z] < end && z < endS) {
                 if(y == vector_pos[z]) {
-                    fzprintf(file_output,file_output_gz,"%.8f ",psize/(size) ); /*size-1.0?: ms accept values from 0 to 1, both included...this is a problem. Please add enough decimals!*/
+                    bzprintf(file_output,file_output_gz,"%.8f ",psize/(size) ); /*size-1.0?: ms accept values from 0 to 1, both included...this is a problem. Please add enough decimals!*/
                     z++;
                 }
                 psize += vector_sizepos[y];
                 y++;
             }
-            fzprintf(file_output,file_output_gz,"\n");
+            bzprintf(file_output,file_output_gz,"\n");
         }
         else {
-            fzprintf(file_output,file_output_gz,"positions: ");
+            bzprintf(file_output,file_output_gz,"positions: ");
             z = begS;
             while(z < endS) {
-                fzprintf(file_output,file_output_gz,"%.8f ",(double)(vector_pos[z]/*+1*/)/lenR );
+                bzprintf(file_output,file_output_gz,"%.8f ",(double)(vector_pos[z]/*+1*/)/lenR );
                 z++;
             }
-            fzprintf(file_output,file_output_gz,"\n");
+            bzprintf(file_output,file_output_gz,"\n");
         }
 		/*mstatspop should accept a new ms_x format that contains a new vector including the physical position */
 		/*Then we wil have physical positions with vector_sizepos[y]*/
-		if(format[0] == 'x') {
-			fzprintf(file_output,file_output_gz,"physical: ");
+		if(args->format[0] == 'x') {
+			bzprintf(file_output,file_output_gz,"physical: ");
 			z = begS;
 			while(z < endS) {
-				fzprintf(file_output,file_output_gz,"%ld ",vector_pos[z]+1 ); 
+				bzprintf(file_output,file_output_gz,"%ld ",vector_pos[z]+1 ); 
 				z++;
 			}
-			fzprintf(file_output,file_output_gz,"\n");
+			bzprintf(file_output,file_output_gz,"\n");
 			/*include the vectors with the weights of the positions for each real position used!*/
-			fzprintf(file_output,file_output_gz,"pos_weight: ");
+			bzprintf(file_output,file_output_gz,"pos_weight: ");
 			z = beg;
 			while(z < end) {
-				fzprintf(file_output,file_output_gz,"%.2f ",vector_sizepos[z]); 
+				bzprintf(file_output,file_output_gz,"%.2f ",vector_sizepos[z]); 
 				z++;
 			}
-			fzprintf(file_output,file_output_gz,"\n");
+			bzprintf(file_output,file_output_gz,"\n");
 			/*include the vectors with the weights of the variants for each real position used!*/
             if(nV > 0) {
                 zw=0;
-				fzprintf(file_output,file_output_gz,"var_weight: ");
+				bzprintf(file_output,file_output_gz,"var_weight: ");
 				while(Pp[zw] < beg && zw < nV) zw++;
 				z = beg;
 				while(z < end) {
 					if(Pp[zw] == z+1) {
-						fzprintf(file_output,file_output_gz,"%.3e ",wV[zw]); 
+						bzprintf(file_output,file_output_gz,"%.3e ",wV[zw]); 
 						zw++;
 					}
 					else {
-                        fzprintf(file_output,file_output_gz,"NA ");/*"%.2f ",(float)0);*/
+                        bzprintf(file_output,file_output_gz,"NA ");/*"%.2f ",(float)0);*/
 					}
 					z++;
 				}
-				fzprintf(file_output,file_output_gz,"\n");
+				bzprintf(file_output,file_output_gz,"\n");
 			}
 		}
 		
@@ -354,18 +407,18 @@ int write_msfile(FILE *file_output, SGZip *file_output_gz, FILE *file_logerr, SG
 		if((endS-begS) > 0) {
 			for(n=0;n<nsam;n++) {
 				for(z=begS;z<endS;z++) {
-					fzprintf(file_output,file_output_gz,"%c",matrix_pol[z*nsam+n]);
+					bzprintf(file_output,file_output_gz,"%c",matrix_pol[z*nsam+n]);
 				}
-				fzprintf(file_output,file_output_gz,"\n");
+				bzprintf(file_output,file_output_gz,"\n");
 			}
 		}
 		/*move slide positions*/
 		if(nwindows==0) {
 			size  = 0.;
 			sizeR = 0.;
-			while(sizeR < (double)slide && x < lenR) {
+			while(sizeR < (double)args->slide && x < lenR) {
 				/*size += vector_sizepos[x];*/
-				if(Physical_length == 1) sizeR += 1.0;
+				if(args->Physical_length == 1) sizeR += 1.0;
 				else sizeR += vector_sizepos[x];
 				x++;
 			}
