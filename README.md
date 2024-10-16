@@ -1,10 +1,10 @@
-# fastaconvtr v0.1beta (20200613) Sebastian E. Ramos-Onsins.
+# fastaconvtr v1.0.0 Sebastian E. Ramos-Onsins.
 
 ### Conversion of fasta and ms files into transposed fasta (tfasta, compressed and indexed) files and viceversa.
 
 ## Flags:
-	-F [input format file: f (fasta), t (tfasta)]
-	-i [path and name of the input file (text or gz indexed)]
+	-F [input format file: f (fasta), t (tfasta)] 
+	-i [path and name of the input file (text or gz indexed)] [tfasta must be compressed and indexed] 
 	-f [output format file: t (tfasta), f (fasta), m (ms), 0(nothing)]
 	-o [path and name of the output sequence file]
 	-n [name of the file containing the name(s) of scaffold(s) and their length (separated by a tab), one per line (ex. fai file)]

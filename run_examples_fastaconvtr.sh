@@ -203,7 +203,7 @@ echo ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10
 echo
 echo tfa2ms.ex05 should give same results than previous
 echo ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_05.ms.txt -E ./100Kchr10_tfa2ms_04.ms.txt_npops1_nsam42_nonsynonymous_max_ExcludeMissingmhits_NOoutg_ploidy1_WEIGHTS.txt -n ./chr10.txt
-../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_05.ms.txt -E ./100Kchr10_tfa2ms_04.ms.txt_npops1_nsam42_nonsynonymous_max_ExcludeMissingmhits_NOoutg_ploidy1_WEIGHTS.txt -n ./chr10.txt
+../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_05.ms.txt -E ./100Kchr10_tfa2ms_04.ms.txt_npops1_nsam42_nonsynonymous_max_ExcludeMissingmhits_NOoutg_ploidy1_WEIGHTS.gz -n ./chr10.txt
 echo
 echo tfa2ms.ex06
 echo ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_06.ms.txt -W ./coord_100Kb.txt -n ./chr10.txt
@@ -222,12 +222,12 @@ echo ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10
 ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_09.ms.txt -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 0 -W ./coord_100Kb.txt -P 0 -n ./chr10.txt > ./100Kchr10_tfa2ms_09.ms.txt.log.txt
 echo
 echo tfa2ms.ex10: checking multiple scaffolds
-echo ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kallchr.tfa -o ./100Kchr10_tfa2ms_10.ms.txt -P 0 -n ./chr10.txt
-../bin/fastaconvtr -F tfasta -f ms     -i ./100Kallchr.tfa -o ./100Kchr10_tfa2ms_10.ms.txt -P 0 -n ./chr10.txt
+echo ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kallchr.tfa.gz -o ./100Kchr10_tfa2ms_10.ms.txt -P 0 -n ./chr10.txt
+../bin/fastaconvtr -F tfasta -f ms     -i ./100Kallchr.tfa.gz -o ./100Kchr10_tfa2ms_10.ms.txt -P 0 -n ./chr10.txt
 echo
 echo tfa2ms.ex11: checking multiple scaffolds coordinates file
-echo ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kallchr.tfa -o ./100Kchr10_tfa2ms_11.ms.txt -W ./coord_100Kb_allchr.txt -n ./chr10.txt
-../bin/fastaconvtr -F tfasta -f ms     -i ./100Kallchr.tfa -o ./100Kchr10_tfa2ms_11.ms.txt -W ./coord_100Kb_allchr.txt -n ./chr10.txt
+echo ../bin/fastaconvtr -F tfasta -f ms     -i ./100Kallchr.tfa.gz -o ./100Kchr10_tfa2ms_11.ms.txt -W ./coord_100Kb_allchr.txt -n ./chr10.txt
+../bin/fastaconvtr -F tfasta -f ms     -i ./100Kallchr.tfa.gz -o ./100Kchr10_tfa2ms_11.ms.txt -W ./coord_100Kb_allchr.txt -n ./chr10.txt
 echo
 
 #TFASTA TO FASTA
@@ -262,20 +262,20 @@ echo
 echo include multiple scaffolds tfasta: check simple, include gtf, coord, mask...
 echo
 echo tfa2tfa.ex04 using multiple chromosomes and output multiple chromosomes
-echo ../bin/fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa -o ./100Kchr1012_tfa2fa_04.fa -n ./chr1012.txt
-../bin/fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa -o ./100Kchr1012_tfa2fa_04.fa -n ./chr1012.txt
+echo ../bin/fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa.gz -o ./100Kchr1012_tfa2fa_04.fa -n ./chr1012.txt
+../bin/fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa.gz -o ./100Kchr1012_tfa2fa_04.fa -n ./chr1012.txt
 echo
 echo tfa2tfa.ex05 using as input multiple chromosomes + gtf
-echo ../bin/fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa -o ./100Kchr12_tfa2fa_05.fa -n ./chr12.txt -g ./100Kallchr.gtf nonsynonymous Nuclear_Universal -c max -u 1
-../bin/fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa -o ./100Kchr12_tfa2fa_05.fa -n ./chr12.txt -g ./100Kallchr.gtf nonsynonymous Nuclear_Universal -c max -u 1
+echo ../bin/fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa.gz -o ./100Kchr12_tfa2fa_05.fa -n ./chr12.txt -g ./100Kallchr.gtf nonsynonymous Nuclear_Universal -c max -u 1
+../bin/fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa.gz -o ./100Kchr12_tfa2fa_05.fa -n ./chr12.txt -g ./100Kallchr.gtf nonsynonymous Nuclear_Universal -c max -u 1
 echo
 echo tfa2tfa.ex06 using as input multiple chromosomes + coord
-echo ../bin/fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa -o ./100Kchr12_tfa2fa_06.fa -n ./chr12.txt -W ./coord_100Kb_allchr.txt -u 1
-../bin/fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa -o ./100Kchr12_tfa2fa_06.fa -n ./chr12.txt -W ./coord_100Kb_allchr.txt -u 1
+echo ../bin/fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa.gz -o ./100Kchr12_tfa2fa_06.fa -n ./chr12.txt -W ./coord_100Kb_allchr.txt -u 1
+../bin/fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa.gz -o ./100Kchr12_tfa2fa_06.fa -n ./chr12.txt -W ./coord_100Kb_allchr.txt -u 1
 echo
 echo tfa2tfa.ex07 using as input multiple chromosomes + mask
-echo ../bin/fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa -o ./100Kchr12_tfa2fa_07.fa -n ./chr12.txt -m ./coord_100Kb_allchr.txt -u 1
-../bin/fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa -o ./100Kchr12_tfa2fa_07.fa -n ./chr12.txt -m ./coord_100Kb_allchr.txt -u 1
+echo ../bin/fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa.gz -o ./100Kchr12_tfa2fa_07.fa -n ./chr12.txt -m ./coord_100Kb_allchr.txt -u 1
+../bin/fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa.gz -o ./100Kchr12_tfa2fa_07.fa -n ./chr12.txt -m ./coord_100Kb_allchr.txt -u 1
 echo
 
 #TFASTA TO TFASTA
@@ -308,22 +308,22 @@ echo ../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kchr10.tfa.gz -o ./100Kchr10
 ../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2tfa_03c.tfa.gz -N 3 40 40 4 -G 1 -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 1 -p 1 -n ./chr10.txt
 echo
 echo tfa2tfa.ex04 using multiple chromosomes
-echo ../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa -o ./100Kallchr.tfa.gz  -n ./chr101214.txt
-../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa -o ./100Kallchr.tfa.gz  -n ./chr101214.txt
+echo ../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa.gz -o ./100Kallchr.tfa.gz  -n ./chr101214.txt
+../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa.gz -o ./100Kallchr.tfa.gz  -n ./chr101214.txt
 echo
 echo tfa2tfa.ex05 using multiple chromosomes
-echo ../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa -o ./100Kallchr10i14.tfa.gz  -n ./chr1014.txt
-../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa -o ./100Kallchr10i14.tfa.gz  -n ./chr1014.txt
+echo ../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa.gz -o ./100Kallchr10i14.tfa.gz  -n ./chr1014.txt
+../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa.gz -o ./100Kallchr10i14.tfa.gz  -n ./chr1014.txt
 echo
 echo tfa2tfa.ex06 using multiple chromosomes
-echo ../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa -o ./100Kallchr12i14.tfa.gz  -n ./chr1214.txt
-../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa -o ./100Kallchr12i14.tfa.gz  -n ./chr1214.txt
+echo ../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa.gz -o ./100Kallchr12i14.tfa.gz  -n ./chr1214.txt
+../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa.gz -o ./100Kallchr12i14.tfa.gz  -n ./chr1214.txt
 echo
 echo tfa2tfa.ex07 using multiple chromosomes
 echo ../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa.gz -o ./100Kallchr07.tfa.gz  -g ./100Kallchr.gtf nonsynonymous Nuclear_Universal -c max -u 1 -n ./chr101214.txt -N 2 40 2 -G 1
 ../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa.gz -o ./100Kallchr07.tfa.gz -g ./100Kallchr.gtf nonsynonymous Nuclear_Universal -c max -u 1 -n ./chr101214.txt -N 2 40 2 -G 1
 echo
 echo tfa2tfa.ex08 using multiple chromosomes and masking multiple chromosomes
-echo ../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa -o ./100Kallchr08.tfa.gz  -n ./chr101214.txt -m ./coord_100Kb_allchr.txt 
-../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa -o ./100Kallchr08.tfa.gz  -n ./chr101214.txt -m ./coord_100Kb_allchr.txt 
+echo ../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa.gz -o ./100Kallchr08.tfa.gz  -n ./chr101214.txt -m ./coord_100Kb_allchr.txt 
+../bin/fastaconvtr -F tfasta -f tfasta -i ./100Kallchr.tfa.gz -o ./100Kallchr08.tfa.gz  -n ./chr101214.txt -m ./coord_100Kb_allchr.txt 
 echo 
