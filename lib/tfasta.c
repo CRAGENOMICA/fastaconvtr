@@ -147,7 +147,14 @@ const char *check_tfa_format(const char *filename, tfa_info_t *tfa_info)
         tfa_info->extension = extension + 1;
       }
     }
-
+  }
+  else {
+    // get the extension
+    char *extension = strrchr(tfa_info->basename, '.');
+    if (extension != NULL) {
+      *extension = '\0';  // Remove the extension by setting a null character
+      tfa_info->extension = extension + 1;
+    }
   }
   
   // Prepare to read lines using kstring_t
