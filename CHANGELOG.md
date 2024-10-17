@@ -1,6 +1,6 @@
 
 
-# Changelog fastaconvtr v1.0.0 Sebastian E. Ramos-Onsins.
+# Change log Version 1.0.0
 
 Conversion of fasta and ms files into transposed fasta (tfasta, compressed and indexed) files and viceversa.
 
@@ -31,7 +31,7 @@ fastaconvtr now uses htslib to read and write Files,the input tfasta file/weight
 	-w [window size]. DEFAULT: Total_length
 	-s [slide size]. DEFAULT: Total_length
 	Inputing fasta format:
-	-p [if fasta input, haplotype:1 (single sequence) genotype:2 (two mixed sequences in IUPAC). DEFAULT: 1
+	-p [if fasta input, haplotype:1 (single sequence) genotype:2 (two mixed sequences in IUPAC)]. DEFAULT: 1
 	Annotation file and weight options:
 	-g [GFF_file]
 	[add also: coding,noncoding,synonymous,nonsynonymous,silent, others (whatever annotated)]
