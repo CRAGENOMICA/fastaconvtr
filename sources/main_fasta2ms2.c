@@ -1118,12 +1118,12 @@ int main(int argc, const char * argv[]) {
 // TODO :: This make it hard to make an automated test
 // TODO :: can be disabled for debuging and testing and redirect that to the log file instead
 #ifndef DEBUG
-		bzprintf(file_output, &file_output_gz, "#fastaconvtr ");
+		bzprintf(file_output, file_output_gz, "#fastaconvtr ");
 		for (x = 1; x < arg; x++)
 		{
-			bzprintf(file_output, &file_output_gz, "%s ", argv[x]);
+			bzprintf(file_output, file_output_gz, "%s ", argv[x]);
 		}
-		bzprintf(file_output, &file_output_gz, "\n");
+		bzprintf(file_output, file_output_gz, "\n");
 #else
 		bzprintf(file_output, file_output_gz, "#fastaconvtr ");
 		for (x = 1; x < arg; x++)
