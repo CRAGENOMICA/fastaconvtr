@@ -1,5 +1,5 @@
 #fastaconvtr -F tfasta -f ms -i ./100Kchr10.tfa.gz -o ./100Kchr10_tfa2ms_04.ms.txt -g ./100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -u 0 -n ./chr10.txt 
-#fastaconvtr v0.1beta (20220907) Sebastian E. Ramos-Onsins.
+#fastaconvtr v.1.0.0 (20250107034050) Sebastian E. Ramos-Onsins.
 #Data for TOTAL Alignment. format: ms length: 100000 Efflength: 489.40 Booleanlength: 541 NumVariants: 2 nwindows: 1 s/v: NA GfreqT: 0.28 GfreqC: 0.24 GfreqG: 0.22 GfreqA: 0.26 GCs: 0.080 CpGs: 0.015 Cs+Gs: 0.463 
 // 1	100000	489.40
 segsites: 2

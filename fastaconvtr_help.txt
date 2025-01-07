@@ -1,4 +1,4 @@
-#fastaconvtr v0.1beta (20220907) Sebastian E. Ramos-Onsins.
+#fastaconvtr v.1.0.0 (20250107034050) Sebastian E. Ramos-Onsins.
 
 Flags:
       -F [input format file: f (fasta), t (tfasta)]
@@ -21,7 +21,7 @@ Flags:
      Inputing fasta format:
       -p [if fasta input,
              haplotype: 1 (single sequence)
-             genotype:  2 (two diploid mixed sequences in IUPAC format. WARNING! lowercase will be considered as one haplotype missing!). DEFAULT: 1
+             genotype:  2 or 4 (two diploid mixed sequences in IUPAC format. If p=4 lowercase will be considered as one haplotype missing!). DEFAULT: 1
      Annotation file and weight options:
       -g [GFF_file]
          [add also: coding,noncoding,synonymous,nonsynonymous,silent, others (whatever annotated)]
@@ -29,4 +29,5 @@ Flags:
          [if 'Other', introduce the single letter code for the 64 triplets in the order UUU UUC UUA UUG ... etc.]
       -c [in case use coding regions, criteria to consider transcripts (max/min/first/long)]. DEFAULT: long
       -E [instead -g & -c, input file with weights for positions: include three columns with a header, first the physical positions (1...end), second the weight for positions and third a boolean weight for the variant (eg. syn variant but nsyn position)]
+      -T [in case define -g and -c and output is TFasta, option to print (1) or not (0) the DNA sequence]. DEFAULT: 1 (print)
 

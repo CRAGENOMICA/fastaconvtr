@@ -1,5 +1,5 @@
-#fastaconvtr -F tfasta -f ms -i ./100Kallchr.tfa -o ./100Kchr10_tfa2ms_11.ms.txt -W ./coord_100Kb_allchr.txt -n ./chr10.txt 
-#fastaconvtr v0.1beta (20220907) Sebastian E. Ramos-Onsins.
+#fastaconvtr -F tfasta -f ms -i ./100Kallchr.tfa.bgz -o ./100Kchr10_tfa2ms_11.ms.txt -W ./coord_100Kb_allchr.txt -n ./chr10.txt 
+#fastaconvtr v.1.0.0 (20250107034050) Sebastian E. Ramos-Onsins.
 #Data for TOTAL Alignment. format: ms length: 49999 Efflength: 3931.00 Booleanlength: 3931 NumVariants: 75 nwindows: 3 s/v: 2.947 GfreqT: 0.29 GfreqC: 0.21 GfreqG: 0.22 GfreqA: 0.28 GCs: 0.061 CpGs: 0.012 Cs+Gs: 0.431 
 // 1	9999	913.00
 segsites: 22

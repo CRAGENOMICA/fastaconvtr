@@ -1,8 +1,11 @@
-
-Open log file...
-Reading input file...
-Reading GTF file...GFF file Warning: end (115567) is larger than number of total sites (100000). Row 94 not analyzed.
- GFF file Warning: end (115567) is larger than number of total sites (100000). Row 95 not analyzed.
- 
-Writing ms file...
-Program Ended
+2025-01-07 03:47:24 DEBUG : Open log file...
+2025-01-07 03:47:24 INFO  : Reading input file...
+2025-01-07 03:47:24 INFO  : Reading GTF file...
+2025-01-07 03:47:24 WARN  : GFF file Warning: end (115567) is larger than number of total sites (100000). Row 94 not analyzed.
+2025-01-07 03:47:24 WARN  : GFF file Warning: end (115567) is larger than number of total sites (100000). Row 95 not analyzed.
+2025-01-07 03:47:24 INFO  : Creating GTF file ./100Kchr10_criteria_max.gff
+2025-01-07 03:47:24 INFO  : Writing mask file ./100Kchr10_fa2ms_15.ms.txt_npops3_nsam84_nonsynonymous_max_ExcludeMissingVariantsmhits_outg_ploidy2_MASK.txt
+2025-01-07 03:47:45 INFO  : Writing weights file ./100Kchr10_fa2ms_15.ms.txt_npops3_nsam84_nonsynonymous_max_ExcludeMissingmhits_outg_ploidy2_WEIGHTS.gz
+2025-01-07 03:47:46 INFO  : Creating index for the weights file ./100Kchr10_fa2ms_15.ms.txt_npops3_nsam84_nonsynonymous_max_ExcludeMissingmhits_outg_ploidy2_WEIGHTS.gz
+2025-01-07 03:47:46 INFO  : Writing ms file ./100Kchr10_fa2ms_15.ms.txt  
+2025-01-07 03:47:46 INFO  : Program Ended

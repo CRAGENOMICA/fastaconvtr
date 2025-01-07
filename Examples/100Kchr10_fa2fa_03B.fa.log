@@ -1,6 +1,106 @@
-
-Open log file...
-Reading weight file...
-Reading input file...
-Write fasta file for specific regions...
-Program Ended
+2025-01-07 03:41:51 DEBUG : Open log file...
+2025-01-07 03:41:51 INFO  : Using tfasta weights file ./100Kchr10_fa2fa_02B.fa_npops1_nsam42_nonsynonymous_max_ExcludeMissingVariantsmhits_NOoutg_ploidy1_TFAv2_WEIGHTS.gz
+2025-01-07 03:41:51 INFO  : Validating tfasta weights file ./100Kchr10_fa2fa_02B.fa_npops1_nsam42_nonsynonymous_max_ExcludeMissingVariantsmhits_NOoutg_ploidy1_TFAv2_WEIGHTS.gz
+2025-01-07 03:41:51 INFO  : tfasta weights file ./100Kchr10_fa2fa_02B.fa_npops1_nsam42_nonsynonymous_max_ExcludeMissingVariantsmhits_NOoutg_ploidy1_TFAv2_WEIGHTS.gz is valid
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 DEBUG : Reallocating memory for wP, wPV and wV
+2025-01-07 03:41:51 INFO  : Reading input file...
+2025-01-07 03:41:51 INFO  : Write fasta file for specific regions...
+2025-01-07 03:42:01 INFO  : Program Ended

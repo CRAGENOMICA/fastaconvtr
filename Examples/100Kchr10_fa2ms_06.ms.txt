@@ -1,5 +1,5 @@
 #fastaconvtr -F fasta -f ms -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_06.ms.txt -W ./coord_100Kb.txt -n ./chr10.txt 
-#fastaconvtr v0.1beta (20220907) Sebastian E. Ramos-Onsins.
+#fastaconvtr v.1.0.0 (20250107034050) Sebastian E. Ramos-Onsins.
 #Data for TOTAL Alignment. format: ms length: 100000 Efflength: 5549.00 Booleanlength: 5549 NumVariants: 113 nwindows: 5 s/v: 2.139 GfreqT: 0.27 GfreqC: 0.23 GfreqG: 0.24 GfreqA: 0.27 GCs: 0.062 CpGs: 0.012 Cs+Gs: 0.463 
 // 1	9999	913.00
 segsites: 22

@@ -1,1 +1,1 @@
-#fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa -o ./100Kchr12_tfa2fa_06.fa -n ./chr12.txt -W ./coord_100Kb_allchr.txt -u 1 
+#fastaconvtr -F tfasta -f fasta -i ./100Kallchr.tfa.bgz -o ./100Kchr12_tfa2fa_06.fa -n ./chr12.txt -W ./coord_100Kb_allchr.txt -u 1 
