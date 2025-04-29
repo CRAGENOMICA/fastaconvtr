@@ -13,8 +13,7 @@
 extern "C" {
 	#endif
 	
-	#include "common.h"
-	
+	#include "common.h"	
     #include "tfasta.h"
 	void usage(void);
 

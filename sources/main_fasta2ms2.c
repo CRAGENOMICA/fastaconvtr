@@ -1,10 +1,10 @@
 #include "main_fasta2ms2.h"
 #include "read_fasta.h"
-#include "tfasta.h"
 
 #include "log.h"
 #include <unistd.h>
-	/* CHUNK is the size of every compressed piece of data */
+
+/* CHUNK is the size of every compressed piece of data */
 	#define CHUNK                16384  /* bytes 0x4000 */
     #define MAX_FZPRINTF_MESSAGE 0x4000 /* 16384 bytes */
 
@@ -151,17 +151,17 @@ int main(int argc, const char * argv[]) {
     // char file_wps[MSP_MAX_FILENAME];
     // char file_masked[MSP_MAX_FILENAME];
     
-	char file_log[MSP_MAX_FILENAME];
-	
+    char file_log[MSP_MAX_FILENAME];
+
 	// FILE *file_input	= 	0;
 //	FILE *file_es   	= 	0;
 	FILE *file_output	=	stdout;
 	FILE *file_wcoor    =   0;
     FILE *file_ws   	= 	0;
-    FILE *file_msk   	= 	0;
+    FILE *file_msk      =   0;
 
     // FILE *file_logerr   =   stdout; // TODO :: Better use stderr
-	FILE *error_log_file = 0; // file_logerr
+    FILE *error_log_file = 0; // file_logerr
 
 
     // SGZip file_input_gz;
@@ -208,6 +208,8 @@ int main(int argc, const char * argv[]) {
     unsigned long nscaffolds;
     char **chr_name_array;
     char **chr_length_array;
+    
+    //char *file_weights_output=0;
 
     memset( args.chr_name_all, 0, MSP_MAX_NAME);
 
@@ -221,7 +223,7 @@ int main(int argc, const char * argv[]) {
     memset( args.file_masked, 0, MSP_MAX_FILENAME);
 
     memset( file_log, 0, MSP_MAX_FILENAME);
-	
+ 
 
 	/*defaults*/
     args.printtfasta = 1;
@@ -308,6 +310,14 @@ int main(int argc, const char * argv[]) {
 					// TODO :: set log level from command line
       				log_add_fp(error_log_file, LOG_DEBUG);
 					log_debug("Open log file...");
+                    break;
+                case 't' : /* output weight file */
+                    arg++;
+                    strcpy(args.file_weights_char, argv[arg] );
+                    break;
+                case 'k' : /* output mask file */
+                    arg++;
+                    strcpy(args.file_mask_char, argv[arg] );
                     break;
                 case 'F' : /* F fa or tfa */
                     arg++;
@@ -1406,10 +1416,10 @@ void usage(void)
 {
 	printf(FASTA2MS2);
 	printf("\nFlags:\n");
-    printf("      -F [input format file: f (fasta), t (tfasta)]\n");/*fasta or tfasta formats are only available*/
     printf("      -i [path and name of the input file (text or gz indexed)]\n");
+    printf("      -F [input format file: f (fasta), t (tfasta)]\n");/*fasta or tfasta formats are only available*/
     printf("      -f [output format file: t (tfasta), f (fasta), m (ms), 0(nothing)]\n");
-    printf("      -o [path and name of the output file (include extension .gz except ms files)]\n");
+    printf("      -o [path and name of the output sequence file\n");
     printf("      -n [name of the file containing the name(s) of scaffold(s) and their length (separated by a tab), one per line (ex. fai file)]\n");
     printf("   OPTIONAL PARAMETERS:\n");
     printf("      -h [help and exit]\n");
@@ -1423,18 +1433,20 @@ void usage(void)
     printf("     Outputing ms format:\n");
     printf("      -w [window size]. DEFAULT: Total_length\n");
     printf("      -s [slide size]. DEFAULT: Total_length\n");
+    printf("      -k [path and name of the output mask file\n");
     printf("     Inputing fasta format:\n");
     printf("      -p [if fasta input,\n");
     printf("             haplotype: 1 (single sequence)\n");
     printf("             genotype:  2 or 4 (two diploid mixed sequences in IUPAC format. If p=4 lowercase will be considered as one haplotype missing!). DEFAULT: 1\n");
     printf("     Annotation file and weight options:\n");
+    printf("      -t [path and name of the output weighted file\n");
     printf("      -g [GFF_file]\n");
     printf("         [add also: coding,noncoding,synonymous,nonsynonymous,silent, others (whatever annotated)]\n");
     printf("         [if 'synonymous', 'nonsynonymous', 'silent' add: Genetic_Code: Nuclear_Universal,mtDNA_Drosophila,mtDNA_Mammals,Other]\n");
     printf("         [if 'Other', introduce the single letter code for the 64 triplets in the order UUU UUC UUA UUG ... etc.]\n");
     printf("      -c [in case use coding regions, criteria to consider transcripts (max/min/first/long)]. DEFAULT: long\n");
     printf("      -E [instead -g & -c, input file with weights for positions: include three columns with a header, first the physical positions (1...end), second the weight for positions and third a boolean weight for the variant (eg. syn variant but nsyn position)]\n");
-    printf("      -T [in case define -g and -c and output is TFasta, option to print (1) or not (0) the DNA sequence]. DEFAULT: 1 (print)\n");
+    /*printf("      -T [in case define -g and -c and output is TFasta, option to print (1) or not (0) the DNA sequence]. DEFAULT: 1 (print)\n");*/
     /*printf("      -r [rewrite the fasta file for selected region (not valid for silent/syn/nsyn) (1/0)]\n");*/
     /*printf("      -t [rewrite the fasta transposed file including the weight of each position and variant, if available) (1/0)]\n");*//*new!*/
     /*printf("\     -e [input file with effect sizes for variants: include two columns with a header, first the physical positions and second the weight]\n");*/

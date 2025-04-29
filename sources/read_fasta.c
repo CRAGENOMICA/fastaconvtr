@@ -7,8 +7,7 @@
  */
 
 #include "read_fasta.h"
-#include "log.c"
-#include "tfasta.h"
+#include "log.h"
 int file_es = 0;
 
 
@@ -35,7 +34,7 @@ int read_fasta(
     char **matrix_pol, 
     // int ploidy, 
 	// int gfffiles, 
-    // char *name_fileinputgff,  # args.file_GFF
+    // char *name_fileinputgff,  # args->file_GFF
     // char *subset_positions,  # args.subset_positions
 	char *genetic_code, 
     //char *criteria_transcript, # args.criteria_transcript
@@ -143,12 +142,13 @@ int read_fasta(
 
     char file_fas_char[MSP_MAX_FILENAME];
     char file_fas_char2[MSP_MAX_FILENAME];
+    char file_weights_char[MSP_MAX_FILENAME];
     static FILE *file_weights	=	0;
     static BGZF *file_weights_gz;
     const char *wv2_header = "##fileformat=wTFAv2.0\n";
+    
+    file_weights_char[0]=0;
     //static struct SGZIndex file_weights_gz_index;          /* This is the index for the output gz file. */
-
-    char file_weights_char[MSP_MAX_FILENAME];
 
 	int output = 1;
 	
@@ -798,37 +798,42 @@ int read_fasta(
                     /*fzclose(file_fas,&file_fas_gz);*/
                     
                     if(args->gfffiles == 1 || file_es != 0) {
-                        memset(file_weights_char, 0, MSP_MAX_FILENAME);
-                        if(args->file_out[0]=='\0') strcpy(file_weights_char, args->file_in);
-                        else strcpy(file_weights_char, args->file_out);
-                        //sprintf(file_weights_char,"%s_npops%d_nsam%d",file_weights_char,(npops>0?npops:1),nsamtot);
-                        char chtemp[MSP_MAX_FILENAME];
-                        sprintf(chtemp,"npops%d_nsam%d",(args->npops>0?args->npops:1),nsamtot);
-                        strcat(file_weights_char,"_");
-                        strcat(file_weights_char,chtemp);
-                        if(args->gfffiles == 1) {
+                        if(args->file_weights_char[0]=='\0') {
+                            memset(file_weights_char, 0, MSP_MAX_FILENAME);
+                            if(args->file_out[0]=='\0') strcpy(file_weights_char, args->file_in);
+                            else strcpy(file_weights_char, args->file_out);
+                            //sprintf(file_weights_char,"%s_npops%d_nsam%d",file_weights_char,(npops>0?npops:1),nsamtot);
+                            char chtemp[MSP_MAX_FILENAME];
+                            sprintf(chtemp,"npops%d_nsam%d",(args->npops>0?args->npops:1),nsamtot);
                             strcat(file_weights_char,"_");
-                            strcat(file_weights_char,args->subset_positions);
-                            strcat(file_weights_char,"_");
-                            strcat(file_weights_char,args->criteria_transcript);
+                            strcat(file_weights_char,chtemp);
+                            if(args->gfffiles == 1) {
+                                strcat(file_weights_char,"_");
+                                strcat(file_weights_char,args->subset_positions);
+                                strcat(file_weights_char,"_");
+                                strcat(file_weights_char,args->criteria_transcript);
+                            }
+                            if(file_ws != 0) {
+                                strcat(file_weights_char,"_IncludedWeightFile");
+                            }
+                            if(args->include_unknown) strcat(file_weights_char,"_IncludeMissingVariantsmhits");
+                            else strcat(file_weights_char,"_ExcludeMissingVariantsmhits");
+                            // if(outgroup_presence==0) strcat(file_weights_char,"_NOoutg");
+                            if(args->outgroup ==0) strcat(file_weights_char,"_NOoutg");
+                            // if(outgroup_presence==1) strcat(file_weights_char,"_outg");
+                            if(args->outgroup==1) strcat(file_weights_char,"_outg");
+                            if(args->ploidy==1) strcat(file_weights_char,"_ploidy1");
+                            if(args->ploidy>2) strcat(file_weights_char,"_ploidy2");
+                            strcat(file_weights_char,"_WEIGHTS.gz");
                         }
-                        if(file_ws != 0) {
-                            strcat(file_weights_char,"_IncludedWeightFile");
-                        }
-                        if(args->include_unknown) strcat(file_weights_char,"_IncludeMissingVariantsmhits");
-                        else strcat(file_weights_char,"_ExcludeMissingVariantsmhits");
-                        // if(outgroup_presence==0) strcat(file_weights_char,"_NOoutg");
-                        if(args->outgroup ==0) strcat(file_weights_char,"_NOoutg");
-                        // if(outgroup_presence==1) strcat(file_weights_char,"_outg");
-                        if(args->outgroup==1) strcat(file_weights_char,"_outg");
-                        if(args->ploidy==1) strcat(file_weights_char,"_ploidy1");
-                        if(args->ploidy>2) strcat(file_weights_char,"_ploidy2");
-                        strcat(file_weights_char,"_WEIGHTS.gz");
-                        log_info("Writing weights file %s", file_weights_char);
-                        if( (file_weights = bzopen( file_weights_char, "wb", &file_weights_gz)) == 0) {
-                            // fzprintf(file_output,file_output_gz,"\n It is not possible to write the weigths file %s.", file_weights_char);
-                            log_error("It is not possible to write the weigths file %s.", file_weights_char);
-                            exit(1);
+                        else {
+                            strcat(file_weights_char,args->file_weights_char);
+                            log_info("Writing weights file %s", file_weights_char);
+                            if( (file_weights = bzopen( file_weights_char, "wb", &file_weights_gz)) == 0) {
+                                // fzprintf(file_output,file_output_gz,"\n It is not possible to write the weigths file %s.", file_weights_char);
+                                log_error("It is not possible to write the weigths file %s.", file_weights_char);
+                                exit(1);
+                            }
                         }
                         
                         // TODO :: handle create index
@@ -843,7 +848,7 @@ int read_fasta(
                         for(xx=0;xx<n_site;xx++) {
                             if(args->gfffiles == 1 || file_es != 0) bzprintf(file_weights,file_weights_gz,"%s\t%ld\t",chr_name,xx+1);
                             if(args->gfffiles == 1) {
-                                /*fzprintf(file_weights,&file_weights_gz,"\t");*/
+                                //fzprintf(file_weights,&file_weights_gz,"\t");
                                 bzprintf(file_weights,file_weights_gz, "%.3f\t",matrix_sizepos[0][xx]);
                                 /*if(matrix_sizepos[0][xx] == 0.0) fzprintf(file_weights,&file_weights_gz,"%.3f\t",(double)0);
                                 else */bzprintf(file_weights,file_weights_gz,"%.3f\t",matrix_segrpos[xx]);
@@ -869,6 +874,7 @@ int read_fasta(
                             create_index(file_weights_char,4,0,tfasta_conf);
                         }
                     }
+                    
                }
             /*}*/
 		}
@@ -931,40 +937,45 @@ int read_fasta(
             }
             if (args->gfffiles == 1 || file_es != 0)
             {
-                memset(file_weights_char, 0, MSP_MAX_FILENAME);
-                if (args->file_out[0] == '\0')
-                    strcpy(file_weights_char, args->file_in);
-                else
-                    strcpy(file_weights_char, args->file_out);
-                // sprintf(file_weights_char,"%s_npops%d_nsam%d",file_weights_char,(npops>0?npops:1),nsamtot);
-                char chtemp[MSP_MAX_FILENAME];
-                sprintf(chtemp, "npops%d_nsam%d", (args->npops > 0 ? args->npops : 1), nsamtot);
-                strcat(file_weights_char, "_");
-                strcat(file_weights_char, chtemp);
-                if (args->gfffiles == 1)
-                {
+                if(args->file_weights_char[0]=='\0') {
+                    memset(file_weights_char, 0, MSP_MAX_FILENAME);
+                    if (args->file_out[0] == '\0')
+                        strcpy(file_weights_char, args->file_in);
+                    else
+                        strcpy(file_weights_char, args->file_out);
+                    // sprintf(file_weights_char,"%s_npops%d_nsam%d",file_weights_char,(npops>0?npops:1),nsamtot);
+                    char chtemp[MSP_MAX_FILENAME];
+                    sprintf(chtemp, "npops%d_nsam%d", (args->npops > 0 ? args->npops : 1), nsamtot);
                     strcat(file_weights_char, "_");
-                    strcat(file_weights_char, args->subset_positions);
-                    strcat(file_weights_char, "_");
-                    strcat(file_weights_char, args->criteria_transcript);
+                    strcat(file_weights_char, chtemp);
+                    if (args->gfffiles == 1)
+                    {
+                        strcat(file_weights_char, "_");
+                        strcat(file_weights_char, args->subset_positions);
+                        strcat(file_weights_char, "_");
+                        strcat(file_weights_char, args->criteria_transcript);
+                    }
+                    if (file_ws != 0)
+                    {
+                        strcat(file_weights_char, "_IncludedWeightFile");
+                    }
+                    if (args->include_unknown)
+                        strcat(file_weights_char, "_IncludeMissingVariantsmhits");
+                    else
+                        strcat(file_weights_char, "_ExcludeMissingVariantsmhits");
+                    if (args->outgroup == 0)
+                        strcat(file_weights_char, "_NOoutg");
+                    if (args->outgroup == 1)
+                        strcat(file_weights_char, "_outg");
+                    if (args->ploidy == 1)
+                        strcat(file_weights_char, "_ploidy1");
+                    if (args->ploidy >= 2)
+                        strcat(file_weights_char, "_ploidy2");
+                    strcat(file_weights_char, "_WEIGHTS.gz");
                 }
-                if (file_ws != 0)
-                {
-                    strcat(file_weights_char, "_IncludedWeightFile");
+                else {
+                    strcat(file_weights_char,args->file_weights_char);
                 }
-                if (args->include_unknown)
-                    strcat(file_weights_char, "_IncludeMissingVariantsmhits");
-                else
-                    strcat(file_weights_char, "_ExcludeMissingVariantsmhits");
-                if (args->outgroup == 0)
-                    strcat(file_weights_char, "_NOoutg");
-                if (args->outgroup == 1)
-                    strcat(file_weights_char, "_outg");
-                if (args->ploidy == 1)
-                    strcat(file_weights_char, "_ploidy1");
-                if (args->ploidy >= 2)
-                    strcat(file_weights_char, "_ploidy2");
-                strcat(file_weights_char, "_WEIGHTS.gz");
                 if (first == 0)
                 {
                     log_info("Writing weights file %s", file_weights_char);
@@ -1127,31 +1138,35 @@ int read_fasta(
         /*START PRINT MS OUTPUT*/
 		
         /***** print MASK in a file ******/
-        memset(mask_name, 0, MSP_MAX_FILENAME);
-        if(args->file_out[0]=='\0') strcpy(mask_name, args->file_in);
-        else strcpy(mask_name, args->file_out);
-        if (args->npops == 0) args->npops = 1;
-        //sprintf(mask_name,"%s_npops%d_nsam%d",mask_name,npops,nsamtot);
-        char chtemp[MSP_MAX_FILENAME];
-        sprintf(chtemp,"npops%d_nsam%d",(args->npops>0?args->npops:1),nsamtot);
-        strcat(mask_name,"_");
-        strcat(mask_name,chtemp);
-        if(args->gfffiles == 1) {
+        if(args->file_mask_char[0]=='\0') {
+            memset(mask_name, 0, MSP_MAX_FILENAME);
+            if(args->file_out[0]=='\0') strcpy(mask_name, args->file_in);
+            else strcpy(mask_name, args->file_out);
+            if (args->npops == 0) args->npops = 1;
+            //sprintf(mask_name,"%s_npops%d_nsam%d",mask_name,npops,nsamtot);
+            char chtemp[MSP_MAX_FILENAME];
+            sprintf(chtemp,"npops%d_nsam%d",(args->npops>0?args->npops:1),nsamtot);
             strcat(mask_name,"_");
-            strcat(mask_name,args->subset_positions);
-            strcat(mask_name,"_");
-            strcat(mask_name,args->criteria_transcript);
+            strcat(mask_name,chtemp);
+            if(args->gfffiles == 1) {
+                strcat(mask_name,"_");
+                strcat(mask_name,args->subset_positions);
+                strcat(mask_name,"_");
+                strcat(mask_name,args->criteria_transcript);
+            }
+            if(file_ws != 0) {
+                strcat(mask_name,"_IncludedWeightFile");
+            }
+            if(args->include_unknown) strcat(mask_name,"_IncludeMissingVariantsmhits");
+            else strcat(mask_name,"_ExcludeMissingVariantsmhits");
+            if(args->outgroup==0) strcat(mask_name,"_NOoutg");
+            if(args->outgroup==1) strcat(mask_name,"_outg");
+            if(args->ploidy==1) strcat(mask_name,"_ploidy1");
+            if(args->ploidy>=2) strcat(mask_name,"_ploidy2");
+            strcat(mask_name,"_MASK.txt");
+        } else {
+            strcat(mask_name,args->file_mask_char);
         }
-        if(file_ws != 0) {
-            strcat(mask_name,"_IncludedWeightFile");
-        }
-        if(args->include_unknown) strcat(mask_name,"_IncludeMissingVariantsmhits");
-        else strcat(mask_name,"_ExcludeMissingVariantsmhits");
-        if(args->outgroup==0) strcat(mask_name,"_NOoutg");
-        if(args->outgroup==1) strcat(mask_name,"_outg");
-        if(args->ploidy==1) strcat(mask_name,"_ploidy1");
-        if(args->ploidy>=2) strcat(mask_name,"_ploidy2");
-        strcat(mask_name,"_MASK.txt"); 
         log_info("Writing mask file %s", mask_name); // TODO :: writing is too slow need to be optimized
         if((file_mask = bzopen(mask_name,"wu",&file_mask_gz)) == 0) {
             //fzprintf(file_logerr,file_logerr_gz,"Error in mask file %s.",mask_name);
@@ -1384,31 +1399,37 @@ int read_fasta(
 		}
         */
         if(args->gfffiles == 1) {
-            memset(file_weights_char, 0, MSP_MAX_FILENAME);
-            if(args->file_out[0]=='\0') strcpy(file_weights_char, args->file_in);
-            else strcpy(file_weights_char, args->file_out);
-            //sprintf(file_weights_char,"%s_npops%d_nsam%d",file_weights_char,npops,nsamtot);
-            char chtemp[MSP_MAX_FILENAME];
-            sprintf(chtemp,"npops%d_nsam%d",(args->npops>0?args->npops:1),nsamtot);
-            strcat(file_weights_char,"_");
-            strcat(file_weights_char,chtemp);
-            strcat(file_weights_char,"_");
-            strcat(file_weights_char,args->subset_positions);
-            strcat(file_weights_char,"_");
-            strcat(file_weights_char,args->criteria_transcript);
-            if(args->include_unknown) strcat(file_weights_char,"_IncludeMissingmhits");
-            else strcat(file_weights_char,"_ExcludeMissingmhits");
-            if(args->outgroup==0) strcat(file_weights_char,"_NOoutg");
-            if(args->outgroup==1) strcat(file_weights_char,"_outg");
-            if(args->ploidy==1) strcat(file_weights_char,"_ploidy1");
-            if(args->ploidy>=2) strcat(file_weights_char,"_ploidy2");
-            strcat(file_weights_char,"_WEIGHTS.gz");
+            if(args->file_weights_char[0]=='\0') {
+                memset(file_weights_char, 0, MSP_MAX_FILENAME);
+                if(args->file_out[0]=='\0') strcpy(file_weights_char, args->file_in);
+                else strcpy(file_weights_char, args->file_out);
+                //sprintf(file_weights_char,"%s_npops%d_nsam%d",file_weights_char,npops,nsamtot);
+                char chtemp[MSP_MAX_FILENAME];
+                sprintf(chtemp,"npops%d_nsam%d",(args->npops>0?args->npops:1),nsamtot);
+                strcat(file_weights_char,"_");
+                strcat(file_weights_char,chtemp);
+                strcat(file_weights_char,"_");
+                strcat(file_weights_char,args->subset_positions);
+                strcat(file_weights_char,"_");
+                strcat(file_weights_char,args->criteria_transcript);
+                if(args->include_unknown) strcat(file_weights_char,"_IncludeMissingmhits");
+                else strcat(file_weights_char,"_ExcludeMissingmhits");
+                if(args->outgroup==0) strcat(file_weights_char,"_NOoutg");
+                if(args->outgroup==1) strcat(file_weights_char,"_outg");
+                if(args->ploidy==1) strcat(file_weights_char,"_ploidy1");
+                if(args->ploidy>=2) strcat(file_weights_char,"_ploidy2");
+                
+                strcat(file_weights_char,"_WEIGHTS.gz");
+            } else {
+                strcat(file_weights_char,args->file_weights_char);
+            }
             log_info("Writing weights file %s", file_weights_char);
             if( (file_weights = bzopen( file_weights_char, "wb", &file_weights_gz)) == 0) {
                 //fzprintf(file_output,file_output_gz,"\n It is not possible to write the weigths file %s.", file_weights_char);
                 log_error("It is not possible to write the weigths file %s.", file_weights_char);
                 exit(1);
             }
+
             // file_weights_gz.index = &file_weights_gz_index;
             // write the header
             bzprintf(file_weights,file_weights_gz,wv2_header);

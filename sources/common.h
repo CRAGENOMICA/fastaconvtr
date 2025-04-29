@@ -19,12 +19,10 @@ extern "C" {
 	#include <string.h>
 	#include <stdlib.h>
 	#include <math.h>
-	#include "htslib/bgzf.h"
-	
+    #include <htslib/bgzf.h>
+
 	#define FULL_VERSION "v." VERSION_NUMBER " (" BUILD_NUMBER ")"
-
-
-	#define FASTA2MS2 "#fastaconvtr " FULL_VERSION " Sebastian E. Ramos-Onsins.\n"
+	#define FASTA2MS2 "#fastaconvtr " //FULL_VERSION " Sebastian E. Ramos-Onsins.\n"
 
 	#define MSP_MAX_FILENAME			(unsigned long) 4096 /**< @brief Maximum Filename Length allowed */
 	#define MSP_MAX_GFF_WORDLEN         (unsigned long) 20
@@ -80,6 +78,8 @@ extern "C" {
 		int *	vint_perpop_nsam ;
 		int printtfasta;
 		int argc;
+        char file_weights_char[ MSP_MAX_FILENAME ];
+        char file_mask_char[ MSP_MAX_FILENAME ];
 	} fastaconvtr_args_t;
 
 

@@ -1,6 +1,5 @@
-#fastaconvtr -F fasta -f ms -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_06b.ms.txt -w 10000 -s 20000 -n ./chr10.txt 
-#fastaconvtr v.1.0.0 (20250107034050) Sebastian E. Ramos-Onsins.
-#Data for TOTAL Alignment. format: ms length: 100000 Efflength: 5549.00 Booleanlength: 5549 NumVariants: 113 nwindows: 5 s/v: 2.139 GfreqT: 0.27 GfreqC: 0.23 GfreqG: 0.24 GfreqA: 0.27 GCs: 0.062 CpGs: 0.012 Cs+Gs: 0.463 
+#fastaconvtr -F fasta -f ms -i ./100Kchr10.fa -o ./100Kchr10_fa2ms_06b.ms.txt -w 10000 -s 20000 -n ./chr10.txt -k ./100Kchr10_fa2ms_06b.ms.mask.txt.gz 
+#fastaconvtr #Data for TOTAL Alignment. format: ms length: 100000 Efflength: 5549.00 Booleanlength: 5549 NumVariants: 113 nwindows: 5 s/v: 2.139 GfreqT: 0.27 GfreqC: 0.23 GfreqG: 0.24 GfreqA: 0.27 GCs: 0.062 CpGs: 0.012 Cs+Gs: 0.463 
 // 1	10000	913.00
 segsites: 22
 positions: 0.01114000 0.03721000 0.04111000 0.04134000 0.04205000 0.04298000 0.04326000 0.04336000 0.04862000 0.04877000 0.04905000 0.05587000 0.05812000 0.06506000 0.07954000 0.07971000 0.08162000 0.08347000 0.08714000 0.08976000 0.09044000 0.09050000 

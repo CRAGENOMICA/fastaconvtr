@@ -1,74 +1,74 @@
-2025-01-07 12:32:45 DEBUG : Open log file...
-2025-01-07 12:32:45 INFO  : Validating tfasta file ./100Kallchr.tfa.gz
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_BGI_CWB_NCYZ0010.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_BGI_CWB_NCYZ0010.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_BGI_CWB_NCYZ0013.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_BGI_CWB_NCYZ0013.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_BGI_CWB_SYWB103.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_BGI_CWB_SYWB103.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_BGI_CWB_SYWB205.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_BGI_CWB_SYWB205.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_BGI_CWB_ZJWB01.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_BGI_CWB_ZJWB01.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_BGI_CWB_ZJWB02.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_BGI_CWB_ZJWB02.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_MS20U10_Meishan.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_MS20U10_Meishan.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_MS20U11_Meishan.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_MS20U11_Meishan.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_MS21M07_Meishan.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_MS21M07_Meishan.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_MS21M14_Meishan.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_MS21M14_Meishan.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_IBGM0327.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_IBGM0327.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_IBGU1803.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_IBGU1803.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_IBGU1804.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_IBGU1804.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_IBGU1805.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_IBGU1805.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_WB21F05_Netherlands.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_WB21F05_Netherlands.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_WB21M03_Netherlands.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_WB21M03_Netherlands.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_WB22F01_NL.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_WB22F01_NL.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_WB22F02_NL.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_WB22F02_NL.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_SCEB01F01_Scebifrons.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_SCEB01F01_Scebifrons.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_Scelebensis.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_Scelebensis.fa_b
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_Sverrucosus.fa_a
-2025-01-07 12:32:45 DEBUG : Adding Sample : chr_10_Sverrucosus.fa_b
-2025-01-07 12:32:45 DEBUG : Sequence Name : chr10
-2025-01-07 12:32:45 DEBUG : Sequence Name : chr12
-2025-01-07 12:32:45 DEBUG : Sequence Name : chr14
-2025-01-07 12:32:45 DEBUG : Sequence names and interval counts:
-2025-01-07 12:32:45 INFO  : Reading input file...
-2025-01-07 12:32:45 DEBUG : Reading DNA data for chr10 from 1 to end of sequence
-2025-01-07 12:32:45 INFO  : Done reading tfasta file, number of samples: 42
-2025-01-07 12:32:45 INFO  : Reading GTF file...
-2025-01-07 12:32:45 INFO  : Creating GTF file ./100Kallchr_criteria_max.gff
-2025-01-07 12:32:45 INFO  : Writing tfasta file...
-2025-01-07 12:32:45 INFO  : Writing weights file ./100Kallchr07.tfa.gz_npops2_nsam42_nonsynonymous_max_IncludeMissingVariantsmhits_outg_ploidy1_WEIGHTS.gz
-2025-01-07 12:32:45 INFO  : Reading input file...
-2025-01-07 12:32:45 DEBUG : Reading DNA data for chr12 from 1 to end of sequence
-2025-01-07 12:32:45 INFO  : Done reading tfasta file, number of samples: 42
-2025-01-07 12:32:45 INFO  : Reading GTF file...
-2025-01-07 12:32:45 WARN  : GFF file Warning: end (115567) is larger than number of total sites (100000). Row 148 not analyzed.
-2025-01-07 12:32:45 WARN  : GFF file Warning: end (115567) is larger than number of total sites (100000). Row 149 not analyzed.
-2025-01-07 12:32:45 INFO  : Appending Data to GTF file ./100Kallchr_criteria_max.gff
-2025-01-07 12:32:45 INFO  : Writing tfasta file...
-2025-01-07 12:32:45 INFO  : Reading input file...
-2025-01-07 12:32:45 DEBUG : Reading DNA data for chr14 from 1 to end of sequence
-2025-01-07 12:32:45 INFO  : Done reading tfasta file, number of samples: 42
-2025-01-07 12:32:45 INFO  : Reading GTF file...
-2025-01-07 12:32:45 WARN  : GFF file Warning: end (86228) is larger than number of total sites (75000). Row 227 not analyzed.
-2025-01-07 12:32:45 WARN  : GFF file Warning: end (86228) is larger than number of total sites (75000). Row 228 not analyzed.
-2025-01-07 12:32:45 INFO  : Appending Data to GTF file ./100Kallchr_criteria_max.gff
-2025-01-07 12:32:45 INFO  : Writing tfasta file...
-2025-01-07 12:32:45 INFO  : Creating index for the weights file ./100Kallchr07.tfa.gz_npops2_nsam42_nonsynonymous_max_IncludeMissingVariantsmhits_outg_ploidy1_WEIGHTS.gz
-2025-01-07 12:32:45 INFO  : Creating index file for the output file ./100Kallchr07.tfa.gz
-2025-01-07 12:32:45 INFO  : Program Ended
+2025-04-29 15:06:09 DEBUG : Open log file...
+2025-04-29 15:06:09 INFO  : Validating tfasta file ./100Kallchr.tfa.gz
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_BGI_CWB_NCYZ0010.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_BGI_CWB_NCYZ0010.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_BGI_CWB_NCYZ0013.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_BGI_CWB_NCYZ0013.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_BGI_CWB_SYWB103.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_BGI_CWB_SYWB103.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_BGI_CWB_SYWB205.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_BGI_CWB_SYWB205.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_BGI_CWB_ZJWB01.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_BGI_CWB_ZJWB01.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_BGI_CWB_ZJWB02.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_BGI_CWB_ZJWB02.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_MS20U10_Meishan.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_MS20U10_Meishan.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_MS20U11_Meishan.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_MS20U11_Meishan.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_MS21M07_Meishan.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_MS21M07_Meishan.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_MS21M14_Meishan.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_MS21M14_Meishan.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_IBGM0327.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_IBGM0327.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_IBGU1803.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_IBGU1803.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_IBGU1804.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_IBGU1804.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_IBGU1805.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_IBGU1805.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_WB21F05_Netherlands.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_WB21F05_Netherlands.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_WB21M03_Netherlands.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_WB21M03_Netherlands.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_WB22F01_NL.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_WB22F01_NL.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_WB22F02_NL.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_WB22F02_NL.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_SCEB01F01_Scebifrons.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_SCEB01F01_Scebifrons.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_Scelebensis.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_Scelebensis.fa_b
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_Sverrucosus.fa_a
+2025-04-29 15:06:09 DEBUG : Adding Sample : chr_10_Sverrucosus.fa_b
+2025-04-29 15:06:09 DEBUG : Sequence Name : chr10
+2025-04-29 15:06:09 DEBUG : Sequence Name : chr12
+2025-04-29 15:06:09 DEBUG : Sequence Name : chr14
+2025-04-29 15:06:09 DEBUG : Sequence names and interval counts:
+2025-04-29 15:06:09 INFO  : Reading input file...
+2025-04-29 15:06:09 DEBUG : Reading DNA data for chr10 from 1 to end of sequence
+2025-04-29 15:06:09 INFO  : Done reading tfasta file, number of samples: 42
+2025-04-29 15:06:09 INFO  : Reading GTF file...
+2025-04-29 15:06:09 INFO  : Creating GTF file ./100Kallchr_criteria_max.gff
+2025-04-29 15:06:09 INFO  : Writing tfasta file...
+2025-04-29 15:06:09 INFO  : Writing weights file ./100Kchr10_tfa2tfa_07.NonSyn.WEIGHTS.gz
+2025-04-29 15:06:09 INFO  : Reading input file...
+2025-04-29 15:06:09 DEBUG : Reading DNA data for chr12 from 1 to end of sequence
+2025-04-29 15:06:09 INFO  : Done reading tfasta file, number of samples: 42
+2025-04-29 15:06:09 INFO  : Reading GTF file...
+2025-04-29 15:06:09 WARN  : GFF file Warning: end (115567) is larger than number of total sites (100000). Row 148 not analyzed.
+2025-04-29 15:06:09 WARN  : GFF file Warning: end (115567) is larger than number of total sites (100000). Row 149 not analyzed.
+2025-04-29 15:06:09 INFO  : Appending Data to GTF file ./100Kallchr_criteria_max.gff
+2025-04-29 15:06:09 INFO  : Writing tfasta file...
+2025-04-29 15:06:09 INFO  : Reading input file...
+2025-04-29 15:06:09 DEBUG : Reading DNA data for chr14 from 1 to end of sequence
+2025-04-29 15:06:09 INFO  : Done reading tfasta file, number of samples: 42
+2025-04-29 15:06:09 INFO  : Reading GTF file...
+2025-04-29 15:06:09 WARN  : GFF file Warning: end (86228) is larger than number of total sites (75000). Row 227 not analyzed.
+2025-04-29 15:06:09 WARN  : GFF file Warning: end (86228) is larger than number of total sites (75000). Row 228 not analyzed.
+2025-04-29 15:06:09 INFO  : Appending Data to GTF file ./100Kallchr_criteria_max.gff
+2025-04-29 15:06:09 INFO  : Writing tfasta file...
+2025-04-29 15:06:09 INFO  : Creating index for the weights file ./100Kchr10_tfa2tfa_07.NonSyn.WEIGHTS.gz
+2025-04-29 15:06:09 INFO  : Creating index file for the output file ./100Kallchr07.tfa.gz
+2025-04-29 15:06:09 INFO  : Program Ended

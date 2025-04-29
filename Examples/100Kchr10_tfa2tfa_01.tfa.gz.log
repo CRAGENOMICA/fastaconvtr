@@ -1,4 +1,0 @@
-2025-01-07 03:51:17 DEBUG : Open log file...
-2025-01-07 03:51:18 INFO  : Validating tfasta file ./100Kchr10.tfa
-2025-01-07 03:51:18 ERROR : Failed to load index for: ./100Kchr10.tfa
-2025-01-07 03:51:18 ERROR : The index file for ./100Kchr10.tfa is invalid

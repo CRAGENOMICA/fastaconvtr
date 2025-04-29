@@ -2060,7 +2060,7 @@ int tripletnsamp(char *cod3n,char *DNA_matr,char strand,double *cmat,
 									/*mhitbp[*nmhits] = ii;*//*mhits are stablished by codons, not by positions*/
 									/*nmhits[0] = nmhits[0] + 1;*/
                                     //fzprintf(file_logerr,file_logerr_gz,"\n Excluded codons: Multiple Mutations starting at position %ld.",ii+1);
-									log_error("Excluded codons: Multiple Mutations starting at position %ld.",ii+1);
+									log_warn("Excluded codons: Multiple Mutations starting at position %ld.",ii+1);
 									return 0;
 								}
 							}
@@ -2077,7 +2077,7 @@ int tripletnsamp(char *cod3n,char *DNA_matr,char strand,double *cmat,
 								/*mhitbp[*nmhits] = ii;*//*mhits are stablished by codons, not by positions*/
 								/*nmhits[0] = nmhits[0] + 1;*/
                                 //fzprintf(file_logerr,file_logerr_gz,"\n Excluded codons: Multiple Mutations starting at position %ld.",ii+1);
-								log_error("Excluded codons: Multiple Mutations starting at position %ld.",ii+1);
+								log_warn("Excluded codons: Multiple Mutations starting at position %ld.",ii+1);
 								return 0;
 							}
 						}

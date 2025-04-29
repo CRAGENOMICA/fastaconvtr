@@ -1,59 +1,59 @@
-2025-01-07 03:51:03 DEBUG : Open log file...
-2025-01-07 03:51:03 INFO  : Validating tfasta file ./100Kallchr.tfa.bgz
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_BGI_CWB_NCYZ0010.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_BGI_CWB_NCYZ0010.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_BGI_CWB_NCYZ0013.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_BGI_CWB_NCYZ0013.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_BGI_CWB_SYWB103.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_BGI_CWB_SYWB103.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_BGI_CWB_SYWB205.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_BGI_CWB_SYWB205.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_BGI_CWB_ZJWB01.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_BGI_CWB_ZJWB01.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_BGI_CWB_ZJWB02.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_BGI_CWB_ZJWB02.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_MS20U10_Meishan.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_MS20U10_Meishan.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_MS20U11_Meishan.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_MS20U11_Meishan.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_MS21M07_Meishan.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_MS21M07_Meishan.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_MS21M14_Meishan.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_MS21M14_Meishan.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_IBGM0327.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_IBGM0327.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_IBGU1803.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_IBGU1803.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_IBGU1804.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_IBGU1804.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_IBGU1805.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_IBGU1805.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_WB21F05_Netherlands.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_WB21F05_Netherlands.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_WB21M03_Netherlands.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_WB21M03_Netherlands.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_WB22F01_NL.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_WB22F01_NL.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_WB22F02_NL.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_WB22F02_NL.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_SCEB01F01_Scebifrons.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_SCEB01F01_Scebifrons.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_Scelebensis.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_Scelebensis.fa_b
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_Sverrucosus.fa_a
-2025-01-07 03:51:03 DEBUG : Adding Sample : chr_10_Sverrucosus.fa_b
-2025-01-07 03:51:03 DEBUG : Sequence Name : chr10
-2025-01-07 03:51:03 DEBUG : Sequence Name : chr12
-2025-01-07 03:51:03 DEBUG : Sequence Name : chr14
-2025-01-07 03:51:03 DEBUG : Sequence names and interval counts:
-2025-01-07 03:51:03 INFO  : Reading coordinates file...
-2025-01-07 03:51:03 INFO  : Reading input file...
-2025-01-07 03:51:03 DEBUG : Reading DNA data for chr12 from 1 to end of sequence
-2025-01-07 03:51:03 INFO  : Done reading tfasta file, number of samples: 42
-2025-01-07 03:51:03 INFO  : Write fasta file for specific regions...
-2025-01-07 03:51:03 INFO  : Writing fasta file ./100Kchr12_tfa2fa_06.fachr12_win_0.fas
-2025-01-07 03:51:03 INFO  : Writing fasta file ./100Kchr12_tfa2fa_06.fachr12_win_1.fas
-2025-01-07 03:51:04 INFO  : Writing fasta file ./100Kchr12_tfa2fa_06.fachr12_win_2.fas
-2025-01-07 03:51:05 INFO  : Writing fasta file ./100Kchr12_tfa2fa_06.fachr12_win_3.fas
-2025-01-07 03:51:06 INFO  : Writing fasta file ./100Kchr12_tfa2fa_06.fachr12_win_4.fas
-2025-01-07 03:51:07 INFO  : Program Ended
+2025-04-29 15:05:50 DEBUG : Open log file...
+2025-04-29 15:05:50 INFO  : Validating tfasta file ./100Kallchr.tfa.gz
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_BGI_CWB_NCYZ0010.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_BGI_CWB_NCYZ0010.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_BGI_CWB_NCYZ0013.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_BGI_CWB_NCYZ0013.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_BGI_CWB_SYWB103.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_BGI_CWB_SYWB103.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_BGI_CWB_SYWB205.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_BGI_CWB_SYWB205.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_BGI_CWB_ZJWB01.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_BGI_CWB_ZJWB01.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_BGI_CWB_ZJWB02.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_BGI_CWB_ZJWB02.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_MS20U10_Meishan.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_MS20U10_Meishan.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_MS20U11_Meishan.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_MS20U11_Meishan.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_MS21M07_Meishan.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_MS21M07_Meishan.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_MS21M14_Meishan.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_MS21M14_Meishan.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_IBGM0327.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_IBGM0327.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_IBGU1803.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_IBGU1803.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_IBGU1804.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_IBGU1804.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_IBGU1805.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_IBGU1805.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_WB21F05_Netherlands.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_WB21F05_Netherlands.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_WB21M03_Netherlands.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_WB21M03_Netherlands.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_WB22F01_NL.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_WB22F01_NL.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_WB22F02_NL.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_WB22F02_NL.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_SCEB01F01_Scebifrons.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_SCEB01F01_Scebifrons.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_Scelebensis.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_Scelebensis.fa_b
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_Sverrucosus.fa_a
+2025-04-29 15:05:50 DEBUG : Adding Sample : chr_10_Sverrucosus.fa_b
+2025-04-29 15:05:50 DEBUG : Sequence Name : chr10
+2025-04-29 15:05:50 DEBUG : Sequence Name : chr12
+2025-04-29 15:05:50 DEBUG : Sequence Name : chr14
+2025-04-29 15:05:50 DEBUG : Sequence names and interval counts:
+2025-04-29 15:05:50 INFO  : Reading coordinates file...
+2025-04-29 15:05:50 INFO  : Reading input file...
+2025-04-29 15:05:50 DEBUG : Reading DNA data for chr12 from 1 to end of sequence
+2025-04-29 15:05:50 INFO  : Done reading tfasta file, number of samples: 42
+2025-04-29 15:05:50 INFO  : Write fasta file for specific regions...
+2025-04-29 15:05:50 INFO  : Writing fasta file ./100Kchr12_tfa2fa_06.fachr12_win_0.fas
+2025-04-29 15:05:51 INFO  : Writing fasta file ./100Kchr12_tfa2fa_06.fachr12_win_1.fas
+2025-04-29 15:05:52 INFO  : Writing fasta file ./100Kchr12_tfa2fa_06.fachr12_win_2.fas
+2025-04-29 15:05:53 INFO  : Writing fasta file ./100Kchr12_tfa2fa_06.fachr12_win_3.fas
+2025-04-29 15:05:54 INFO  : Writing fasta file ./100Kchr12_tfa2fa_06.fachr12_win_4.fas
+2025-04-29 15:05:55 INFO  : Program Ended

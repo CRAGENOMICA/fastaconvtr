@@ -1,11 +1,11 @@
-2025-01-07 03:44:23 DEBUG : Open log file...
-2025-01-07 03:44:23 INFO  : Reading input file...
-2025-01-07 03:44:23 INFO  : Reading GTF file...
-2025-01-07 03:44:23 WARN  : GFF file Warning: end (115567) is larger than number of total sites (100000). Row 94 not analyzed.
-2025-01-07 03:44:23 WARN  : GFF file Warning: end (115567) is larger than number of total sites (100000). Row 95 not analyzed.
-2025-01-07 03:44:23 INFO  : Creating GTF file ./100Kchr10_criteria_max.gff
-2025-01-07 03:44:23 INFO  : Writing mask file ./100Kchr10_fa2ms_04b.ms.txt_npops2_nsam42_nonsynonymous_max_ExcludeMissingVariantsmhits_outg_ploidy1_MASK.txt
-2025-01-07 03:44:33 INFO  : Writing weights file ./100Kchr10_fa2ms_04b.ms.txt_npops2_nsam42_nonsynonymous_max_ExcludeMissingmhits_outg_ploidy1_WEIGHTS.gz
-2025-01-07 03:44:34 INFO  : Creating index for the weights file ./100Kchr10_fa2ms_04b.ms.txt_npops2_nsam42_nonsynonymous_max_ExcludeMissingmhits_outg_ploidy1_WEIGHTS.gz
-2025-01-07 03:44:34 INFO  : Writing ms file ./100Kchr10_fa2ms_04b.ms.txt  
-2025-01-07 03:44:34 INFO  : Program Ended
+2025-04-29 14:58:17 DEBUG : Open log file...
+2025-04-29 14:58:17 INFO  : Reading input file...
+2025-04-29 14:58:17 INFO  : Reading GTF file...
+2025-04-29 14:58:17 WARN  : GFF file Warning: end (115567) is larger than number of total sites (100000). Row 94 not analyzed.
+2025-04-29 14:58:17 WARN  : GFF file Warning: end (115567) is larger than number of total sites (100000). Row 95 not analyzed.
+2025-04-29 14:58:17 INFO  : Creating GTF file ./100Kchr10_criteria_max.gff
+2025-04-29 14:58:17 INFO  : Writing mask file ./100Kchr10_fa2ms_04b.ms.mask.txt.gz
+2025-04-29 14:58:28 INFO  : Writing weights file ./100Kchr10_fa2ms_04b.ms.NonSyn.WEIGHTS.gz
+2025-04-29 14:58:29 INFO  : Creating index for the weights file ./100Kchr10_fa2ms_04b.ms.NonSyn.WEIGHTS.gz
+2025-04-29 14:58:29 INFO  : Writing ms file ./100Kchr10_fa2ms_04b.ms.txt  
+2025-04-29 14:58:29 INFO  : Program Ended
