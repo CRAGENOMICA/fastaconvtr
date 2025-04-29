@@ -2,7 +2,7 @@
 Flags:
       -i [path and name of the input file (text or gz indexed)]
       -F [input format file: f (fasta), t (tfasta)]
-      -f [output format file: t (tfasta), f (fasta), m (ms), 0(nothing)]
+      -f [output format file: t (tfasta), f (fasta), m (ms)]
       -o [path and name of the output sequence file
       -n [name of the file containing the name(s) of scaffold(s) and their length (separated by a tab), one per line (ex. fai file)]
    OPTIONAL PARAMETERS:
@@ -29,5 +29,6 @@ Flags:
          [if 'synonymous', 'nonsynonymous', 'silent' add: Genetic_Code: Nuclear_Universal,mtDNA_Drosophila,mtDNA_Mammals,Other]
          [if 'Other', introduce the single letter code for the 64 triplets in the order UUU UUC UUA UUG ... etc.]
       -c [in case use coding regions, criteria to consider transcripts (max/min/first/long)]. DEFAULT: long
+      -T [in case define -g and -c and output is TFasta, option to print (1) or not (0) the DNA sequence]. DEFAULT: 1 (print)
       -E [instead -g & -c, input file with weights for positions: include three columns with a header, first the physical positions (1...end), second the weight for positions and third a boolean weight for the variant (eg. syn variant but nsyn position)]
 

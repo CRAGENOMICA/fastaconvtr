@@ -828,12 +828,12 @@ int read_fasta(
                         }
                         else {
                             strcat(file_weights_char,args->file_weights_char);
-                            log_info("Writing weights file %s", file_weights_char);
-                            if( (file_weights = bzopen( file_weights_char, "wb", &file_weights_gz)) == 0) {
-                                // fzprintf(file_output,file_output_gz,"\n It is not possible to write the weigths file %s.", file_weights_char);
-                                log_error("It is not possible to write the weigths file %s.", file_weights_char);
+                        }
+                        log_info("Writing weights file %s", file_weights_char);
+                        if( (file_weights = bzopen( file_weights_char, "wb", &file_weights_gz)) == 0) {
+                            // fzprintf(file_output,file_output_gz,"\n It is not possible to write the weigths file %s.", file_weights_char);
+                            log_error("It is not possible to write the weigths file %s.", file_weights_char);
                                 exit(1);
-                            }
                         }
                         
                         // TODO :: handle create index

@@ -1007,15 +1007,19 @@ int main(int argc, const char * argv[]) {
 		}
 		
 	}
-	else {
-		// use wu for uncompressed output
-		file_output = bzopen(args.file_out, "wu", &file_output_gz); // fopen(args.file_out, "wb");
-
-		if (file_output == NULL)
-		{
-			log_error("It is not possible to write in the output file %s\n", args.file_out);
-			exit(1);
-		}
+    else {
+        // use wu for uncompressed output
+        if(args.format[0] != '0')
+        {
+            file_output = bzopen(args.file_out, "wu", &file_output_gz); // fopen(args.file_out, "wb");
+            
+            if (file_output == NULL)
+            {
+                log_error("It is not possible to write in the output file %s\n", args.file_out);
+                exit(1);
+            }
+        }
+        else file_output = bzopen(strcat(args.file_in,"_NULL"), "wu", &file_output_gz);
 	}
 
 	/*do a loop using each value of chr_names_all into chr_name.*/
@@ -1418,7 +1422,7 @@ void usage(void)
 	printf("\nFlags:\n");
     printf("      -i [path and name of the input file (text or gz indexed)]\n");
     printf("      -F [input format file: f (fasta), t (tfasta)]\n");/*fasta or tfasta formats are only available*/
-    printf("      -f [output format file: t (tfasta), f (fasta), m (ms), 0(nothing)]\n");
+    printf("      -f [output format file: t (tfasta), f (fasta), m (ms)]\n");
     printf("      -o [path and name of the output sequence file\n");
     printf("      -n [name of the file containing the name(s) of scaffold(s) and their length (separated by a tab), one per line (ex. fai file)]\n");
     printf("   OPTIONAL PARAMETERS:\n");
@@ -1445,8 +1449,8 @@ void usage(void)
     printf("         [if 'synonymous', 'nonsynonymous', 'silent' add: Genetic_Code: Nuclear_Universal,mtDNA_Drosophila,mtDNA_Mammals,Other]\n");
     printf("         [if 'Other', introduce the single letter code for the 64 triplets in the order UUU UUC UUA UUG ... etc.]\n");
     printf("      -c [in case use coding regions, criteria to consider transcripts (max/min/first/long)]. DEFAULT: long\n");
+    printf("      -T [in case define -g and -c and output is TFasta, option to print (1) or not (0) the DNA sequence]. DEFAULT: 1 (print)\n");
     printf("      -E [instead -g & -c, input file with weights for positions: include three columns with a header, first the physical positions (1...end), second the weight for positions and third a boolean weight for the variant (eg. syn variant but nsyn position)]\n");
-    /*printf("      -T [in case define -g and -c and output is TFasta, option to print (1) or not (0) the DNA sequence]. DEFAULT: 1 (print)\n");*/
     /*printf("      -r [rewrite the fasta file for selected region (not valid for silent/syn/nsyn) (1/0)]\n");*/
     /*printf("      -t [rewrite the fasta transposed file including the weight of each position and variant, if available) (1/0)]\n");*//*new!*/
     /*printf("\     -e [input file with effect sizes for variants: include two columns with a header, first the physical positions and second the weight]\n");*/
