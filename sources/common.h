@@ -23,9 +23,12 @@ extern "C" {
 
 	#define FULL_VERSION "v." VERSION_NUMBER " (" BUILD_NUMBER ")"
 	#define FASTA2MS2 "#fastaconvtr" //FULL_VERSION " Sebastian E. Ramos-Onsins.\n"
-    #define FASTAMS2VERSION "version 0.1-20250911"
+    #define FASTAMS2VERSION "version 0.1-20250911\n"
+    #define FASTAMS2TITLE "Conversion of fasta/ms/tfasta files to tfasta/ms/fasta \n and " \
+                          "Construction of WEIGHT files FROM GTF files to be used in mstatspop.\n"
+    #define FASTAMS2AUTHORS "Sebastian E. Ramos-Onsins and Ahmed Hafez.\n"
 
-	#define MSP_MAX_FILENAME			(unsigned long) 4096 /**< @brief Maximum Filename Length allowed */
+    #define MSP_MAX_FILENAME			(unsigned long) 4096 /**< @brief Maximum Filename Length allowed */
 	#define MSP_MAX_GFF_WORDLEN         (unsigned long) 20
 	#define MSP_GENETIC_CODETYPE_LEN	(unsigned long) 50	/* e.g. "Nuclear universal" */
 	#define MSP_GENCODE_COMBINATIONS    (unsigned long) 64 /* 4^3 */
