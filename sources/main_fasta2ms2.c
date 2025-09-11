@@ -1419,6 +1419,7 @@ int main(int argc, const char * argv[]) {
 void usage(void) 
 {
 	printf(FASTA2MS2);
+    printf(FASTAMS2VERSION);
 	printf("\nFlags:\n");
     printf("      -i [path and name of the input file (text or gz indexed)]\n");
     printf("      -F [input format file: f (fasta), t (tfasta)]\n");/*fasta or tfasta formats are only available*/
