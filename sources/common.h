@@ -23,7 +23,7 @@ extern "C" {
 
 	#define FULL_VERSION "v." VERSION_NUMBER " (" BUILD_NUMBER ")"
 	#define FASTA2MS2 "#fastaconvtr" //FULL_VERSION " Sebastian E. Ramos-Onsins.\n"
-    #define FASTAMS2VERSION "version 20250911"
+    #define FASTAMS2VERSION "version 0.1-20250911"
 
 	#define MSP_MAX_FILENAME			(unsigned long) 4096 /**< @brief Maximum Filename Length allowed */
 	#define MSP_MAX_GFF_WORDLEN         (unsigned long) 20
