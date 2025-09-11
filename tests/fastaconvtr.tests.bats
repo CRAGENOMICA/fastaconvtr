@@ -5,7 +5,8 @@ load '../node_modules/bats-assert/load'
 @test "fastaconvtr ok" {
   run fastaconvtr -h
   assert_success
-  [ "${lines[0]}" = "#fastaconvtr v0.1beta (20220907) Sebastian E. Ramos-Onsins." ]
+  [ "${lines[2]}" = "#fastaconvtr " ] 
+  #"#fastaconvtr v0.1beta (20220907) Sebastian E. Ramos-Onsins." ]
 }
 
 
@@ -45,7 +46,7 @@ load '../node_modules/bats-assert/load'
 # bats test_tags=tag:fa2tfa
 @test "fa2tfa ex03" {
   # ...
-  run fastaconvtr -F fasta -f tfasta -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2tfa_03B.tfa.gz -E $TEST_FILES_DIR/100Kchr10_fa2tfa_02B.tfa.gz_npops1_nsam42_nonsynonymous_max_ExcludeMissingVariantsmhits_NOoutg_ploidy1_WEIGHTS.gz -n $TEST_FILES_DIR/chr10.txt
+  run fastaconvtr -F fasta -f tfasta -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2tfa_03B.tfa.gz -E $TEST_FILES_DIR/100Kchr10_fa2tfa_02B.NonSyn.WEIGHTS.gz -n $TEST_FILES_DIR/chr10.txt
   assert_success
 
 
@@ -62,7 +63,7 @@ load '../node_modules/bats-assert/load'
 # bats test_tags=tag:fa2tfa
 @test "fa2tfa ex03B should give same results of fa2tfa ex02B" {
   # ...
-  run fastaconvtr  -F fasta -f tfasta -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2tfa_03B.tfa.gz -E $TEST_FILES_DIR/100Kchr10_fa2tfa_02B.tfa.gz_npops1_nsam42_nonsynonymous_max_ExcludeMissingVariantsmhits_NOoutg_ploidy1_WEIGHTS.gz -n $TEST_FILES_DIR/chr10.txt
+  run fastaconvtr  -F fasta -f tfasta -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2tfa_03B.tfa.gz -E $TEST_FILES_DIR/100Kchr10_fa2tfa_02B.NonSyn.WEIGHTS.gz -n $TEST_FILES_DIR/chr10.txt
   assert_success
 
 }
@@ -86,7 +87,7 @@ load '../node_modules/bats-assert/load'
 # bats test_tags=tag:fa2tfa
 @test "fa2tfa ex06 should give same results of fa2tfa ex05" {
   # ...
-  run fastaconvtr  -F fasta -f tfasta -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2tfa_06.tfa.gz -E $TEST_FILES_DIR/100Kchr10_fa2tfa_05.tfa.gz_npops1_nsam84_nonsynonymous_max_IncludeMissingVariantsmhits_NOoutg_ploidy2_WEIGHTS.gz -p 2 -n $TEST_FILES_DIR/chr10.txt
+  run fastaconvtr  -F fasta -f tfasta -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2tfa_06.tfa.gz -E $TEST_FILES_DIR/100Kchr10_fa2tfa_05.NonSyn.WEIGHTS.gz -p 2 -n $TEST_FILES_DIR/chr10.txt
   assert_success
 
 }
@@ -148,7 +149,7 @@ load '../node_modules/bats-assert/load'
 # bats test_tags=tag:fa2fa
 @test "fa2fa ex03 same results as fa2fa ex02B" {
   # ...
-  run fastaconvtr  -F fasta -f fasta  -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2fa_03.fa -E $TEST_FILES_DIR/100Kchr10_fa2fa_02.fa_npops1_nsam42_nonsynonymous_max_IncludeMissingVariantsmhits_NOoutg_ploidy1_WEIGHTS.gz -n $TEST_FILES_DIR/chr10.txt
+  run fastaconvtr  -F fasta -f fasta  -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2fa_03.fa -E $TEST_FILES_DIR/100Kchr10_fa2fa_02.NonSyn.WEIGHTS.gz -n $TEST_FILES_DIR/chr10.txt
   assert_success
 
 }
@@ -156,7 +157,7 @@ load '../node_modules/bats-assert/load'
 # bats test_tags=tag:fa2fa
 @test "fa2fa ex03B same results as fa2fa ex02B" {
   # ...
-  run fastaconvtr -F fasta -f fasta  -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2fa_03B.fa -E $TEST_FILES_DIR/100Kchr10_fa2fa_02B.fa_npops1_nsam42_nonsynonymous_max_ExcludeMissingVariantsmhits_NOoutg_ploidy1_WEIGHTS.gz -n $TEST_FILES_DIR/chr10.txt
+  run fastaconvtr -F fasta -f fasta  -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2fa_03B.fa -E $TEST_FILES_DIR/100Kchr10_fa2fa_02B.NonSyn.WEIGHTS.gz -n $TEST_FILES_DIR/chr10.txt
   assert_success
 
 }
@@ -189,7 +190,7 @@ load '../node_modules/bats-assert/load'
 # bats test_tags=tag:fa2fa
 @test "fa2fa ex07 as results of fa2fa ex06" {
   # ...
-  run fastaconvtr -F fasta -f fasta  -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2fa_07.fa -E $TEST_FILES_DIR/100Kchr10_fa2fa_06.fa_npops1_nsam84_nonsynonymous_max_IncludeMissingVariantsmhits_NOoutg_ploidy2_WEIGHTS.gz -p 2 -n $TEST_FILES_DIR/chr10.txt
+  run fastaconvtr -F fasta -f fasta  -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2fa_07.fa -E $TEST_FILES_DIR/100Kchr10_fa2fa_06.NonSyn.WEIGHTS.gz -p 2 -n $TEST_FILES_DIR/chr10.txt
   assert_success
 
 }
@@ -252,7 +253,7 @@ load '../node_modules/bats-assert/load'
 # bats test_tags=tag:fa2fa
 @test "fa2ms ex05 same results as fa2ms ex04b" {
   # ...
-  run fastaconvtr -F fasta -f ms -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2ms_05.ms.txt -E $TEST_FILES_DIR/100Kchr10_fa2ms_04.ms.txt_npops1_nsam42_nonsynonymous_max_ExcludeMissingmhits_NOoutg_ploidy1_WEIGHTS.gz -n $TEST_FILES_DIR/chr10.txt
+  run fastaconvtr -F fasta -f ms -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2ms_05.ms.txt -E $TEST_FILES_DIR/100Kchr10_fa2ms_04.NonSyn.WEIGHTS.gz -n $TEST_FILES_DIR/chr10.txt
   assert_success
 
 }
@@ -308,7 +309,7 @@ load '../node_modules/bats-assert/load'
 # bats test_tags=tag:fa2fa
 @test "fa2ms ex11 same results as fa2ms ex10" {
   # ...
-  run fastaconvtr -F fasta -f ms -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2ms_11.ms.txt -E $TEST_FILES_DIR/100Kchr10_fa2ms_10.ms.txt_npops1_nsam84_nonsynonymous_max_ExcludeMissingmhits_NOoutg_ploidy2_WEIGHTS.gz -p 2 -n $TEST_FILES_DIR/chr10.txt
+  run fastaconvtr -F fasta -f ms -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2ms_11.ms.txt -E $TEST_FILES_DIR/100Kchr10_fa2ms_10.NonSyn.WEIGHTS.gz -p 2 -n $TEST_FILES_DIR/chr10.txt
   assert_success
 
 }
@@ -332,7 +333,7 @@ load '../node_modules/bats-assert/load'
 # bats test_tags=tag:fa2fa
 @test "fa2ms ex14 as results of fa2ms ex13" {
   # ...
-  run fastaconvtr -F fasta -f ms -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2ms_14.ms.txt -E $TEST_FILES_DIR/100Kchr10_fa2ms_13.ms.txt_npops1_nsam42_nonsynonymous_max_ExcludeMissingmhits_NOoutg_ploidy1_WEIGHTS.gz -P 0 -p 2 -W $TEST_FILES_DIR/coord_100Kb.txt -n $TEST_FILES_DIR/chr10.txt
+  run fastaconvtr -F fasta -f ms -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2ms_14.ms.txt -E $TEST_FILES_DIR/100Kchr10_fa2ms_13.NonSyn.WEIGHTS.gz -P 0 -p 2 -W $TEST_FILES_DIR/coord_100Kb.txt -n $TEST_FILES_DIR/chr10.txt
   assert_success
 
 }

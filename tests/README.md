@@ -10,5 +10,5 @@ npm install  https://github.com/ztombol/bats-file
 
 
 # To Run the Test
-bats ./tests/fastaconvtr.tests.bats
+bats ./tests/fastaconvtr.tests.bats 
 ```
