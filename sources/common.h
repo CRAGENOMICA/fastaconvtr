@@ -23,7 +23,7 @@ extern "C" {
 
 	#define FULL_VERSION "v." VERSION_NUMBER " (" BUILD_NUMBER ")"
 	#define FASTA2MS2 "#fastaconvtr" //FULL_VERSION " Sebastian E. Ramos-Onsins.\n"
-    #define FASTAMS2VERSION "version " VERSION_NUMBER " (" BUILD_NUMBER ")\n"
+    #define FASTAMS2VERSION "version " VERSION_NUMBER "-" BUILD_NUMBER "\n"
     #define FASTAMS2TITLE "Conversion of fasta/ms/tfasta files to tfasta/ms/fasta \nand " \
                           "Construction of WEIGHT files FROM GTF files to be used in mstatspop.\n"
     #define FASTAMS2AUTHORS "Sebastian E. Ramos-Onsins and Ahmed Hafez.\n"
