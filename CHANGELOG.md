@@ -1,3 +1,8 @@
+# Change log Version 1.0.1
+
+* fix long int overflow
+* add new examples
+* add new flags  -t and -k
 
 
 # Change log Version 1.0.0

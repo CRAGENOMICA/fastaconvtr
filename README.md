@@ -1,4 +1,4 @@
-# fastaconvtr v1.0.0 Sebastian E. Ramos-Onsins.
+# fastaconvtr v1.0.1 Sebastian E. Ramos-Onsins.
 
 ### Conversion of fasta and ms files into transposed fasta (tfasta, compressed and indexed) files and viceversa.
 

@@ -118,12 +118,12 @@ jobs:
         ls -al
         cpack -G TGZ
     - name: Upload release tarball
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         # Name of the artifact. This is the name that will be displayed in the GitHub Actions UI.
         # get the name of the release tarball
 
-        name: fastaconvtr-release
+        name: fastaconvtr-release-${{ matrix.os }}-${{ matrix.c_compiler }}-${{ matrix.build_type }}
         path: | 
            ${{ steps.strings.outputs.build-output-dir }}/*.tar.gz 
            ${{ steps.strings.outputs.build-output-dir }}/version.txt
@@ -147,9 +147,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Download release tarball
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
-        name: fastaconvtr-release
+        pattern: fastaconvtr-release-*
         path: ${{ github.workspace }}/fastaconvtr-release
 
     - name: check release tarball
@@ -157,8 +157,10 @@ jobs:
 
     - name: version
       run: |
-        echo "version=$(cat ${{ github.workspace }}/fastaconvtr-release/version.txt)" >> "$GITHUB_ENV"
-        echo "version=$(cat ${{ github.workspace }}/fastaconvtr-release/version.txt)" >> "$GITHUB_OUTPUT"
+        # Find the first version.txt file (all should have the same version)
+        VERSION_FILE=$(find ${{ github.workspace }}/fastaconvtr-release -name "version.txt" | head -1)
+        echo "version=$(cat $VERSION_FILE)" >> "$GITHUB_ENV"
+        echo "version=$(cat $VERSION_FILE)" >> "$GITHUB_OUTPUT"
       id: version
 
 
@@ -181,7 +183,7 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ github.workspace }}/fastaconvtr-release/fastaconvtr-${{ steps.version.outputs.version }}-Linux.tar.gz
+        asset_path: ${{ github.workspace }}/fastaconvtr-release/*/fastaconvtr-${{ steps.version.outputs.version }}-Linux.tar.gz
         # asset_path: ${{ steps.strings.outputs.build-output-dir }}/*.Linux.tar.gz
         asset_name: fastaconvtr-v${{ steps.version.outputs.version }}-Linux.tar.gz
         asset_content_type: application/gzip
@@ -191,6 +193,6 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ github.workspace }}/fastaconvtr-release/fastaconvtr-${{ steps.version.outputs.version }}-Darwin.tar.gz
+        asset_path: ${{ github.workspace }}/fastaconvtr-release/*/fastaconvtr-${{ steps.version.outputs.version }}-Darwin.tar.gz
         asset_name: fastaconvtr-v${{ steps.version.outputs.version }}-Darwin.tar.gz
         asset_content_type: application/gzip
