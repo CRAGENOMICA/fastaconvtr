@@ -123,7 +123,7 @@ jobs:
         # Name of the artifact. This is the name that will be displayed in the GitHub Actions UI.
         # get the name of the release tarball
 
-        name: fastaconvtr-release-${{ matrix.os }}-${{ matrix.c_compiler }}-${{ matrix.build_type }}
+        name: fastaconvtr-release-${{ matrix.os }}-${{ matrix.c_compiler }}
         path: | 
            ${{ steps.strings.outputs.build-output-dir }}/*.tar.gz 
            ${{ steps.strings.outputs.build-output-dir }}/version.txt
@@ -177,35 +177,35 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ github.token }}
 
-    - name: find and upload linux artifact
+    - name: find linux artifact
+      id: find_linux
       run: |
-        # Find the Linux tarball
-        LINUX_TARBALL=$(find ${{ github.workspace }}/fastaconvtr-release -name "*Linux.tar.gz" | head -1)
-        if [ -n "$LINUX_TARBALL" ]; then
-          echo "Found Linux tarball: $LINUX_TARBALL"
-          # Upload using curl since upload-release-asset doesn't handle wildcards well
-          curl -X POST \
-            -H "Authorization: token ${{ github.token }}" \
-            -H "Content-Type: application/gzip" \
-            --data-binary @"$LINUX_TARBALL" \
-            "${{ steps.create_release.outputs.upload_url }}?name=fastaconvtr-v${{ steps.version.outputs.version }}-Linux.tar.gz"
-        else
-          echo "No Linux tarball found"
-          exit 1
-        fi
-    - name: find and upload macos artifact
+        LINUX_FILE=$(find ${{ github.workspace }}/fastaconvtr-release -name "*Linux.tar.gz" | head -1)
+        echo "linux_file=$LINUX_FILE" >> "$GITHUB_OUTPUT"
+        echo "Found Linux file: $LINUX_FILE"
+    
+    - name: upload linux artifact
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ steps.find_linux.outputs.linux_file }}
+        asset_name: fastaconvtr-v${{ steps.version.outputs.version }}-Linux.tar.gz
+        asset_content_type: application/gzip
+    - name: find macos artifact
+      id: find_macos
       run: |
-        # Find the macOS tarball
-        MACOS_TARBALL=$(find ${{ github.workspace }}/fastaconvtr-release -name "*Darwin.tar.gz" | head -1)
-        if [ -n "$MACOS_TARBALL" ]; then
-          echo "Found macOS tarball: $MACOS_TARBALL"
-          # Upload using curl since upload-release-asset doesn't handle wildcards well
-          curl -X POST \
-            -H "Authorization: token ${{ github.token }}" \
-            -H "Content-Type: application/gzip" \
-            --data-binary @"$MACOS_TARBALL" \
-            "${{ steps.create_release.outputs.upload_url }}?name=fastaconvtr-v${{ steps.version.outputs.version }}-Darwin.tar.gz"
-        else
-          echo "No macOS tarball found"
-          exit 1
-        fi
+        MACOS_FILE=$(find ${{ github.workspace }}/fastaconvtr-release -name "*Darwin.tar.gz" | head -1)
+        echo "macos_file=$MACOS_FILE" >> "$GITHUB_OUTPUT"
+        echo "Found macOS file: $MACOS_FILE"
+    
+    - name: upload macos artifact
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ steps.find_macos.outputs.macos_file }}
+        asset_name: fastaconvtr-v${{ steps.version.outputs.version }}-Darwin.tar.gz
+        asset_content_type: application/gzip
