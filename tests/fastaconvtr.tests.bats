@@ -5,7 +5,7 @@ load '../node_modules/bats-assert/load'
 @test "fastaconvtr ok" {
   run fastaconvtr -h
   assert_success
-  [ "${lines[2]}" = "#fastaconvtr " ] 
+  [ "${lines[2]}" = "#fastaconvtr" ] 
   #"#fastaconvtr v0.1beta (20220907) Sebastian E. Ramos-Onsins." ]
 }
 
@@ -105,6 +105,15 @@ load '../node_modules/bats-assert/load'
 @test "fa2tfa ex08" {
   # ...
   run fastaconvtr -F fasta -f tfasta -i $TEST_FILES_DIR/100Kchr10.fa -o $TEST_OUTPUT/100Kchr10_fa2tfa_08.tfa.gz -N 2 40 2 -G 1 -u 1 -g $TEST_FILES_DIR/100Kchr10.gtf nonsynonymous Nuclear_Universal -c max -n $TEST_FILES_DIR/chr10.txt
+  assert_success
+
+}
+
+
+# bats test_tags=tag:fa2tfa
+@test "fa2tfa ex09" {
+  # ...
+  run fastaconvtr -F tfasta -f tfsta -i $TEST_FILES_DIR/100Kallchr.tfa.gz -o $TEST_OUTPUT/100Kallchr_tfa2tfa_09.tfa.gz -N 2 40 2 -G 1 -u 1 -n $TEST_FILES_DIR/chr101214.txt -g $TEST_FILES_DIR/100Kallchr.gtf silent Nuclear_Universal
   assert_success
 
 }
