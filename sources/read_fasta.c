@@ -302,12 +302,13 @@ int read_fasta(
 
     }
     if(args->input_format[0] == 't') {
-        
+        log_debug("Reading tfasta file: %s", chr_name);
         /*READ TFASTA FILE*/
         if(
             // function_read_tfasta(file_input,file_input_gz,
             //     // file_logerr,file_logerr_gz,
             //     init_site,end_site,&n_sam,&n_site,&names,&DNA_matr,chr_name,first)==0
+           
             read_tfasta_DNA_lite(tfasta, chr_name, init_site, end_site, &n_sam, &n_site, &DNA_matr) == 0
             
         ) 
@@ -316,6 +317,7 @@ int read_fasta(
             log_error("Unable reading tfasta file");
             exit(1);
         }
+        log_debug("Done reading tfasta file: %s", chr_name);
         n_samp = n_sam;
         names = tfasta->names;
         log_info("Done reading tfasta file, number of samples: %d", n_samp);
@@ -674,6 +676,7 @@ int read_fasta(
 				free(matrix_segrpos);
 				return(0);
 			}
+            log_info("GFF file processed successfully");
 		}
 		else {
 			if(file_ws != 0) {
