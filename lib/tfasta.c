@@ -975,7 +975,7 @@ int read_tfasta_DNA_lite(
   kstring_t str = {0, 0, NULL};
   const char *delim = ":\t\n";
   // keep track DNA_matr2 size
-  int count = 0;
+  long int count = 0;
   while (tbx_itr_next(tfasta->fp, tfasta->tbx, iter, &str) >= 0)
   {
     // if line start with # then it is a comment

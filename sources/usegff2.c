@@ -109,7 +109,7 @@ int use_gff(
 	char fields[9][SIZE_ROW];
 	struct valuesgff *fieldsgff, *fieldsgff2;
 	char *seqid /*, *fileid*/;
-	double *cmat, *cmatnc, *cmatsil;
+	double *cmat, *cmatnc, *cmatsil; // current matrix_sizepos for each seqname/gene_id
 	char *cframe_pos;
 	long int ii, ii2, k;
 	long int startframe = 0;
@@ -681,8 +681,7 @@ int use_gff(
 		log_error("Error: memory not reallocated. use_gff.c.cmatsil");
 		return 0; /*error*/
 	}
-	for (ii = 0; ii < n_site; ii++)
-		cmatsil[ii] = (double)1;
+
 	/*init a 3*n_samp matrix for syn/nsyn triplets*/
 	if (strcmp(subset_positions, "synonymous") == 0 || strcmp(subset_positions, "nonsynonymous") == 0 || strcmp(subset_positions, "silent") == 0 || strcmp(subset_positions, "silent") == 0 || strcmp(subset_positions, "0-fold") == 0 || strcmp(subset_positions, "2-fold") == 0 || strcmp(subset_positions, "3-fold") == 0 || strcmp(subset_positions, "4-fold") == 0)
 	{
@@ -1251,13 +1250,13 @@ int use_gff(
 				memcpy(fieldsgff2 + nrows2, fieldsgff + j, sizeof(struct valuesgff) * 1); /*include row in fieldsgff2*/
 				nrows2++;
 				/*
-				if(nrows2 >= nrows) {
-					if(!(fieldsgff2 = (struct valuesgff *)realloc(fieldsgff2,(nrows2+1)*sizeof(struct valuesgff)))) {
-						fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. use_gff.3b \n");
-						return 0;
-					}
-				}
-				*/
+				 if(nrows2 >= nrows) {
+				 if(!(fieldsgff2 = (struct valuesgff *)realloc(fieldsgff2,(nrows2+1)*sizeof(struct valuesgff)))) {
+				 fzprintf(file_logerr,file_logerr_gz,"\nError: memory not reallocated. use_gff.3b \n");
+				 return 0;
+				 }
+				 }
+				 */
 				j++;
 			}
 		}
@@ -1293,7 +1292,7 @@ int use_gff(
 		log_error("Error: memory not reallocated. use_gff.c.vector_erase_overlapped");
 		return 0; /*error*/
 	}
-	/*sort the struct by start to be fast in the comparison*/
+	/*sort the struct*/
 	qsort(fieldsgff2, nrows /*-1*/, sizeof(struct valuesgff), comp_start_id);
 	/*check that CDS regions with different gene_id are not overlapped: We assume we have replaced all '.' by its value in strand and frame */
 	if (strcmp(subset_positions, "synonymous") == 0 || strcmp(subset_positions, "nonsynonymous") == 0 || strcmp(subset_positions, "silent") == 0 || strcmp(subset_positions, "silent") == 0 || strcmp(subset_positions, "0-fold") == 0 || strcmp(subset_positions, "2-fold") == 0 || strcmp(subset_positions, "3-fold") == 0 || strcmp(subset_positions, "4-fold") == 0)
@@ -1357,64 +1356,16 @@ int use_gff(
 				}
 				if (overlap_nf == 1)
 				{
+					// ibeg and iend are the begin and end of the overlapped fragment to exclude
 					ibeg = fieldsgff2[m].start >= fieldsgff2[n].start ? fieldsgff2[m].start : fieldsgff2[n].start;
 					iend = fieldsgff2[m].end <= fieldsgff2[n].end ? fieldsgff2[m].end : fieldsgff2[n].end;
 
-					if (iend == fieldsgff2[m].end)
-					{
-						j = n;
-						k = m;
-					}
-					else
-					{
-						j = m;
-						k = n; /*ibeg == fieldsgff2[m].start*/
-					}
-
-					/*calculate the reading frame from the new starting point*/
-					if (fieldsgff2[j].strand[0] == '+' && fieldsgff2[k].strand[0] == '+')
-					{ /*cut n*/
-						cframe[0] = fieldsgff2[j].frame[0];
-						rest = fmod((double)((fieldsgff2[j].frame[0] - 48) + (iend - ibeg + 1)), 3.0);
-						fieldsgff2[j].frame[0] = 48 + rest;
-					}
-					if (fieldsgff2[j].strand[0] == '-' && fieldsgff2[k].strand[0] == '-')
-					{ /*cut m*/
-						cframe[0] = fieldsgff2[k].frame[0];
-						rest = fmod((double)((fieldsgff2[k].frame[0] - 48) + (iend - ibeg + 1)), 3.0);
-						fieldsgff2[k].frame[0] = 48 + rest;
-					}
-					if (fieldsgff2[j].strand[0] == '+' && fieldsgff2[k].strand[0] == '-')
-					{ /*cut both*/
-						cframe[0] = fieldsgff2[j].frame[0];
-						rest = fmod((double)((fieldsgff2[j].frame[0] - 48) + (iend - ibeg + 1)), 3.0);
-						fieldsgff2[j].frame[0] = 48 + rest;
-						cframe[0] = fieldsgff2[k].frame[0];
-						rest = fmod((double)((fieldsgff2[k].frame[0] - 48) + (iend - ibeg + 1)), 3.0);
-						fieldsgff2[k].frame[0] = 48 + rest;
-					}
-					/*if(fieldsgff2[j].strand[0]=='-' && fieldsgff2[k].strand[0]=='+') no cut*/
-
-					/* Save original values before modification to avoid dependent comparisons */
-					long orig_m_start = fieldsgff2[m].start;
-					long orig_n_start = fieldsgff2[n].start;
-					long orig_m_end = fieldsgff2[m].end;
-					long orig_n_end = fieldsgff2[n].end;
-
-					/* Adjust start/end to exclude overlapping region */
-					if (orig_m_start >= orig_n_start)
-						fieldsgff2[m].start = iend + 1;
-					if (orig_n_start >= orig_m_start)
-						fieldsgff2[n].start = iend + 1;
-					if (orig_m_end <= orig_n_end)
-						fieldsgff2[m].end = ibeg - 1;
-					if (orig_n_end <= orig_m_end)
-						fieldsgff2[n].end = ibeg - 1;
-
-					for (ii = ibeg; ii < iend; ii++)
+					// mark overlapped positions
+					for (ii = ibeg; ii <= iend; ii++)
 						vector_erase_overlapped[ii] = 1;
+
 					// fzprintf(file_logerr,file_logerr_gz,"\n Reading GTF file: Overlapping CDS regions with different reading frame (gene_id = %s vs gene_id = %s). OVERLAPPED REGION (from %ld to %ld) NOT CONSIDERED",fieldsgff2[m].gene_id,fieldsgff2[n].gene_id,ibeg+1,iend+1);
-					log_warn("Reading GTF file: Overlapping CDS regions with different reading frame (gene_id = \"%s\" vs gene_id = \"%s\"). OVERLAPPED REGION (from %ld to %ld) NOT CONSIDERED", fieldsgff2[m].gene_id, fieldsgff2[n].gene_id, ibeg + 1, iend + 1);
+					log_warn("Reading GTF file: Overlapping CDS regions with different reading frame (gene_id = \"%s\" vs gene_id = \"%s\"). OVERLAPPED REGION (%s: %ld to %ld) NOT CONSIDERED", fieldsgff2[m].gene_id, fieldsgff2[n].gene_id, fieldsgff2[m].filename, ibeg + 1, iend + 1);
 				}
 			}
 		}
@@ -1428,7 +1379,7 @@ int use_gff(
 
 	free(fieldsgff);
 
-	/*write a file_gff with the rows be take into account*/
+	// write a file_gff with the rows be take into account
 	*transcript = '\0';
 	strcat(transcript, "_criteria_");
 	strcat(transcript, criteria_transcripts);
@@ -1440,7 +1391,7 @@ int use_gff(
 	ff = strstr(name_fileinputgff2, ".");
 	ff1 = ff;
 	while (ff1 != NULL)
-	{ /*search the last '.'*/
+	{ // search the last '.'
 		if ((ff1 = strstr(ff + 1, ".")) != NULL)
 			ff = ff1;
 	}
@@ -1450,7 +1401,7 @@ int use_gff(
 		strcat(ff, transcript);
 	}
 	else
-		strncat(name_fileinputgff, transcript, 256);
+		strncat(name_fileinputgff2, transcript, 256);
 
 	if (first == 0)
 	{
@@ -1459,7 +1410,7 @@ int use_gff(
 		if ((file_gff2 = bzopen(name_fileinputgff2, "wu", &file_gff2_gz)) == 0)
 		{
 			// fzprintf(file_logerr,file_logerr_gz,"\n  It is not possible to create the file %s",name_fileinputgff);
-			log_error("It is not possible to create the file %s", name_fileinputgff);
+			log_error("It is not possible to create the file %s", name_fileinputgff2);
 			return 0;
 		}
 		bzprintf(file_gff2, file_gff2_gz, "#seqname\tsource\tfeature\tstart\tend\tscore\tstrand\tframe\tattributes\n");
@@ -1470,7 +1421,7 @@ int use_gff(
 		if ((file_gff2 = bzopen(name_fileinputgff2, "au", &file_gff2_gz)) == 0)
 		{
 			// fzprintf(file_logerr,file_logerr_gz,"\n  It is not possible to create the file %s",name_fileinputgff);
-			log_error("It is not possible to create the file %s", name_fileinputgff);
+			log_error("It is not possible to create the file %s", name_fileinputgff2);
 			return 0;
 		}
 	}
@@ -1503,7 +1454,7 @@ int use_gff(
 	log_debug("GTF file %s created", name_fileinputgff2);
 	/*fieldsgff2, nrows and vector_erase_overlapped are the necessary information in this first part*/
 
-	/**********************************************  END TO CHECK  *******************************************************/
+	/* *********************************************  END TO CHECK  ***************************************************** **/
 	/**********************************************  END TO CHECK  *******************************************************/
 	/**********************************************  END TO CHECK  *******************************************************/
 	/**********************************************  END TO CHECK  *******************************************************/
@@ -1520,11 +1471,11 @@ int use_gff(
 
 	/*
 
-	SECOND PART: ONCE THE GFF/GTF ROWS ARE INCLUDED AND FILTERED ACCORDING OVERLAPPED TRANSCRIPTS CRITERIA, DETECT POSITIONS AND VARIANTS:
+	 SECOND PART: ONCE THE GFF/GTF ROWS ARE INCLUDED AND FILTERED ACCORDING OVERLAPPED TRANSCRIPTS CRITERIA, DETECT POSITIONS AND VARIANTS:
 
 
-	Warning: codons that belong to several transcripts will be counted consecutively in the -c max option. The codons that are incomplete will be discarded except for the first consecutive exon. ??
-	*/
+	 Warning: codons that belong to several transcripts will be counted consecutively in the -c max option. The codons that are incomplete will be discarded except for the first consecutive exon. ??
+	 */
 
 	/*counting frames already in annotation*/
 	if (!(cframe_pos = (char *)calloc(n_site, sizeof(char))))
