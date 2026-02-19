@@ -5,7 +5,8 @@
 
 // Configuration for the tbx index
 
-static inline char get_DNA_char (char *c) {
+static inline char get_DNA_char(char *c)
+{
   switch (*c)
   {
   case 'T':
@@ -93,18 +94,22 @@ static inline char get_DNA_char (char *c) {
   }
 }
 
-
-
-
 // Function to get the name of the file format
-static const char* get_format_name(int format) {
-    switch (format) {
-        case TBX_UCSC: return "UCSC (BED)";
-        case TBX_SAM: return "SAM";
-        case TBX_VCF: return "VCF";
-        case TBX_GENERIC: return "Generic";
-        default: return "Unknown";
-    }
+static const char *get_format_name(int format)
+{
+  switch (format)
+  {
+  case TBX_UCSC:
+    return "UCSC (BED)";
+  case TBX_SAM:
+    return "SAM";
+  case TBX_VCF:
+    return "VCF";
+  case TBX_GENERIC:
+    return "Generic";
+  default:
+    return "Unknown";
+  }
 }
 
 const char *check_tfa_format(const char *filename, tfa_info_t *tfa_info)
@@ -128,35 +133,39 @@ const char *check_tfa_format(const char *filename, tfa_info_t *tfa_info)
   }
 
   // allocate memory for the basename to copy the filename
-  tfa_info->basename =  get_basename(filename, false);
+  tfa_info->basename = get_basename(filename, false);
   if (tfa_info->is_compressed)
   {
     // detect compression format
     // detect compression extension
     // remove the extension to get file name without the compression extension
-    
+
     // get the extension
-  char *extension = strrchr(tfa_info->basename, '.');
-   if (extension != NULL && (strcmp(extension, ".gz") == 0 || strcmp(extension, ".bgz") == 0)) {
-      tfa_info->compressed_extension = extension+1;
-      *extension = '\0';  // Remove the extension by setting a null character
+    char *extension = strrchr(tfa_info->basename, '.');
+    if (extension != NULL && (strcmp(extension, ".gz") == 0 || strcmp(extension, ".bgz") == 0))
+    {
+      tfa_info->compressed_extension = extension + 1;
+      *extension = '\0'; // Remove the extension by setting a null character
       // get the the actual file extension without the compression extension
       extension = strrchr(tfa_info->basename, '.');
-      if (extension != NULL) {
-        *extension = '\0';  // Remove the extension by setting a null character
+      if (extension != NULL)
+      {
+        *extension = '\0'; // Remove the extension by setting a null character
         tfa_info->extension = extension + 1;
       }
     }
   }
-  else {
+  else
+  {
     // get the extension
     char *extension = strrchr(tfa_info->basename, '.');
-    if (extension != NULL) {
-      *extension = '\0';  // Remove the extension by setting a null character
+    if (extension != NULL)
+    {
+      *extension = '\0'; // Remove the extension by setting a null character
       tfa_info->extension = extension + 1;
     }
   }
-  
+
   // Prepare to read lines using kstring_t
   kstring_t str = {0, 0, NULL};
   int ret = bgzf_getline(bgzf_fp, '\n', &str); // Read the first line
@@ -212,20 +221,21 @@ const char *check_wtfa_format(const char *filename, tfa_info_t *tfa_info)
     // detect compression format
     // detect compression extension
     // remove the extension to get file name without the compression extension
-    
+
     // get the extension
-  char *extension = strrchr(tfa_info->basename, '.');
-   if (extension != NULL && (strcmp(extension, ".gz") == 0 || strcmp(extension, ".bgz") == 0)) {
-      tfa_info->compressed_extension = extension+1;
-      *extension = '\0';  // Remove the extension by setting a null character
+    char *extension = strrchr(tfa_info->basename, '.');
+    if (extension != NULL && (strcmp(extension, ".gz") == 0 || strcmp(extension, ".bgz") == 0))
+    {
+      tfa_info->compressed_extension = extension + 1;
+      *extension = '\0'; // Remove the extension by setting a null character
       // get the the actual file extension without the compression extension
       extension = strrchr(tfa_info->basename, '.');
-      if (extension != NULL) {
-        *extension = '\0';  // Remove the extension by setting a null character
+      if (extension != NULL)
+      {
+        *extension = '\0'; // Remove the extension by setting a null character
         tfa_info->extension = extension + 1;
       }
     }
-
   }
   tfa_info->is_weight_file = 1;
   // Prepare to read lines using kstring_t
@@ -279,7 +289,8 @@ int init_tfasta_file(tfasta_file *tfasta, char *tfasta_fname)
     return TFA_ERROR;
   }
 
-  if (strcmp(tfa_format, TFAv2.version) != 0) {
+  if (strcmp(tfa_format, TFAv2.version) != 0)
+  {
     log_error("Unsupported TFA format: %s", tfa_format);
     log_error("Current Supported TFA format is: %s", TFAv2.version);
     return TFA_INVALID_FORMAT;
@@ -289,6 +300,8 @@ int init_tfasta_file(tfasta_file *tfasta, char *tfasta_fname)
   tfasta->tfasta_fname = tfasta_fname;
   tfasta->n_sam = 0;
   tfasta->names = NULL;
+  tfasta->nseq = 0;
+  tfasta->seq_names = NULL;
   tfasta->tbx = tbx_index_load(tfasta_fname);
   if (tfasta->tbx == NULL)
   {
@@ -321,7 +334,8 @@ int init_tfasta_file(tfasta_file *tfasta, char *tfasta_fname)
     {
       // collect names
       int nseq = 0;
-      char *cc = strtok(str.s, ">\n\r ");
+      char *delimiters = ">\n\r\t ";
+      char *cc = strtok(str.s, delimiters);
       while (cc != NULL)
       {
         if (strstr(cc, "#NAMES:") == 0)
@@ -365,52 +379,50 @@ int init_tfasta_file(tfasta_file *tfasta, char *tfasta_fname)
             // }
           }
         }
-        cc = strtok(NULL, ">\n\r ");
+        cc = strtok(NULL, delimiters);
       }
       tfasta->n_sam = nseq;
     }
-    
   }
   // free kstring_t str
   free(str.s);
-  // if n_sam is 0, then the file does not contain any samples 
+  // if n_sam is 0, then the file does not contain any samples
   if (tfasta->n_sam == 0)
   {
     log_error("No samples or names found in the tfasta: %s", tfasta_fname);
     return TFA_ERROR;
   }
 
-  int nseq;
-  const char **seqnames = tbx_seqnames(tfasta->tbx, &nseq);
-  if (seqnames == NULL)
+  tfasta->seq_names = (char **)tbx_seqnames(tfasta->tbx, &tfasta->nseq);
+  if (tfasta->seq_names == NULL)
   {
     fprintf(stderr, "Failed to retrieve sequence names.\n");
     tbx_destroy(tfasta->tbx);
     return TFA_ERROR;
   }
-  // Print sequence names
-  for (int i = 0; i < nseq; i++)
+
+  // Allocate and populate n_records_per_seq
+  tfasta->n_records = (uint64_t *)calloc(tfasta->nseq, sizeof(uint64_t));
+  if (tfasta->n_records == NULL)
   {
-    // printf("%s\n", seqnames[i]);
-    log_debug("Sequence Name : %s", seqnames[i]);
+    fprintf(stderr, "Failed to allocate memory for record counts.\n");
+    tbx_destroy(tfasta->tbx);
+    return TFA_ERROR;
   }
 
-  // Print sequence names and their interval counts
+  // Print sequence names and store their interval counts
   log_debug("Sequence names and interval counts:");
   uint64_t n_records;
   uint64_t unmaped;
-  for (int i = 0; i < nseq; i++)
+  for (int i = 0; i < tfasta->nseq; i++)
   {
     hts_idx_get_stat(tfasta->tbx->idx, i, &n_records, &unmaped);
-    printf("\t\t%s: %lu intervals\n", seqnames[i], n_records);
+    tfasta->n_records[i] = n_records;
+    printf("\t\t%s: %lu intervals\n", tfasta->seq_names[i], n_records);
   }
 
-  // Print the format of the indexed file
-  int format = tfasta->tbx->conf.preset;
-  // log_debug("Format of the indexed file: %s\n", get_format_name(format));
-
   tfasta->is_initialized = true;
-  free(seqnames);
+  // free(seqnames);
   return TFA_OK;
 }
 
@@ -437,10 +449,17 @@ void close_tfasta_file(tfasta_file *tfasta)
     }
     free(tfasta->names);
   }
+  if (tfasta->seq_names != NULL)
+  {
+    free(tfasta->seq_names);
+  }
+  if (tfasta->n_records != NULL)
+  {
+    free(tfasta->n_records);
+  }
+
   tfasta->is_initialized = false;
 }
-
-
 
 int init_wtfasta_file(wtfasta_file *wtfasta, char *wtfasta_fname)
 {
@@ -457,7 +476,8 @@ int init_wtfasta_file(wtfasta_file *wtfasta, char *wtfasta_fname)
     return TFA_ERROR;
   }
 
-  if (strcmp(tfa_format, wTFAv2.version) != 0) {
+  if (strcmp(tfa_format, wTFAv2.version) != 0)
+  {
     log_error("Unsupported wTFA format: %s", tfa_format);
     log_error("Current Supported wTFA format is: %s", wTFAv2.version);
     return TFA_INVALID_FORMAT;
@@ -483,7 +503,6 @@ int init_wtfasta_file(wtfasta_file *wtfasta, char *wtfasta_fname)
   return TFA_OK;
 }
 
-
 /**
  * Closes the wtfasta file.
  *
@@ -502,17 +521,18 @@ void close_wtfasta_file(wtfasta_file *wtfasta)
   wtfasta->is_initialized = false;
 }
 
-int get_interval_length(const char* chr_name,tbx_t *tbx) {
+int get_interval_length(const char *chr_name, tbx_t *tbx)
+{
   // get the length of the chromosome / scaffold
   // get the length of the sequence
   int nseq;
   const char **seqnames = tbx_seqnames(tbx, &nseq);
   if (seqnames == NULL)
   {
-    log_error( "Failed to retrieve sequence names.");
+    log_error("Failed to retrieve sequence names.");
     return -2;
   }
-  // find the index of 
+  // find the index of
   for (int i = 0; i < nseq; i++)
   {
     if (strcmp(seqnames[i], chr_name) == 0)
@@ -529,12 +549,11 @@ int get_interval_length(const char* chr_name,tbx_t *tbx) {
   return 0;
 }
 
-
 // n_sam initialized once when first is 0
 // names initialized once when first is 0
 // the actual output of this function is the DNA_matr, n_site
 // return 0 if error
-// return 1 if success 
+// return 1 if success
 // return -1 if end of file : since we are using an index and we are reading a specific region of the file, we should not reach the end of the file
 // we can not reach the end of the file, we should always read the region we are interested in
 // or retun n_site = 0 if the region we are interested in is not in the file
@@ -545,9 +564,8 @@ int read_tfasta_DNA(
     long int end_site,
     int *n_sam,
     long long *n_site,
-    //char ***names,
-    char **DNA_matr    
-    )
+    // char ***names,
+    char **DNA_matr)
 {
   // n_sam : number of samples
   // n_site : number of sites, sites correspond to positions in the DNA sequences
@@ -582,28 +600,29 @@ int read_tfasta_DNA(
   // static tfasta_file tfasta;
   // memset(&tfasta, 0, sizeof(tfasta_file));
   // char *tfasta_fname = file_input_gz->file_name;
-  if(end_site == -1) {
-    // reading all 
+  if (end_site == -1)
+  {
+    // reading all
     log_debug("Reading DNA data for %s from %ld to end of sequence", chr_name, init_site);
-    end_site =  get_interval_length(chr_name, tfasta->tbx);
-    if (end_site <=0)
+    end_site = get_interval_length(chr_name, tfasta->tbx);
+    if (end_site <= 0)
     {
       log_error("Failed to get the length of the sequence for %s", chr_name);
       return 0;
     }
   }
-  else {
+  else
+  {
     log_debug("Reading DNA data for %s from %ld to %ld", chr_name, init_site, end_site);
   }
-  
-  
+
   static long int position = 1;
 
   // names :: is pre allocated to 128 samples
   // each sample name is allocated to 50 characters
 
   char *c;
-  
+
   // // return 0 for error, 1 for success
   // // Open the file with tabix index
   // tbx_t *tbx = tbx_index_load(filename);
@@ -625,13 +644,12 @@ int read_tfasta_DNA(
   // if first time we call this function
   // TODO :: this should be moved to the main function and not here
 
-  //init_tfasta_file(&tfasta, tfasta_fname);
-  
+  // init_tfasta_file(&tfasta, tfasta_fname);
+
   // copy the number of samples and names to the output variables
   *n_sam = tfasta->n_sam;
   // *names = tfasta->names;
   *n_site = 0;
-  
 
   // construct and char string with chr_name and init_site and end_site
   // construct a region string in the format chr_name:init_site-end_site
@@ -651,13 +669,13 @@ int read_tfasta_DNA(
   if (iter == NULL)
   {
     // it is possible that the region is not found in the index
-    //fprintf(stderr, "Failed to parse region: %s\n", chr_name);
+    // fprintf(stderr, "Failed to parse region: %s\n", chr_name);
     log_error("Failed to parse region: %s", chr_name);
 
     // reset the position to 0
     // free iter
     hts_itr_destroy(iter);
-    
+
     position = 1;
     return 0;
   }
@@ -678,8 +696,6 @@ int read_tfasta_DNA(
     // close_tfasta_file(tfasta);
     return (0);
   }
-  
-
 
   // tbx_itr_querys will return an iterator to the region in the file
   // it only return what we asked for, so we need to iterate over the iterator to get the data
@@ -687,7 +703,7 @@ int read_tfasta_DNA(
   kstring_t str = {0, 0, NULL};
   const char *delim = ":\t\n";
   // keep track DNA_matr2 size
-  long count = 0;
+  long int count = 0;
   while (tbx_itr_next(tfasta->fp, tfasta->tbx, iter, &str) >= 0)
   {
     // if line start with # then it is a comment
@@ -707,17 +723,19 @@ int read_tfasta_DNA(
       // log_debug("col %d  : %s", col,  cc);
 
       // col 0 is the name of the sequence
-      if(col == 0) {
-
+      if (col == 0)
+      {
       }
 
       // col 1 is the position
-      if(col == 1) {
+      if (col == 1)
+      {
         position = atol(cc);
       }
-      
-      // col 2 is the nucleotides per sample 
-      if(col == 2) {
+
+      // col 2 is the nucleotides per sample
+      if (col == 2)
+      {
         // TODO : fill the DNA_matr matrix
 
         // DOES we require that strlen(cc) == n_sam ??
@@ -728,26 +746,28 @@ int read_tfasta_DNA(
           // log_debug("Nucleotide %d  : %c", i,  cc[i]);
           // fill the matrix
           // DNA_matr[(((long long)nseq * (unsigned long)*n_site) + (unsigned long)col)] = '1';
-          int DNA_matr2_index = (((long long)tfasta->n_sam * (unsigned long)*n_site) + (unsigned long)i);
-          char dna_char =  get_DNA_char(&cc[i]);
-          if(dna_char == -1) {
+          long int DNA_matr2_index = (((long long)tfasta->n_sam * (unsigned long)*n_site) + (unsigned long)i);
+          char dna_char = get_DNA_char(&cc[i]);
+          if (dna_char == -1)
+          {
             log_error("Unexpected value in tfa file: position %ld, sample %d \n%c", position, i, cc[i]);
             free(DNA_matr2);
             hts_itr_destroy(iter);
             return (-1);
           }
-          if(dna_char > 0) {
+          if (dna_char > 0)
+          {
             DNA_matr2[DNA_matr2_index] = dna_char;
             count++;
           }
         }
-
-      } 
+      }
 
       // in case we have more than 3 columns
       // we can ignore them for now
-      if(col > 2) {
-        log_debug("Ignoring unsupported data column %d  : %s", col,  cc);
+      if (col > 2)
+      {
+        log_debug("Ignoring unsupported data column %d  : %s", col, cc);
       }
 
       // increment the column
@@ -757,21 +777,22 @@ int read_tfasta_DNA(
     }
     // increment the site
     *n_site += 1;
-    if(*n_site > expected_sites) {
+    if (*n_site > expected_sites)
+    {
       // need to reallocate memory for the matrix, if our calculations are correct, this should not happen
       log_debug("Reallocating memory for DNA_matr2");
     }
   }
   // if *n_site == 0, then the region is not found in the file
-  if(*n_site == 0) {
-   
+  if (*n_site == 0)
+  {
+
     hts_itr_destroy(iter);
     free(DNA_matr2);
     free(str.s);
     return 1;
   }
 
-  
   free(str.s);
 
   // possible side effect, memory was allocated for DNA_matr2 before
@@ -788,8 +809,10 @@ int read_tfasta_DNA(
     return (0);
   }
 
-  for (unsigned long x = 0; x < tfasta->n_sam; x++) {
-    for (unsigned long xx = 0; xx < *n_site; xx++) { /*transpose */
+  for (unsigned long x = 0; x < tfasta->n_sam; x++)
+  {
+    for (unsigned long xx = 0; xx < *n_site; xx++)
+    { /*transpose */
       (*DNA_matr)[((*n_site * x) + xx)] =
           DNA_matr2[((tfasta->n_sam * xx) + x)];
     }
@@ -799,7 +822,6 @@ int read_tfasta_DNA(
 
   return (1);
 }
-
 
 /**
  * Reads the DNA data from the specified tfasta file for the specified chromosome and region.
@@ -814,9 +836,8 @@ int read_tfasta_DNA_lite(
     long int end_site,
     int *n_sam,
     long long *n_site,
-    //char ***names,
-    char **DNA_matr    
-    )
+    // char ***names,
+    char **DNA_matr)
 {
   // n_sam : number of samples
   // n_site : number of sites, sites correspond to positions in the DNA sequences
@@ -851,28 +872,29 @@ int read_tfasta_DNA_lite(
   // static tfasta_file tfasta;
   // memset(&tfasta, 0, sizeof(tfasta_file));
   // char *tfasta_fname = file_input_gz->file_name;
-  if(end_site == -1) {
-    // reading all 
+  if (end_site == -1)
+  {
+    // reading all
     log_debug("Reading DNA data for %s from %ld to end of sequence", chr_name, init_site);
-    end_site =  get_interval_length(chr_name, tfasta->tbx);
-    if (end_site <=0)
+    end_site = get_interval_length(chr_name, tfasta->tbx);
+    if (end_site <= 0)
     {
       log_error("Failed to get the length of the sequence for %s", chr_name);
       return 0;
     }
   }
-  else {
+  else
+  {
     log_debug("Reading DNA data for %s from %ld to %ld", chr_name, init_site, end_site);
   }
-  
-  
+
   static long int position = 1;
 
   // names :: is pre allocated to 128 samples
   // each sample name is allocated to 50 characters
 
   char *c;
-  
+
   // // return 0 for error, 1 for success
   // // Open the file with tabix index
   // tbx_t *tbx = tbx_index_load(filename);
@@ -894,13 +916,12 @@ int read_tfasta_DNA_lite(
   // if first time we call this function
   // TODO :: this should be moved to the main function and not here
 
-  //init_tfasta_file(&tfasta, tfasta_fname);
-  
+  // init_tfasta_file(&tfasta, tfasta_fname);
+
   // copy the number of samples and names to the output variables
   *n_sam = tfasta->n_sam;
   // *names = tfasta->names;
   *n_site = 0;
-  
 
   // construct and char string with chr_name and init_site and end_site
   // construct a region string in the format chr_name:init_site-end_site
@@ -920,13 +941,13 @@ int read_tfasta_DNA_lite(
   if (iter == NULL)
   {
     // it is possible that the region is not found in the index
-    //fprintf(stderr, "Failed to parse region: %s\n", chr_name);
+    // fprintf(stderr, "Failed to parse region: %s\n", chr_name);
     log_error("Failed to parse region: %s", chr_name);
 
     // reset the position to 0
     // free iter
     hts_itr_destroy(iter);
-    
+
     position = 1;
     return 0;
   }
@@ -947,8 +968,6 @@ int read_tfasta_DNA_lite(
     // close_tfasta_file(tfasta);
     return (0);
   }
-  
-
 
   // tbx_itr_querys will return an iterator to the region in the file
   // it only return what we asked for, so we need to iterate over the iterator to get the data
@@ -956,7 +975,7 @@ int read_tfasta_DNA_lite(
   kstring_t str = {0, 0, NULL};
   const char *delim = ":\t\n";
   // keep track DNA_matr2 size
-  int count = 0;
+  long int count = 0;
   while (tbx_itr_next(tfasta->fp, tfasta->tbx, iter, &str) >= 0)
   {
     // if line start with # then it is a comment
@@ -976,17 +995,19 @@ int read_tfasta_DNA_lite(
       // log_debug("col %d  : %s", col,  cc);
 
       // col 0 is the name of the sequence
-      if(col == 0) {
-
+      if (col == 0)
+      {
       }
 
       // col 1 is the position
-      if(col == 1) {
+      if (col == 1)
+      {
         position = atol(cc);
       }
-      
-      // col 2 is the nucleotides per sample 
-      if(col == 2) {
+
+      // col 2 is the nucleotides per sample
+      if (col == 2)
+      {
         // TODO : fill the DNA_matr matrix
 
         // DOES we require that strlen(cc) == n_sam ??
@@ -997,26 +1018,28 @@ int read_tfasta_DNA_lite(
           // log_debug("Nucleotide %d  : %c", i,  cc[i]);
           // fill the matrix
           // DNA_matr[(((long long)nseq * (unsigned long)*n_site) + (unsigned long)col)] = '1';
-          int DNA_matr2_index = (((long long)tfasta->n_sam * (unsigned long)*n_site) + (unsigned long)i);
-          char dna_char =  get_DNA_char(&cc[i]);
-          if(dna_char == -1) {
+          long int DNA_matr2_index = (((long long)tfasta->n_sam * (unsigned long)*n_site) + (unsigned long)i);
+          char dna_char = get_DNA_char(&cc[i]);
+          if (dna_char == -1)
+          {
             log_error("Unexpected value in tfa file: position %ld, sample %d \n%c", position, i, cc[i]);
             free(DNA_matr2);
             hts_itr_destroy(iter);
             return (-1);
           }
-          if(dna_char > 0) {
+          if (dna_char > 0)
+          {
             DNA_matr2[DNA_matr2_index] = dna_char;
             count++;
           }
         }
-
-      } 
+      }
 
       // in case we have more than 3 columns
       // we can ignore them for now
-      if(col > 2) {
-        log_debug("Ignoring unsupported data column %d  : %s", col,  cc);
+      if (col > 2)
+      {
+        log_debug("Ignoring unsupported data column %d  : %s", col, cc);
       }
 
       // increment the column
@@ -1026,21 +1049,22 @@ int read_tfasta_DNA_lite(
     }
     // increment the site
     *n_site += 1;
-    if(*n_site > expected_sites) {
+    if (*n_site > expected_sites)
+    {
       // need to reallocate memory for the matrix, if our calculations are correct, this should not happen
       log_debug("Reallocating memory for DNA_matr2");
     }
   }
   // if *n_site == 0, then the region is not found in the file
-  if(*n_site == 0) {
-   
+  if (*n_site == 0)
+  {
+
     hts_itr_destroy(iter);
     free(DNA_matr2);
     free(str.s);
     return 1;
   }
 
-  
   free(str.s);
 
   // possible side effect, memory was allocated for DNA_matr2 before
@@ -1050,7 +1074,6 @@ int read_tfasta_DNA_lite(
 
   return (1);
 }
-
 
 /**
  * Creates an index for the given input file and saves it to the specified output file.

@@ -1,3 +1,7 @@
+# Change log Version 1.0.2
+* fix long int overflow
+* fix problem in reading and processing GTF files
+
 # Change log Version 1.0.1
 
 * fix long int overflow
