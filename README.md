@@ -1,6 +1,6 @@
 # fastaconvtr v1.0.1 Sebastian E. Ramos-Onsins.
 
-### Conversion of fasta and ms files into transposed fasta (tfasta, compressed and indexed) files and viceversa.
+### Conversion of fasta and ms files into transposed fasta (tfasta, compressed and indexed) files and viceversa. Generation of Weight files for analyses of subset positions/regions given in a GTF file.
 
 ## Flags:
 	-F [input format file: f (fasta), t (tfasta)] 
